@@ -1,0 +1,55 @@
+/* Spotlight View for Glasshouse Home. Every rule is scoped to .g6-custom, which the
+   overlay script puts on #stage only while Spotlight View is on, so stock Home is
+   untouched otherwise. Loaded after Home's own styles. */
+@font-face{font-family:'Geist';src:url('/assets/fonts/Geist-Light.ttf') format('truetype');font-weight:300;font-display:swap}
+@font-face{font-family:'Geist';src:url('/assets/fonts/Geist-Regular.ttf') format('truetype');font-weight:400;font-display:swap}
+@font-face{font-family:'Geist';src:url('/assets/fonts/Geist-Medium.ttf') format('truetype');font-weight:500;font-display:swap}
+@font-face{font-family:'Geist';src:url('/assets/fonts/Geist-SemiBold.ttf') format('truetype');font-weight:600;font-display:swap}
+@font-face{font-family:'Inter';src:url('/assets/fonts/Inter-Light.ttf') format('truetype');font-weight:300;font-display:swap}
+@font-face{font-family:'Inter';src:url('/assets/fonts/Inter-Regular.ttf') format('truetype');font-weight:400;font-display:swap}
+@font-face{font-family:'Inter';src:url('/assets/fonts/Inter-Medium.ttf') format('truetype');font-weight:500;font-display:swap}
+@font-face{font-family:'Inter';src:url('/assets/fonts/Inter-SemiBold.ttf') format('truetype');font-weight:600;font-display:swap}
+.g6-custom.g6-font-system,.g6-custom.g6-font-system *{font-family:'LG Smart UI',sans-serif!important}
+.g6-custom.g6-font-geist,.g6-custom.g6-font-geist *{font-family:'Geist',sans-serif!important}
+.g6-custom.g6-font-inter,.g6-custom.g6-font-inter *{font-family:'Inter',sans-serif!important}
+.g6-custom #now{-webkit-align-items:flex-start;align-items:flex-start;padding:64px;height:602px}
+.g6-custom #clock{font-size:48px;letter-spacing:-1px}
+.g6-custom #date{margin-top:10px;font-size:24px}
+.g6-custom #srcTitle{font-size:32px}
+.g6-custom #srcKind{line-height:30px}
+.g6-custom #srcVia{font-size:24px;line-height:32px}
+.g6-custom .dev{width:384px;height:216px}
+.g6-custom .ch.tv{width:384px;height:216px}
+.g6-custom #preview,.g6-custom #now #preview.info{width:864px;height:486px;-webkit-order:-1;order:-1;margin-left:0;margin-right:56px}
+.g6-custom #when{-webkit-order:2;order:2;margin-left:auto;text-align:right;width:auto;padding-left:24px}
+.g6-custom #pvNote{line-height:486px;background:#000;font-size:0;font-weight:600;text-transform:uppercase;letter-spacing:.12em}
+.g6-custom #pvNote:before{content:"No signal";font-size:18px}
+.g6-custom #preview.full #pvNote{font-size:0}
+.g6-custom #preview.full #pvNote:before{font-size:34px}
+.g6-custom #now #preview:after{border:0}
+.g6-custom #now #preview{outline:1px solid rgba(244,241,234,.16);outline-offset:0}
+.g6-custom .glyph img.plate{border-radius:0}
+.g6-custom #rows{top:696px}
+.g6-custom #guide{top:612px;padding:0 64px}
+.g6-custom #gBody{left:64px;right:64px}
+.g6-custom #pvInfo{right:auto;left:0;top:100%;bottom:auto;margin:12px 0 0;width:100%;text-align:left}
+.g6-custom #pvInfo,.g6-custom #pvInfo *{font-family:'Manrope',sans-serif;font-size:18px;line-height:1.3;font-weight:400;letter-spacing:0;color:#6b665e}
+.g6-custom #pvMode{font-weight:600}
+.g6-custom #pvInfo{white-space:nowrap}
+.g6-custom #pvInfo div{display:inline;margin:0;white-space:nowrap;overflow:visible;text-overflow:clip}
+.g6-custom #pvLight b{margin-right:6px}
+.g6-custom #pvLight:not(:empty):before,.g6-custom #pvSig:not(:empty):before{content:"\00b7";margin:0 .5em}
+.g6-custom #pvSig span+span{margin-left:0}
+.g6-custom #pvSig span+span:before{content:"\00b7";margin:0 .5em}
+.g6-custom #weather{-webkit-order:1;order:1;margin-left:40px;text-align:right}
+.g6-custom #wxMain{-webkit-justify-content:flex-end;justify-content:flex-end}
+.g6-custom #wxIcon,.g6-custom #wxIcon svg{width:38.4px;height:38.4px}
+.g6-custom #wxIcon{margin-right:10px}
+.g6-custom #wxTemp{font-size:48px;line-height:.8;letter-spacing:-1px}
+.g6-custom #wxLine{margin-top:10px;font-size:24px;line-height:normal}
+.g6-custom #plate{-webkit-order:1;order:1;margin-left:40px}
+.g6-custom #plSig,.g6-custom #plStrip{font-size:18px;height:26px;line-height:26px}
+.g6-custom #plMode{font-size:32px;height:44px;line-height:44px;margin:8px 0 4px}
+.g6-custom .row h2{padding:0 64px}
+.g6-custom .wrap{margin:0 42px}
+.g6-custom .slot{margin:0 64px}

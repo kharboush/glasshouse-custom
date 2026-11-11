@@ -1,15 +1,17 @@
 # glasshouse-custom
 
-LG G6 Home custom layout for [Glasshouse](https://github.com/rorygallagher2024/glasshouse), kept as an update-safe patch behind a **Spotlight View** toggle in Home settings.
+**Spotlight View** for [Glasshouse](https://github.com/rorygallagher2024/glasshouse) Home on an LG G6: a big live preview up top, a compact clock in the corner and larger tiles below.
 
-Built against Glasshouse 0.144.1 (upstream commit `306db88`).
+It is an update-proof overlay. Glasshouse's own files stay stock, and a small service on the TV keeps the overlay applied, including after Glasshouse updates itself. Tested with Glasshouse 0.144.1.
 
-## Use
+## Install
 
-Copy the `customizations/` folder into the root of a Glasshouse checkout, then run:
+From this repo, with the TV's address:
 
 ```sh
-./customizations/apply-lg-g6-home.sh
+./customizations/install-tv.sh 192.168.0.42
 ```
 
-See [customizations/README.md](customizations/README.md) for what the layout changes, how to deploy to the TV, and how to refresh the patch.
+Then open `http://<tv-address>:8090/` to switch it on or off and choose the font.
+
+See [customizations/README.md](customizations/README.md) for how it works, everything it changes, and how to uninstall.

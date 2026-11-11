@@ -1,0 +1,27 @@
+#!/bin/sh
+# webosbrew boot hook: start the Spotlight View service for Glasshouse.
+# Installed as /var/lib/webosbrew/init.d/60-g6-spotlight (no dot in the name:
+# BusyBox run-parts skips those). Glasshouse's updater only refreshes its own
+# 50-tvweb hook, so this one survives Glasshouse updates.
+# Remove this file and /var/lib/g6-spotlight to uninstall.
+
+D=/var/lib/g6-spotlight
+[ -x /usr/bin/node ] || exit 0
+[ -f "$D/service.js" ] || exit 0
+
+# Already running (the loop below records its pid).
+PIDF="$D/loop.pid"
+[ -f "$PIDF" ] && kill -0 "$(cat "$PIDF")" 2>/dev/null && exit 0
+
+LOG="$D/service.log"
+[ "$(wc -c < "$LOG" 2>/dev/null || echo 0)" -gt 65536 ] && mv -f "$LOG" "$LOG.old"
+
+# Restarts the service if it ever stops; in the background so boot is not held up.
+(
+  while true; do
+    /usr/bin/node "$D/service.js" >>"$LOG" 2>&1
+    sleep 5
+  done
+) </dev/null >/dev/null 2>&1 &
+echo $! > "$PIDF"
+exit 0
