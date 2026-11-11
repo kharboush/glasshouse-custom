@@ -24,6 +24,7 @@ Top strip (`#now`, 602px tall, 64px padding), left to right:
 | Tiles (`.tile`) | Square corners; 16px apart; every tile has the preview's outline (1px, 16% white); the selected tile keeps its 2px white outline | 8px apart; 6px rounded corners; no outline until selected |
 | Guide programme cells (`.gc`) and their selection outline | Square corners | 4px rounded corners |
 | Toast (`#toast`), e.g. after choosing a Guide programme | 32px from the left and bottom edges, square corners | 112px from the left, 26px from the bottom, 6px rounded corners |
+| Recent apps panel (`#recents`) | Snapshots 384×216, 16px apart, square corners, the preview's 1px outline (2px white when selected); heading inset 64px; square Close and Close all buttons | Snapshots 372×209, 32px apart, 6px rounded corners, outline only when selected (4px out); heading inset 112px; rounded buttons |
 | Picture details without preview (`#plate`), shown with no source or while switching | Hidden (the panel says "No signal" then; the line under the preview shows details while a picture plays) | Beside the clock: 52px mode, 23px lines |
 
 Below the strip:
