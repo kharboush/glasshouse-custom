@@ -34,7 +34,7 @@ Alternative View keeps its own clock and input tiles.
 
 ## Font
 
-Spotlight View sets every Home element in **Inter** (Rasmus Andersson, v4.0, SIL Open Font License; see `fonts/OFL-Inter.txt`) instead of stock Outfit and Manrope. Weights bundled: Light 300 (the clock, temperature and other large display text), Regular 400, Medium 500, SemiBold 600. The `@font-face` rules are added to `home.html` by the patch; the font files live in `customizations/fonts/` because a text patch cannot carry them, and the apply script copies them into `server/assets/fonts/`. When deploying, copy them to `/var/lib/tvweb/assets/fonts/` on the TV.
+Spotlight View sets every Home element in the generic `sans-serif` family instead of stock Outfit and Manrope, so the TV picks its own system font: on the G6 that is LG Display Regular. Nothing is bundled or downloaded. LG Display has a single weight, so light text renders at regular weight and semibold text is synthesised by the browser.
 
 ## Files the patch touches
 
@@ -52,7 +52,7 @@ After updating the Glasshouse checkout, run:
 ./customizations/apply-lg-g6-home.sh
 ```
 
-The script applies the patch only if every file applies cleanly. It then copies the Inter fonts from `customizations/fonts/` into `server/assets/fonts/`. Running it again is safe: it reports that the changes are already applied. If an upstream release changes a patched section, the script stops without modifying any file; review and refresh the patch rather than forcing it.
+The script applies the patch only if every file applies cleanly. Running it again is safe: it reports that the changes are already applied. If an upstream release changes a patched section, the script stops without modifying any file; review and refresh the patch rather than forcing it.
 
 The script does not touch the TV. Deploy as below, then turn on **Spotlight View** in Home settings (it stays on across deploys once saved).
 

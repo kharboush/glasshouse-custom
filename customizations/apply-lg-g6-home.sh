@@ -17,7 +17,3 @@ else
   echo "Review the upstream changes and update customizations/lg-g6-home.patch before retrying." >&2
   exit 1
 fi
-
-# Fonts are binary, so they live beside the patch and are copied in.
-cp "$ROOT"/customizations/fonts/* "$ROOT/server/assets/fonts/"
-echo "Copied the Spotlight View fonts into server/assets/fonts."
