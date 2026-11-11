@@ -130,7 +130,7 @@ index 25b0e4c..1f25ed8 100644
      r.push({ label: t('home.alternative', 'Alternative View'),
               value: altOn ? t('common.on', 'On') : t('common.off', 'Off'), cls: altOn ? 'on' : 'off',
 diff --git a/server/assets/home.html b/server/assets/home.html
-index 9ce9022..bb0b084 100644
+index 9ce9022..50585f4 100644
 --- a/server/assets/home.html
 +++ b/server/assets/home.html
 @@ -163,6 +163,47 @@ html.resting #wall .layer{-webkit-animation-play-state:paused;animation-play-sta
@@ -139,7 +139,7 @@ index 9ce9022..bb0b084 100644
  
 +/* The G6 layout is opt-in: stock rules above stay in force while it is off.
 +   Keep this before Alternative View so that view's own choices still win. */
-+.g6-custom,.g6-custom *{font-family:sans-serif!important}
++.g6-custom,.g6-custom *{font-family:'LG Smart UI',sans-serif!important}
 +.g6-custom #now{-webkit-align-items:flex-start;align-items:flex-start;padding:64px;height:602px}
 +.g6-custom #clock{font-size:48px;letter-spacing:-1px}
 +.g6-custom #date{margin-top:10px;font-size:24px}

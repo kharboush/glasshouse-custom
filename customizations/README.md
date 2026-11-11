@@ -34,7 +34,7 @@ Alternative View keeps its own clock and input tiles.
 
 ## Font
 
-Spotlight View sets every Home element in the generic `sans-serif` family instead of stock Outfit and Manrope, so the TV picks its own system font: on the G6 that is LG Display Regular. Nothing is bundled or downloaded. LG Display has a single weight, so light text renders at regular weight and semibold text is synthesised by the browser.
+Spotlight View sets every Home element in **LG Smart UI**, the system font LG uses for the webOS menus, instead of stock Outfit and Manrope (`font-family:'LG Smart UI',sans-serif`). It is already installed on the TV (`/usr/share/fonts/LG_Smart_UI-*.ttf`, in Light, Regular, SemiBold and Bold), so nothing is bundled or downloaded. LG licenses it for the TV only, so it is referenced by name and never copied into this repo. Elsewhere, such as a desktop browser, Home falls back to that machine's default sans-serif. The plain `sans-serif` fallback on the TV is LG Display, a narrow single-weight font, which is why the font is named explicitly.
 
 ## Files the patch touches
 
