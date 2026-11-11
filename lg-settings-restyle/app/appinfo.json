@@ -1,0 +1,15 @@
+{
+  "id": "io.github.kharboush.lg-settings-restyle",
+  "version": "1.0.0",
+  "vendor": "kharboush",
+  "type": "web",
+  "main": "index.html",
+  "title": "Settings Restyle",
+  "appDescription": "A darker, squarer look for LG's Settings, applied at every start",
+  "icon": "icon80.png",
+  "largeIcon": "icon130.png",
+  "iconColor": "#000000",
+  "bgColor": "#000000",
+  "resolution": "1920x1080",
+  "disableBackHistoryAPI": true
+}

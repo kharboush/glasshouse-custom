@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>Settings Restyle</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;background:#000;color:#ece7df;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif}
+body{display:flex;display:-webkit-flex;align-items:center;-webkit-align-items:center;justify-content:center;-webkit-justify-content:center}
+#card{text-align:center;padding:4vh 4vw;max-width:70vw}
+.title{font-size:3.6vh;font-weight:400;letter-spacing:.02em;margin-bottom:1.4vh}
+.status{font-size:2.2vh;line-height:1.5;color:#a39d93;min-height:3.4vh}
+.note{font-size:1.8vh;line-height:1.5;color:#6b665e;margin-top:2.4vh}
+#act{display:none;margin-top:3.5vh;padding:1.4vh 3.2vw;font-size:2vh;font-weight:600;color:#000;background:#ece7df;border:none;outline:none}
+#act.on{display:inline-block}
+</style>
+</head>
+<body>
+<div id="card">
+  <div class="title">Settings Restyle</div>
+  <div id="status" class="status">Starting&hellip;</div>
+  <button id="act" type="button"></button>
+  <div class="note" id="note"></div>
+</div>
+<script>
+/*
+ * Installs, or removes, the restyled LG Settings. The work is done by the scripts
+ * in payload/, run as root through the Homebrew Channel's exec service, as
+ * Glasshouse's own Homebrew Channel app does. No backticks or ES2015 in this
+ * script: the Homebrew Channel's compatibility check reads them as needing a
+ * newer TV browser.
+ */
+(function () {
+  var EXEC = 'luna://org.webosbrew.hbchannel.service/exec';
+  var appDir = decodeURIComponent(location.pathname.replace(/\/[^\/]*$/, ''));
+  var statusEl = document.getElementById('status');
+  var noteEl = document.getElementById('note');
+  var act = document.getElementById('act');
+  var busy = false;
+  var installed = false;
+
+  function say(text, button) {
+    statusEl.textContent = text;
+    if (button) { act.textContent = button; act.className = 'on'; act.focus(); }
+    else { act.className = ''; }
+  }
+
+  // Runs payload/<script> and calls back with its final JSON line, or null.
+  function run(script, cb) {
+    var bridge;
+    try { bridge = new PalmServiceBridge(); } catch (e) { bridge = null; }
+    if (!bridge) return cb(null, 'This TV cannot run the setup. The Homebrew Channel is needed.');
+    var timer = setTimeout(function () { cb(null, 'It did not finish.'); }, 120000);
+    bridge.onservicecallback = function (msg) {
+      clearTimeout(timer);
+      var reply = {}, result = null;
+      try { reply = JSON.parse(msg); } catch (e) { reply = {}; }
+      if (reply.returnValue === false) return cb(null, 'The Homebrew Channel would not run it. Check that it is installed and up to date.');
+      var lines = String(reply.stdoutString || '').replace(/\s+$/, '').split('\n');
+      try { result = JSON.parse(lines[lines.length - 1]); } catch (e) { result = null; }
+      cb(result, null);
+    };
+    bridge.call(EXEC, JSON.stringify({ command: 'sh "' + appDir + '/payload/' + script + '"' }));
+  }
+
+  function install() {
+    if (busy) return;
+    busy = true;
+    say('Restyling Settings…');
+    run('install.sh', function (result, err) {
+      busy = false;
+      if (err || !result || !result.ok) {
+        installed = false;
+        return say('Setup failed' + (err ? ': ' + err : (result && result.error ? ': ' + result.error : '')) + '.', 'Try again');
+      }
+      installed = true;
+      noteEl.textContent = 'It is applied again at every start. To go back to LG’s own Settings, remove it here, or uninstall this app from the Homebrew Channel and restart the TV.';
+      say('Settings is restyled.', 'Remove the restyle');
+    });
+  }
+
+  function remove() {
+    if (busy) return;
+    busy = true;
+    say('Putting LG’s Settings back…');
+    run('uninstall.sh', function (result, err) {
+      busy = false;
+      if (err || !result || !result.ok) {
+        return say('Could not remove it' + (err ? ': ' + err : (result && result.error ? ': ' + result.error : '')) + '.', 'Try again');
+      }
+      installed = false;
+      noteEl.textContent = '';
+      say('LG’s own Settings is back.', 'Restyle Settings');
+    });
+  }
+
+  function press() { if (installed) remove(); else install(); }
+  act.addEventListener('click', press);
+  document.addEventListener('keydown', function (e) {
+    var k = e.keyCode || e.which;
+    if (k === 13) press();
+    else if (k === 461) {                  // Back: leave, as everywhere else on the TV
+      if (window.PalmSystem && typeof window.PalmSystem.platformBack === 'function') window.PalmSystem.platformBack();
+      else window.close();
+    }
+  });
+
+  install();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,63 @@
+/* Settings Restyle: LG Settings in Spotlight View's style. restyle.sh appends this after
+   LG's own stylesheet in a copy of the Settings app, then mounts the copy over the original.
+   Class names are the ones in this firmware's main.js (webOS 11.2.0); LG's files are not
+   in this package. */
+
+/* Square corners: the theme's corner sizes. Toggle knobs are squared further down. */
+*{--semantic-radius-container:0!important;--semantic-radius-button:0!important;--semantic-radius-full:0!important;
+  --semantic-radius-popup:0!important;--semantic-radius-overlay:0!important;
+  --primitive-radius-12:0!important;--primitive-radius-24:0!important;--primitive-radius-30:0!important}
+
+/* Solid black backgrounds; Home's cream and grey text. */
+*{--semantic-color-background-overlay-default:#000!important;
+  --semantic-color-background-full-default:#000!important;
+  --semantic-color-background-popup-default:#000!important;
+  --semantic-color-on-background-main:#ece7df!important;--semantic-color-on-surface-main:#ece7df!important;
+  --semantic-color-on-background-sub:#a39d93!important;--semantic-color-on-surface-sub:#a39d93!important}
+
+/* Text at 85%: the type sizes in use, each scaled (size n is n/48 rem). */
+*{--primitive-font-size-36:.6375rem!important;--primitive-font-size-40:.70833rem!important;
+  --primitive-font-size-48:.85rem!important;--primitive-font-size-54:.95625rem!important;
+  --primitive-font-size-60:1.0625rem!important;--primitive-font-size-66:1.16875rem!important;
+  --primitive-font-size-72:1.275rem!important;--primitive-font-size-78:1.38125rem!important;
+  --primitive-font-size-84:1.4875rem!important;--primitive-font-size-90:1.59375rem!important;
+  --primitive-font-size-96:1.7rem!important;--primitive-font-size-108:1.9125rem!important}
+
+/* Icons: one smaller size (they were 1.25rem to 2rem). */
+*{--icon-size:1.2rem!important}
+
+/* Tighter padding: the spacing steps padding uses, at 70% (step n is n/48 rem). */
+*{--primitive-spacing-12:.175rem!important;--primitive-spacing-18:.2625rem!important;--primitive-spacing-24:.35rem!important;
+  --primitive-spacing-30:.4375rem!important;--primitive-spacing-36:.525rem!important;--primitive-spacing-48:.7rem!important;
+  --primitive-spacing-60:.875rem!important;--primitive-spacing-72:1.05rem!important;--primitive-spacing-84:1.225rem!important;
+  --primitive-spacing-90:1.3125rem!important;--primitive-spacing-96:1.4rem!important;--primitive-spacing-132:1.925rem!important}
+
+/* Menu and card surfaces: a see-through warm grey (Home's secondary grey at 8%) instead of LG's light cool grey. Popups stay solid so they read over anything. */
+*{--semantic-color-surface-default:rgba(163,157,147,.08)!important;--semantic-color-surface-popup-default:#0a0908!important;
+  --semantic-color-surface-input-field:rgba(163,157,147,.08)!important;--semantic-color-surface-popup-input-field:rgba(163,157,147,.08)!important}
+
+/* No panel padding. Class names come from main.js's CSS-module maps (firmware is frozen,
+   so they do not change). Popups and dialogs keep theirs. */
+.rNnQtITqjt7SIZW9avb5 .gH3JCo25nk7pnNQr2JN3{padding:0!important}                       /* main panel body */
+.vgwoa87gsRoa91cU0Gbp.tpTsYvflI6WOmeHunYvv{padding:0!important}                          /* main panel header */
+.Sz17YwYvXwxTp1uauAgR .hxzuk5lCnC1zWIdB2nte .mvVv1jmeNnczVlM6E4F8{padding:0!important}  /* overlay panel */
+.mvVv1jmeNnczVlM6E4F8 .JcK2TYYIjuF5NEj64Wgp{padding:0!important}                        /* overlay panel scroller */
+.mvVv1jmeNnczVlM6E4F8 .brXipWWOMY2HfiK2O02v{margin:0!important;padding:0!important}     /* overlay panel content */
+.E8glpfTu4P2PXgg4AWkE.LKfNPuTFg93KrthqQNCC .vi6V8F_6eOnFvbbhIiJP{padding:0!important}   /* panel body variant */
+
+/* The greys LG Settings actually draws: the selected (unfocused) menu item, the
+   slider/scroll tracks. The white focus fill stays. (The translucent surface is left as
+   LG has it: it marks the main menu's selected item, and black made that invisible.) */
+*{--semantic-color-surface-default-selected:#1a1916!important;
+
+  --semantic-color-surface-default-track:#2a2825!important}
+
+
+/* The menu grey: LG draws white at 10% on these, which reads as light grey over black.
+   Found by painting each candidate a loud colour. Notes from that test: the main menu's
+   selected item uses --semantic-color-surface-default-translucent, and a focused disabled
+   option uses --semantic-color-surface-default-disabled-focused. */
+.PsrROKluXLQLFps9J9Qv,.MhI8YCC1l0_ZnrJ3Zh2h,.t7NLRDCN3xWA4ZL1Vmhj,.addhGe2rZG4Ewbv0b3jB,.tKSnxleckWhyD5EeZKfh{background-color:rgba(163,157,147,.08)!important}
+
+/* Toggle knob: square, to sit in the now-square toggle track. */
+.omXb6vOeZhSORVZY6EjS .CvdSQBjC9z4agYejSOb7{border-radius:0!important}
