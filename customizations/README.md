@@ -34,7 +34,13 @@ Alternative View keeps its own clock and input tiles.
 
 ## Font
 
-Spotlight View sets every Home element in **LG Smart UI**, the system font LG uses for the webOS menus, instead of stock Outfit and Manrope (`font-family:'LG Smart UI',sans-serif`). It is already installed on the TV (`/usr/share/fonts/LG_Smart_UI-*.ttf`, in Light, Regular, SemiBold and Bold), so nothing is bundled or downloaded. LG licenses it for the TV only, so it is referenced by name and never copied into this repo. Elsewhere, such as a desktop browser, Home falls back to that machine's default sans-serif. The plain `sans-serif` fallback on the TV is LG Display, a narrow single-weight font, which is why the font is named explicitly.
+A **Spotlight View font** dropdown, next to the Spotlight View toggle in both settings screens (setting key `g6Font`), picks the typeface Home uses while Spotlight View is on:
+
+- **System font** (default): LG Smart UI, the font LG uses for the webOS menus, already installed on the TV (`/usr/share/fonts/LG_Smart_UI-*.ttf`). LG licenses it for the TV only, so it is referenced by name and never copied into this repo. Plain `sans-serif` is not used because on the TV it resolves to LG Display, a narrow single-weight font.
+- **Geist**: Vercel, SIL Open Font License (`fonts/OFL-Geist.txt`).
+- **Inter**: Rasmus Andersson, v4.0, SIL Open Font License (`fonts/OFL-Inter.txt`).
+
+Geist and Inter are bundled in Light 300, Regular 400, Medium 500 and SemiBold 600. A text patch cannot carry font files, so they live in `customizations/fonts/`, and the apply script copies them into `server/assets/fonts/`. When deploying, copy them to `/var/lib/tvweb/assets/fonts/` on the TV. Browsers only download a bundled font when it is chosen.
 
 ## Files the patch touches
 
@@ -52,7 +58,7 @@ After updating the Glasshouse checkout, run:
 ./customizations/apply-lg-g6-home.sh
 ```
 
-The script applies the patch only if every file applies cleanly. Running it again is safe: it reports that the changes are already applied. If an upstream release changes a patched section, the script stops without modifying any file; review and refresh the patch rather than forcing it.
+The script applies the patch only if every file applies cleanly. It then copies the bundled fonts from `customizations/fonts/` into `server/assets/fonts/`. Running it again is safe: it reports that the changes are already applied. If an upstream release changes a patched section, the script stops without modifying any file; review and refresh the patch rather than forcing it.
 
 The script does not touch the TV. Deploy as below, then turn on **Spotlight View** in Home settings (it stays on across deploys once saved).
 

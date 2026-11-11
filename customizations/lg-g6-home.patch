@@ -1,5 +1,5 @@
 diff --git a/docs/dashboard/home.md b/docs/dashboard/home.md
-index f2f753e..4c61f11 100644
+index f2f753e..a64ffa7 100644
 --- a/docs/dashboard/home.md
 +++ b/docs/dashboard/home.md
 @@ -234,7 +234,7 @@ When opening a channel from the Internet TV row or live preview, playback opens
@@ -16,15 +16,16 @@ index f2f753e..4c61f11 100644
  * While Glasshouse Home is on:
      * **Starting up:** Open Home at power-on, Hide LG's Home while the TV starts.
 -    * **Layout:** Alternative View, Rows along the bottom.
-+    * **Layout:** Alternative View, Spotlight View, Rows along the bottom.
++    * **Layout:** Alternative View, Spotlight View, Spotlight View font, Rows along the bottom.
      * **Shown on Home:** Clock and date, Last watched, App count, CEC addresses, Channel logos, Weather, Picture details.
      * **Live preview:** Live preview, with Keep the preview on and Preview in the tile once it is on.
      * **Search.**
-@@ -446,6 +446,7 @@ The **Layout** section configures the on-screen placement of rows and status ele
+@@ -446,6 +446,8 @@ The **Layout** section configures the on-screen placement of rows and status ele
  
      ![Glasshouse Home with the clock off and the rows along the bottom](../screenshots/home-bottom.jpg)
  
 +* **Spotlight View:** A big live preview up top, with a compact clock in the corner and larger tiles below. Off by default; switching it off restores the stock layout. The choice is saved in the TV's Home layout.
++* **Spotlight View font:** The typeface Home uses while Spotlight View is on: the TV's system font (the default), Geist or Inter.
  * **Alternative View:** A compact layout with a smaller clock on the right, status badges to its left, and rounded, translucent tiles. Row titles show only while arranging, so **App count** is greyed out. Off by default, and works with **Rows along the bottom** and the other switches:
  
      ![Glasshouse Home in Alternative View with the rows along the bottom](../screenshots/home-alternative.jpg)
@@ -118,28 +119,63 @@ index 0c81a53..60eafb5 100755
        visitHomeRecentsHidden, visitHomeUploads, visitHomeShuffle, visitHomeLauncher, visitHomeReadiness, visitAudioOverride, visitHomeRecents, visitHomeGuide,
        visitHomeFadeAndInputs] },
 diff --git a/server/assets/dashboard.html b/server/assets/dashboard.html
-index 25b0e4c..1f25ed8 100644
+index 25b0e4c..f9a5e86 100644
 --- a/server/assets/dashboard.html
 +++ b/server/assets/dashboard.html
-@@ -1188,6 +1188,7 @@ function glasshouseHomeRows(d) {
+@@ -1188,6 +1188,14 @@ function glasshouseHomeRows(d) {
      }
      r.push(homeSwitchRow(d, 'showClock', t('home.showClock', 'Clock and date'), t('home.showClockDesc', 'At the top of Glasshouse Home. Switched off, the space stays empty.'), 'homeShow', d.layout.showClock !== false));
      r.push(homeSwitchRow(d, 'rowsBottom', t('home.rowsBottom', 'Rows along the bottom'), t('home.rowsBottomDesc', 'The rows of apps and inputs sit along the bottom of the screen, as on LG’s Home, rather than in the middle.'), 'homeShow', d.layout.rowsBottom === true));
 +    r.push(homeSwitchRow(d, 'g6CustomLayout', t('home.g6CustomLayout', 'Spotlight View'), t('home.g6CustomLayoutDesc', 'A big live preview up top, with a compact clock in the corner and larger tiles below. Off keeps the standard Glasshouse layout.'), 'homeShow', d.layout.g6CustomLayout === true));
++    // Spotlight View's font; OK steps through them.
++    var fontNames = { system: t('home.g6Font.system', 'System font'), geist: 'Geist', inter: 'Inter' };
++    var fontNow = d.layout.g6Font || 'system';
++    r.push({ label: t('home.g6Font', 'Spotlight View font'), key: 'g6Font', value: fontNames[fontNow], cls: 'act',
++             act: can ? 'homeG6Font' : null,
++             press: t('tv.press.change', 'Press OK to change'),
++             hint: t('home.g6FontDesc', 'The typeface Home uses while Spotlight View is on.') });
      var altOn = d.layout.view === 'alternative';
      r.push({ label: t('home.alternative', 'Alternative View'),
               value: altOn ? t('common.on', 'On') : t('common.off', 'Off'), cls: altOn ? 'on' : 'off',
+@@ -3438,6 +3446,10 @@ function activate() {
+       return homeLayout({ search: !r.on });
+     case 'homeAlternative':
+       return homeLayout({ view: r.on ? 'standard' : 'alternative' });
++    case 'homeG6Font':
++      var fontOrder = ['system', 'geist', 'inter'];
++      var fontAt = fontOrder.indexOf((homeData && homeData.layout && homeData.layout.g6Font) || 'system');
++      return homeLayout({ g6Font: fontOrder[(fontAt + 1) % fontOrder.length] });
+     case 'homeWeather':
+       var wxOrder = ['off', 'ha', 'internet'];
+       var wxAt = wxOrder.indexOf((homeData && homeData.layout && homeData.layout.weather) || 'ha');
 diff --git a/server/assets/home.html b/server/assets/home.html
-index 9ce9022..50585f4 100644
+index 9ce9022..0457743 100644
 --- a/server/assets/home.html
 +++ b/server/assets/home.html
-@@ -163,6 +163,47 @@ html.resting #wall .layer{-webkit-animation-play-state:paused;animation-play-sta
+@@ -17,6 +17,14 @@
+ @font-face{font-family:'Outfit';src:url('/assets/fonts/Outfit-Regular.ttf') format('truetype');font-weight:400;font-display:swap}
+ @font-face{font-family:'Manrope';src:url('/assets/fonts/Manrope-Regular.ttf') format('truetype');font-weight:400;font-display:swap}
+ @font-face{font-family:'Manrope';src:url('/assets/fonts/Manrope-SemiBold.ttf') format('truetype');font-weight:600;font-display:swap}
++@font-face{font-family:'Geist';src:url('/assets/fonts/Geist-Light.ttf') format('truetype');font-weight:300;font-display:swap}
++@font-face{font-family:'Geist';src:url('/assets/fonts/Geist-Regular.ttf') format('truetype');font-weight:400;font-display:swap}
++@font-face{font-family:'Geist';src:url('/assets/fonts/Geist-Medium.ttf') format('truetype');font-weight:500;font-display:swap}
++@font-face{font-family:'Geist';src:url('/assets/fonts/Geist-SemiBold.ttf') format('truetype');font-weight:600;font-display:swap}
++@font-face{font-family:'Inter';src:url('/assets/fonts/Inter-Light.ttf') format('truetype');font-weight:300;font-display:swap}
++@font-face{font-family:'Inter';src:url('/assets/fonts/Inter-Regular.ttf') format('truetype');font-weight:400;font-display:swap}
++@font-face{font-family:'Inter';src:url('/assets/fonts/Inter-Medium.ttf') format('truetype');font-weight:500;font-display:swap}
++@font-face{font-family:'Inter';src:url('/assets/fonts/Inter-SemiBold.ttf') format('truetype');font-weight:600;font-display:swap}
+ *{margin:0;padding:0;box-sizing:border-box}
+ html,body{height:100%;background:#000;overflow:hidden}
+ body{font-family:'Manrope',sans-serif;color:#ece7df;-webkit-font-smoothing:antialiased;cursor:default}
+@@ -163,6 +171,49 @@ html.resting #wall .layer{-webkit-animation-play-state:paused;animation-play-sta
  .rows-bottom #rows:before{-webkit-flex:0 0 auto;flex:0 0 auto;height:100%}
  .rows-bottom #rows:after{-webkit-flex:0 0 0;flex:0 0 0}
  
 +/* The G6 layout is opt-in: stock rules above stay in force while it is off.
 +   Keep this before Alternative View so that view's own choices still win. */
 +.g6-custom,.g6-custom *{font-family:'LG Smart UI',sans-serif!important}
++.g6-custom.g6-font-geist,.g6-custom.g6-font-geist *{font-family:'Geist',sans-serif!important}
++.g6-custom.g6-font-inter,.g6-custom.g6-font-inter *{font-family:'Inter',sans-serif!important}
 +.g6-custom #now{-webkit-align-items:flex-start;align-items:flex-start;padding:64px;height:602px}
 +.g6-custom #clock{font-size:48px;letter-spacing:-1px}
 +.g6-custom #date{margin-top:10px;font-size:24px}
@@ -181,7 +217,7 @@ index 9ce9022..50585f4 100644
  /* Alternative View (#999): a smaller clock on the right, Last watched to its
     left, and the rows as rounded, translucent tiles, titled only while arranging. */
  .alternative #now{padding:0 90px}
-@@ -731,7 +772,7 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
+@@ -731,7 +782,7 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
    // The remote's keys as webOS reports them to a page.
    var KEY = { left: 37, up: 38, right: 39, down: 40, ok: 13, back: 461, red: 403, green: 404, yellow: 405,
      chUp: 33, chDown: 34, info: 457, play: 415, pause: 19, stop: 413 };
@@ -190,7 +226,7 @@ index 9ce9022..50585f4 100644
    var GUIDE_TILE = 'iptv-guide';
    // Internet TV's Add channels tile: last in its row while arranging, and the row's only tile while it is empty.
    var ADD_TILE = 'iptv-add';
-@@ -809,6 +850,9 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
+@@ -809,6 +860,9 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
    function dateText(d) {
      var lang = (window.I18N && I18N.lang) ? I18N.lang() : 'en';
      var loc = lang === 'en' ? 'en-US' : lang;
@@ -200,7 +236,7 @@ index 9ce9022..50585f4 100644
      function part(opts) {
        try { return d.toLocaleDateString(loc, opts); } catch (e) { return ''; }
      }
-@@ -900,7 +944,9 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
+@@ -900,7 +954,9 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
      if (kind === 'iptv' && data.sources && data.sources.iptv && (state.arranging || (!out.length && !hasLineup))) {
        out.push({ id: ADD_TILE, add: true, name: t('home.tv.addTitle', 'Add channels') });
      } else if (kind === 'iptv' && (out.length || hasLineup) && !state.arranging) {
@@ -211,21 +247,21 @@ index 9ce9022..50585f4 100644
      }
      return out;
    }
-@@ -1904,7 +1950,8 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
+@@ -1904,7 +1960,8 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
      $('stage').className = (state.arranging ? 'arranging' : '') + (recents.open ? ' recents' : '') +
        (finder.open ? ' finding' : '') + (finder.typing ? ' typing' : '') + (searchOn() ? '' : ' no-search') + (folder.open ? ' folder' : '') +
        (!layout || layout.showClock === false ? ' no-clock' : '') + (layout && layout.rowsBottom === true ? ' rows-bottom' : '') +
 -      (layout && layout.view === 'alternative' ? ' alternative' : '') + (player.open ? ' playing' : '') + (adder.open ? ' adding' : '') +
-+      (layout && layout.view === 'alternative' ? ' alternative' : '') + (layout && layout.g6CustomLayout === true ? ' g6-custom' : '') +
++      (layout && layout.view === 'alternative' ? ' alternative' : '') + (layout && layout.g6CustomLayout === true ? ' g6-custom g6-font-' + (layout.g6Font || 'system') : '') +
 +      (player.open ? ' playing' : '') + (adder.open ? ' adding' : '') +
        (adder.open && adder.typing ? ' adtyping' : '') + (guide.open ? ' guiding' : '');
      followPreview();
    }
 diff --git a/server/assets/ui.html b/server/assets/ui.html
-index 205db73..86c0c86 100644
+index 205db73..14c2d01 100644
 --- a/server/assets/ui.html
 +++ b/server/assets/ui.html
-@@ -1196,6 +1196,13 @@
+@@ -1196,6 +1196,24 @@
        </div>
        <div class="prot-status"><button type="button" class="pill idle" id="home-alternative" onclick="homeAlternative()">&mdash;</button></div>
      </div>
@@ -236,26 +272,48 @@ index 205db73..86c0c86 100644
 +      </div>
 +      <div class="prot-status"><button type="button" class="pill idle" id="home-g6-custom-layout" onclick="homeG6CustomLayout()">&mdash;</button></div>
 +    </div>
++    <div class="prot-row home-gh-row" id="home-g6-font-row" hidden>
++      <div class="prot-main">
++        <div class="prot-title" data-t="home.g6Font">Spotlight View font</div>
++        <div class="prot-desc" data-t="home.g6FontDesc">The typeface Home uses while Spotlight View is on.</div>
++      </div>
++      <div class="prot-status"><select class="pill-sel" id="home-g6-font-sel" onchange="homeG6Font(this.value)" aria-label="Spotlight View font" data-t-aria-label="home.g6Font">
++        <option value="system" data-t="home.g6Font.system">System font</option>
++        <option value="geist">Geist</option>
++        <option value="inter">Inter</option>
++      </select></div>
++    </div>
      <div class="prot-row home-gh-row" id="home-rows-bottom-row" hidden>
        <div class="prot-main">
          <div class="prot-title" data-t="home.rowsBottom">Rows along the bottom</div>
 diff --git a/server/assets/ui/home.js b/server/assets/ui/home.js
-index eb2a07f..4bbe2f8 100644
+index eb2a07f..94b822c 100644
 --- a/server/assets/ui/home.js
 +++ b/server/assets/ui/home.js
-@@ -233,7 +233,7 @@ function renderHome() {
+@@ -232,8 +232,14 @@ function renderHome() {
+       ? t('home.searchBlockedList', 'Unavailable: the ad blocker\u2019s hosts list blocks {host}, which LG\u2019s search needs, so the search mark is hidden on Glasshouse Home. Take {host} out of the list to use it. This switch keeps its setting.', { host: searchBlocked.host })
        : t('home.searchBlockedLevel', 'Unavailable: the ad blocker\u2019s Everything setting blocks {host}, which LG\u2019s search needs, so the search mark is hidden on Glasshouse Home. Set the ad blocker to Ads & telemetry or off to use it. This switch keeps its setting.', { host: searchBlocked.host });
    }
++  const fontSel = q('home-g6-font-sel');
++  if (fontSel) {
++    q('home-g6-font-row').hidden = !st.supported.ok;
++    fontSel.value = (st.layout && st.layout.g6Font) || 'system';
++    fontSel.disabled = !homeWritable();
++  }
    // Fading, as Picture details.
 -  [['home-fade', 'fade'], ['home-rows-bottom', 'rowsBottom']].forEach(([id, field]) => {
 +  [['home-fade', 'fade'], ['home-g6-custom-layout', 'g6CustomLayout'], ['home-rows-bottom', 'rowsBottom']].forEach(([id, field]) => {
      const row = q(id + '-row');
      if (row) row.hidden = !st.supported.ok;
      const btn = q(id);
-@@ -994,6 +994,10 @@ function homeRowsBottom() {
+@@ -994,6 +1000,14 @@ function homeRowsBottom() {
    homeSaveLayout({ rowsBottom: homeLayout.rowsBottom !== true });
  }
  
++function homeG6Font(value) {
++  homeSaveLayout({ g6Font: value });
++}
++
 +function homeG6CustomLayout() {
 +  homeSaveLayout({ g6CustomLayout: homeLayout.g6CustomLayout !== true });
 +}
@@ -264,40 +322,52 @@ index eb2a07f..4bbe2f8 100644
    homeSaveLayout({ fade: homeLayout.fade !== true });
  }
 diff --git a/server/lib/home.js b/server/lib/home.js
-index cfaf779..b77f846 100644
+index cfaf779..f6ca363 100644
 --- a/server/lib/home.js
 +++ b/server/lib/home.js
-@@ -417,6 +417,8 @@ function defaults() {
+@@ -54,6 +54,8 @@ var SORTS = ['custom', 'recent'];
+ var SHOW_KEYS = ['showClock', 'showLastOn', 'showAppCount', 'showCec', 'showTvLogos'];
+ // Where the weather badge's weather comes from: nowhere, Home Assistant's pushes, or Open-Meteo.
+ var WEATHER_SOURCES = ['off', 'ha', 'internet'];
++// The font Spotlight View sets Home in: the TV's own, or one bundled with the customisation.
++var G6_FONTS = ['system', 'geist', 'inter'];
+ // Each kind of motion on the view, on unless switched off: the wallpaper's
+ // slow drift and its cross-fade between parts of the day, rows easing to the
+ // chosen tile, and Recent apps, search and the folder sliding in.
+@@ -417,6 +419,9 @@ function defaults() {
      wallShuffleMinutes: 10,
      // The rows centred below the top strip, or along the bottom as on LG's Home.
      rowsBottom: false,
 +    // Additive G6 sizing, preview placement and Guide ordering over the stock view.
 +    g6CustomLayout: false,
++    g6Font: 'system',
      // standard, or alternative: a smaller clock on the right, and the rows
      // as rounded, translucent tiles without their titles.
      view: 'standard',
-@@ -503,6 +505,7 @@ function normalise(raw) {
+@@ -503,6 +508,8 @@ function normalise(raw) {
    d.weather = WEATHER_SOURCES.indexOf(raw.weather) !== -1 ? raw.weather : raw.showWeather === false ? 'off' : 'ha';
    d.weatherPlace = weatherPlaceOf(raw.weatherPlace);
    d.rowsBottom = raw.rowsBottom === true;
 +  d.g6CustomLayout = raw.g6CustomLayout === true;
++  d.g6Font = G6_FONTS.indexOf(raw.g6Font) !== -1 ? raw.g6Font : 'system';
    d.view = raw.view === 'alternative' ? 'alternative' : 'standard';
    d.previewAlways = raw.previewAlways === true;
    d.previewInTile = raw.previewInTile === true;
-@@ -653,6 +656,7 @@ function setLayout(body, cb) {
+@@ -653,6 +660,8 @@ function setLayout(body, cb) {
      livePreview: typeof body.livePreview === 'boolean' ? body.livePreview : c.livePreview,
      showClock: typeof body.showClock === 'boolean' ? body.showClock : c.showClock,
      rowsBottom: typeof body.rowsBottom === 'boolean' ? body.rowsBottom : c.rowsBottom,
 +    g6CustomLayout: typeof body.g6CustomLayout === 'boolean' ? body.g6CustomLayout : c.g6CustomLayout,
++    g6Font: G6_FONTS.indexOf(body.g6Font) !== -1 ? body.g6Font : c.g6Font,
      view: body.view !== undefined ? body.view : c.view,
      showLastOn: typeof body.showLastOn === 'boolean' ? body.showLastOn : c.showLastOn,
      showAppCount: typeof body.showAppCount === 'boolean' ? body.showAppCount : c.showAppCount,
-@@ -709,7 +713,7 @@ function layoutOf(c) {
+@@ -709,7 +718,7 @@ function layoutOf(c) {
      excludedRecents: c.excludedRecents,
      searchHintSeen: c.searchHintSeen, picture: c.picture, livePreview: c.livePreview, search: c.search, recommended: c.recommended,
      fade: c.fade, wallDrift: c.wallDrift, wallCrossfade: c.wallCrossfade, smoothScroll: c.smoothScroll, slidePanels: c.slidePanels,
 -    darkening: c.darkening, hideUnused: c.hideUnused, showClock: c.showClock, rowsBottom: c.rowsBottom, view: c.view,
-+    darkening: c.darkening, hideUnused: c.hideUnused, showClock: c.showClock, rowsBottom: c.rowsBottom, g6CustomLayout: c.g6CustomLayout, view: c.view,
++    darkening: c.darkening, hideUnused: c.hideUnused, showClock: c.showClock, rowsBottom: c.rowsBottom, g6CustomLayout: c.g6CustomLayout, g6Font: c.g6Font, view: c.view,
      showLastOn: c.showLastOn, showAppCount: c.showAppCount, showCec: c.showCec, showTvLogos: c.showTvLogos, weather: c.weather, weatherPlace: c.weatherPlace, previewAlways: c.previewAlways, previewInTile: c.previewInTile, wallAnim: c.wallAnim,
      animTheme: c.animTheme, animSky: c.animSky, animLight: c.animLight, animThemes: ANIM_THEMES,
      wallShuffleMinutes: c.wallShuffleMinutes, shuffleMinutes: SHUFFLE_MINUTES, colours: c.colours,
