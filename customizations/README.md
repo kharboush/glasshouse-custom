@@ -23,6 +23,7 @@ Top strip (`#now`, 602px tall, 64px padding), left to right:
 | Full-colour channel logos (`.glyph img.plate`), on tiles and in the Guide | Square corners | 6px rounded corners |
 | Tiles (`.tile`) | Square corners; 16px apart; every tile has the preview's outline (1px, 16% white); the selected tile keeps its 2px white outline | 8px apart; 6px rounded corners; no outline until selected |
 | Guide programme cells (`.gc`) and their selection outline | Square corners | 4px rounded corners |
+| Toast (`#toast`), e.g. after choosing a Guide programme | 32px from the left and bottom edges, square corners | 112px from the left, 26px from the bottom, 6px rounded corners |
 | Picture details without preview (`#plate`), shown with no source or while switching | Hidden (the panel says "No signal" then; the line under the preview shows details while a picture plays) | Beside the clock: 52px mode, 23px lines |
 
 Below the strip:

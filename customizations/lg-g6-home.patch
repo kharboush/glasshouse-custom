@@ -149,7 +149,7 @@ index bd1b51e..16c8470 100644
        var wxOrder = ['off', 'ha', 'internet'];
        var wxAt = wxOrder.indexOf((homeData && homeData.layout && homeData.layout.weather) || 'ha');
 diff --git a/server/assets/home.html b/server/assets/home.html
-index 4a922cd..d77c2e5 100644
+index 4a922cd..42bf40c 100644
 --- a/server/assets/home.html
 +++ b/server/assets/home.html
 @@ -17,6 +17,14 @@
@@ -167,7 +167,7 @@ index 4a922cd..d77c2e5 100644
  *{margin:0;padding:0;box-sizing:border-box}
  html,body{height:100%;background:#000;overflow:hidden}
  body{font-family:'Manrope',sans-serif;color:#ece7df;-webkit-font-smoothing:antialiased;cursor:default}
-@@ -163,6 +171,57 @@ html.resting #wall .layer{-webkit-animation-play-state:paused;animation-play-sta
+@@ -163,6 +171,58 @@ html.resting #wall .layer{-webkit-animation-play-state:paused;animation-play-sta
  .rows-bottom #rows:before{-webkit-flex:0 0 auto;flex:0 0 auto;height:100%}
  .rows-bottom #rows:after{-webkit-flex:0 0 0;flex:0 0 0}
  
@@ -197,6 +197,7 @@ index 4a922cd..d77c2e5 100644
 +.g6-custom #now #preview{outline:1px solid rgba(244,241,234,.16);outline-offset:0}
 +.g6-custom .glyph img.plate{border-radius:0}
 +.g6-custom .gc{border-radius:0}
++.g6-custom #toast{left:32px;bottom:32px;border-radius:0}
 +.g6-custom .tile{border-radius:0;outline:1px solid rgba(244,241,234,.16);outline-offset:0;margin-right:16px}
 +.g6-custom .tile.focus{outline-width:2px}
 +.g6-custom #rows{top:720px}
@@ -225,7 +226,7 @@ index 4a922cd..d77c2e5 100644
  /* Alternative View (#999): a smaller clock on the right, Last watched to its
     left, and the rows as rounded, translucent tiles, titled only while arranging. */
  .alternative #now{padding:0 90px}
-@@ -731,7 +790,7 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
+@@ -731,7 +791,7 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
    // The remote's keys as webOS reports them to a page.
    var KEY = { left: 37, up: 38, right: 39, down: 40, ok: 13, back: 461, red: 403, green: 404, yellow: 405,
      chUp: 33, chDown: 34, info: 457, play: 415, pause: 19, stop: 413 };
@@ -234,7 +235,7 @@ index 4a922cd..d77c2e5 100644
    var GUIDE_TILE = 'iptv-guide';
    // Internet TV's Add channels tile: last in its row while arranging, and the row's only tile while it is empty.
    var ADD_TILE = 'iptv-add';
-@@ -739,6 +798,8 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
+@@ -739,6 +799,8 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
    var FOLDER_TILE = 'more-apps';
    // Tiles per line in the More apps grid: 9 of 176px fill the 1696px between the margins.
    var FOLDER_COLS = 9;
@@ -243,7 +244,7 @@ index 4a922cd..d77c2e5 100644
    // Held this long, OK arranges the tiles rather than opening one.
    var LONG_PRESS_MS = 800;
    var BEAT_MS = 5000;
-@@ -809,6 +870,9 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
+@@ -809,6 +871,9 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
    function dateText(d) {
      var lang = (window.I18N && I18N.lang) ? I18N.lang() : 'en';
      var loc = lang === 'en' ? 'en-US' : lang;
@@ -253,7 +254,7 @@ index 4a922cd..d77c2e5 100644
      function part(opts) {
        try { return d.toLocaleDateString(loc, opts); } catch (e) { return ''; }
      }
-@@ -900,7 +964,9 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
+@@ -900,7 +965,9 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
      if (kind === 'iptv' && data.sources && data.sources.iptv && (state.arranging || (!out.length && !hasLineup))) {
        out.push({ id: ADD_TILE, add: true, name: t('home.tv.addTitle', 'Add channels') });
      } else if (kind === 'iptv' && (out.length || hasLineup) && !state.arranging) {
@@ -264,7 +265,7 @@ index 4a922cd..d77c2e5 100644
      }
      return out;
    }
-@@ -1905,7 +1971,8 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
+@@ -1905,7 +1972,8 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
      $('stage').className = (state.arranging ? 'arranging' : '') + (recents.open ? ' recents' : '') +
        (finder.open ? ' finding' : '') + (finder.typing ? ' typing' : '') + (searchOn() ? '' : ' no-search') + (folder.open ? ' folder' : '') +
        (!layout || layout.showClock === false ? ' no-clock' : '') + (layout && layout.rowsBottom === true ? ' rows-bottom' : '') +
@@ -274,7 +275,7 @@ index 4a922cd..d77c2e5 100644
        (adder.open && adder.typing ? ' adtyping' : '') + (guide.open ? ' guiding' : '');
      followPreview();
    }
-@@ -3884,11 +3951,11 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
+@@ -3884,11 +3952,11 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
      if (k === KEY.back) return closeFolder();
      if (!n) return;
      if (k === KEY.ok) return openFromFolder(folder.apps[c]);
