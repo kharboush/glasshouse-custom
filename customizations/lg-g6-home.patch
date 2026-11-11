@@ -30,7 +30,7 @@ index 30e3643..a28bb63 100644
  
      ![Glasshouse Home in Alternative View with the rows along the bottom](../screenshots/home-alternative.jpg)
 diff --git a/scripts/check-dashboards.js b/scripts/check-dashboards.js
-index 0c81a53..f46879e 100755
+index 0c81a53..7a99507 100755
 --- a/scripts/check-dashboards.js
 +++ b/scripts/check-dashboards.js
 @@ -508,6 +508,75 @@ async function visitHomePreviewOptions(browser, base, problems) {
@@ -92,7 +92,7 @@ index 0c81a53..f46879e 100755
 +    await changeLayout({ g6CustomLayout: true });
 +    g = await geometry();
 +    expect([g.now, g.clock, g.title, g.preview, g.note, g.rows, g.dev, g.tv, g.broadcast, g.guide, g.on],
-+      [[602, 62, 'flex-start'], 48, 32, [864, 486], 486, 736, [384, 216], [384, 216], [224, 176], ['Guide', 'Internet'], true], 'additive overrides when on');
++      [[602, 62, 'flex-start'], 48, 32, [864, 486], 486, 720, [384, 216], [384, 216], [224, 176], ['Guide', 'Internet'], true], 'additive overrides when on');
 +    await changeLayout({ view: 'alternative' });
 +    g = await geometry();
 +    expect([g.clock, g.dev], [100, [420, 108]], 'Alternative View keeps its own clock and input tiles');
@@ -149,7 +149,7 @@ index bd1b51e..16c8470 100644
        var wxOrder = ['off', 'ha', 'internet'];
        var wxAt = wxOrder.indexOf((homeData && homeData.layout && homeData.layout.weather) || 'ha');
 diff --git a/server/assets/home.html b/server/assets/home.html
-index 4a922cd..931525f 100644
+index 4a922cd..33b3f8d 100644
 --- a/server/assets/home.html
 +++ b/server/assets/home.html
 @@ -17,6 +17,14 @@
@@ -195,7 +195,7 @@ index 4a922cd..931525f 100644
 +.g6-custom .glyph img.plate{border-radius:0}
 +.g6-custom .tile{border-radius:0;outline:1px solid rgba(244,241,234,.16);outline-offset:0;margin-right:16px}
 +.g6-custom .tile.focus{outline-width:2px}
-+.g6-custom #rows{top:736px}
++.g6-custom #rows{top:720px}
 +.g6-custom #guide{top:612px;padding:0 64px}
 +.g6-custom #gBody{left:64px;right:64px}
 +.g6-custom #pvInfo{right:auto;left:0;top:100%;bottom:auto;margin:12px 0 0;width:100%;text-align:left}
