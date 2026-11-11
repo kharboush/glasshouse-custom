@@ -20,6 +20,7 @@ Top strip (`#now`, 602px tall, 64px padding), left to right:
 | Weather (`#weather`) | Just left of the clock, matching it line for line: icon at the clock line height (38.4px), 48px temperature, 24px line 10px below | 112px icon, 176px temperature, 28px line |
 | "No picture" panel (`#pvNote`) | Solid black, label 32px SemiBold | Near-black `#14120f`, label 23px regular |
 | Preview outline (`#preview:after`) | None (the thin outline flickered as the preview switched between "No picture" and video) | 1px, 16% white |
+| Full-colour channel logos (`.glyph img.plate`), on tiles and in the Guide | Square corners | 6px rounded corners |
 | Picture details without preview (`#plate`) | Just left of the clock: 32px mode, 18px lines | 52px mode, 23px lines |
 
 Below the strip:
