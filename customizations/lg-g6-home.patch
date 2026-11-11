@@ -1,5 +1,5 @@
 diff --git a/docs/dashboard/home.md b/docs/dashboard/home.md
-index f2f753e..77b39f8 100644
+index f2f753e..4c61f11 100644
 --- a/docs/dashboard/home.md
 +++ b/docs/dashboard/home.md
 @@ -234,7 +234,7 @@ When opening a channel from the Internet TV row or live preview, playback opens
@@ -7,7 +7,7 @@ index f2f753e..77b39f8 100644
  ### Electronic Programme Guide (EPG)
  
 -Whenever the lineup contains channels, a **Guide** tile remains accessible on the Internet TV row (even if no channels are currently starred):
-+Whenever the lineup contains channels, a **Guide** tile remains accessible on the Internet TV row (even if no channels are currently starred). It follows the channels by default, or leads the row while **G6 custom layout** is on:
++Whenever the lineup contains channels, a **Guide** tile remains accessible on the Internet TV row (even if no channels are currently starred). It follows the channels by default, or leads the row while **Spotlight View** is on:
  
  ![The guide on a G3](../screenshots/iptv-home-guide.jpg)
  
@@ -16,7 +16,7 @@ index f2f753e..77b39f8 100644
  * While Glasshouse Home is on:
      * **Starting up:** Open Home at power-on, Hide LG's Home while the TV starts.
 -    * **Layout:** Alternative View, Rows along the bottom.
-+    * **Layout:** Alternative View, G6 custom layout, Rows along the bottom.
++    * **Layout:** Alternative View, Spotlight View, Rows along the bottom.
      * **Shown on Home:** Clock and date, Last watched, App count, CEC addresses, Channel logos, Weather, Picture details.
      * **Live preview:** Live preview, with Keep the preview on and Preview in the tile once it is on.
      * **Search.**
@@ -24,7 +24,7 @@ index f2f753e..77b39f8 100644
  
      ![Glasshouse Home with the clock off and the rows along the bottom](../screenshots/home-bottom.jpg)
  
-+* **G6 custom layout:** Opts into additive overrides over the standard layout: a 864×486 (16:9) preview at the top left inside 64px padding; the source text beside it (32px title, 24px source line) with room to fit; a 48px clock and 24px short date (such as "Wed, Nov 11") right-aligned in the top-right corner; 384×216 input and Internet TV tiles; rows and the Guide moved down below the top strip; and Guide first on the Internet TV row. Broadcast channel tiles keep their standard size. Off by default; switching it off restores the stock layout. The choice is saved in the TV's Home layout.
++* **Spotlight View:** A big live preview up top, with a compact clock in the corner and larger tiles below. Off by default; switching it off restores the stock layout. The choice is saved in the TV's Home layout.
  * **Alternative View:** A compact layout with a smaller clock on the right, status badges to its left, and rounded, translucent tiles. Row titles show only while arranging, so **App count** is greyed out. Off by default, and works with **Rows along the bottom** and the other switches:
  
      ![Glasshouse Home in Alternative View with the rows along the bottom](../screenshots/home-alternative.jpg)
@@ -118,14 +118,14 @@ index 0c81a53..60eafb5 100755
        visitHomeRecentsHidden, visitHomeUploads, visitHomeShuffle, visitHomeLauncher, visitHomeReadiness, visitAudioOverride, visitHomeRecents, visitHomeGuide,
        visitHomeFadeAndInputs] },
 diff --git a/server/assets/dashboard.html b/server/assets/dashboard.html
-index 25b0e4c..53dfb9b 100644
+index 25b0e4c..1f25ed8 100644
 --- a/server/assets/dashboard.html
 +++ b/server/assets/dashboard.html
 @@ -1188,6 +1188,7 @@ function glasshouseHomeRows(d) {
      }
      r.push(homeSwitchRow(d, 'showClock', t('home.showClock', 'Clock and date'), t('home.showClockDesc', 'At the top of Glasshouse Home. Switched off, the space stays empty.'), 'homeShow', d.layout.showClock !== false));
      r.push(homeSwitchRow(d, 'rowsBottom', t('home.rowsBottom', 'Rows along the bottom'), t('home.rowsBottomDesc', 'The rows of apps and inputs sit along the bottom of the screen, as on LG’s Home, rather than in the middle.'), 'homeShow', d.layout.rowsBottom === true));
-+    r.push(homeSwitchRow(d, 'g6CustomLayout', t('home.g6CustomLayout', 'G6 custom layout'), t('home.g6CustomLayoutDesc', 'Larger 864 × 486 preview at top left, a small right-aligned clock with a short date, compact source text, larger input and Internet TV tiles, a Guide below the preview, and Guide first in Internet TV. Off keeps the standard Glasshouse layout.'), 'homeShow', d.layout.g6CustomLayout === true));
++    r.push(homeSwitchRow(d, 'g6CustomLayout', t('home.g6CustomLayout', 'Spotlight View'), t('home.g6CustomLayoutDesc', 'A big live preview up top, with a compact clock in the corner and larger tiles below. Off keeps the standard Glasshouse layout.'), 'homeShow', d.layout.g6CustomLayout === true));
      var altOn = d.layout.view === 'alternative';
      r.push({ label: t('home.alternative', 'Alternative View'),
               value: altOn ? t('common.on', 'On') : t('common.off', 'Off'), cls: altOn ? 'on' : 'off',
@@ -200,7 +200,7 @@ index 9ce9022..5fd6256 100644
      followPreview();
    }
 diff --git a/server/assets/ui.html b/server/assets/ui.html
-index 205db73..490e5ed 100644
+index 205db73..86c0c86 100644
 --- a/server/assets/ui.html
 +++ b/server/assets/ui.html
 @@ -1196,6 +1196,13 @@
@@ -209,8 +209,8 @@ index 205db73..490e5ed 100644
      </div>
 +    <div class="prot-row home-gh-row" id="home-g6-custom-layout-row" hidden>
 +      <div class="prot-main">
-+        <div class="prot-title" data-t="home.g6CustomLayout">G6 custom layout</div>
-+        <div class="prot-desc" data-t="home.g6CustomLayoutDesc">Larger 864 × 486 preview at top left, a small right-aligned clock with a short date, compact source text, larger input and Internet TV tiles, a Guide below the preview, and Guide first in Internet TV. Off keeps the standard Glasshouse layout.</div>
++        <div class="prot-title" data-t="home.g6CustomLayout">Spotlight View</div>
++        <div class="prot-desc" data-t="home.g6CustomLayoutDesc">A big live preview up top, with a compact clock in the corner and larger tiles below. Off keeps the standard Glasshouse layout.</div>
 +      </div>
 +      <div class="prot-status"><button type="button" class="pill idle" id="home-g6-custom-layout" onclick="homeG6CustomLayout()">&mdash;</button></div>
 +    </div>

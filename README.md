@@ -1,6 +1,6 @@
 # glasshouse-custom
 
-LG G6 Home custom layout for [Glasshouse](https://github.com/rorygallagher2024/glasshouse), kept as an update-safe patch behind a **G6 custom layout** toggle in Home settings.
+LG G6 Home custom layout for [Glasshouse](https://github.com/rorygallagher2024/glasshouse), kept as an update-safe patch behind a **Spotlight View** toggle in Home settings.
 
 Built against Glasshouse 0.143.1 (upstream commit `f24cb7e`).
 

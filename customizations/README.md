@@ -2,7 +2,7 @@
 
 Published at <https://github.com/kharboush/glasshouse-custom>. To restore it into a fresh Glasshouse checkout, copy that repo's `customizations/` folder into the checkout root and run the apply script below.
 
-`lg-g6-home.patch` adds a saved **G6 custom layout** toggle to Glasshouse Home settings (setting key `g6CustomLayout`, saved in the TV's Home layout). The stock layout remains the default; switching the toggle off restores stock styling, the stock long date and Guide-last ordering.
+`lg-g6-home.patch` adds a saved **Spotlight View** toggle to Glasshouse Home settings (setting key `g6CustomLayout`, saved in the TV's Home layout). The stock layout remains the default; switching the toggle off restores stock styling, the stock long date and Guide-last ordering.
 
 All styling is additive: every override is scoped under the `.g6-custom` class on `#stage`, so no stock CSS declaration is replaced.
 
@@ -44,7 +44,7 @@ After updating the Glasshouse checkout, run:
 
 The script applies the patch only if every file applies cleanly. Running it again is safe: it reports that the changes are already applied. If an upstream release changes a patched section, the script stops without modifying any file; review and refresh the patch rather than forcing it.
 
-The script does not touch the TV. Deploy as below, then turn on **G6 custom layout** in Home settings (it stays on across deploys once saved).
+The script does not touch the TV. Deploy as below, then turn on **Spotlight View** in Home settings (it stays on across deploys once saved).
 
 ## Deploying `home.html` to the TV
 
