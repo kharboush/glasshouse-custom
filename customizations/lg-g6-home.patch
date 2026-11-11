@@ -130,17 +130,17 @@ index 25b0e4c..1f25ed8 100644
      r.push({ label: t('home.alternative', 'Alternative View'),
               value: altOn ? t('common.on', 'On') : t('common.off', 'Off'), cls: altOn ? 'on' : 'off',
 diff --git a/server/assets/home.html b/server/assets/home.html
-index 9ce9022..93c019d 100644
+index 9ce9022..adcc214 100644
 --- a/server/assets/home.html
 +++ b/server/assets/home.html
 @@ -17,6 +17,10 @@
  @font-face{font-family:'Outfit';src:url('/assets/fonts/Outfit-Regular.ttf') format('truetype');font-weight:400;font-display:swap}
  @font-face{font-family:'Manrope';src:url('/assets/fonts/Manrope-Regular.ttf') format('truetype');font-weight:400;font-display:swap}
  @font-face{font-family:'Manrope';src:url('/assets/fonts/Manrope-SemiBold.ttf') format('truetype');font-weight:600;font-display:swap}
-+@font-face{font-family:'Geist';src:url('/assets/fonts/Geist-Light.ttf') format('truetype');font-weight:300;font-display:swap}
-+@font-face{font-family:'Geist';src:url('/assets/fonts/Geist-Regular.ttf') format('truetype');font-weight:400;font-display:swap}
-+@font-face{font-family:'Geist';src:url('/assets/fonts/Geist-Medium.ttf') format('truetype');font-weight:500;font-display:swap}
-+@font-face{font-family:'Geist';src:url('/assets/fonts/Geist-SemiBold.ttf') format('truetype');font-weight:600;font-display:swap}
++@font-face{font-family:'Inter';src:url('/assets/fonts/Inter-Light.ttf') format('truetype');font-weight:300;font-display:swap}
++@font-face{font-family:'Inter';src:url('/assets/fonts/Inter-Regular.ttf') format('truetype');font-weight:400;font-display:swap}
++@font-face{font-family:'Inter';src:url('/assets/fonts/Inter-Medium.ttf') format('truetype');font-weight:500;font-display:swap}
++@font-face{font-family:'Inter';src:url('/assets/fonts/Inter-SemiBold.ttf') format('truetype');font-weight:600;font-display:swap}
  *{margin:0;padding:0;box-sizing:border-box}
  html,body{height:100%;background:#000;overflow:hidden}
  body{font-family:'Manrope',sans-serif;color:#ece7df;-webkit-font-smoothing:antialiased;cursor:default}
@@ -150,7 +150,7 @@ index 9ce9022..93c019d 100644
  
 +/* The G6 layout is opt-in: stock rules above stay in force while it is off.
 +   Keep this before Alternative View so that view's own choices still win. */
-+.g6-custom,.g6-custom *{font-family:'Geist',sans-serif!important}
++.g6-custom,.g6-custom *{font-family:'Inter',sans-serif!important}
 +.g6-custom #now{-webkit-align-items:flex-start;align-items:flex-start;padding:64px;height:602px}
 +.g6-custom #clock{font-size:48px;letter-spacing:-1px}
 +.g6-custom #date{margin-top:10px;font-size:24px}
