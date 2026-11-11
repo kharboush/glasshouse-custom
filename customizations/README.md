@@ -1,5 +1,7 @@
 # LG G6 Home custom layout
 
+Published at <https://github.com/kharboush/glasshouse-custom>. To restore it into a fresh Glasshouse checkout, copy that repo's `customizations/` folder into the checkout root and run the apply script below.
+
 `lg-g6-home.patch` adds a saved **G6 custom layout** toggle to Glasshouse Home settings (setting key `g6CustomLayout`, saved in the TV's Home layout). The stock layout remains the default; switching the toggle off restores stock styling, the stock long date and Guide-last ordering.
 
 All styling is additive: every override is scoped under the `.g6-custom` class on `#stage`, so no stock CSS declaration is replaced.
@@ -69,3 +71,5 @@ git diff --output=customizations/lg-g6-home.patch -- \
   server/lib/home.js \
   test/test-home.js
 ```
+
+Then copy the updated `customizations/` folder into a clone of <https://github.com/kharboush/glasshouse-custom>, commit and push, so the published copy stays current.
