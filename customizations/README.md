@@ -26,7 +26,7 @@ Top strip (`#now`, 602px tall, 64px padding), left to right:
 
 Below the strip:
 
-- Rows (`#rows`) start at 696px, with 64px side offsets.
+- Rows (`#rows`) start at 736px, with 64px side offsets.
 - The Guide (`#guide`) starts at 612px, with 64px side margins; it shows 4 channel rows and scrolls the rest.
 - Input tiles and Internet TV tiles are 384×216. Broadcast channel tiles keep their stock size.
 - Guide is the first Internet TV tile.
