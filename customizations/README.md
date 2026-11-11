@@ -29,6 +29,7 @@ Below the strip:
 - Rows (`#rows`) start at 720px, with 64px side offsets.
 - The Guide (`#guide`) starts at 612px, with 64px side margins; it shows 4 channel rows and scrolls the rest.
 - Input tiles and Internet TV tiles are 384×216. App tiles are 216×216 (stock 168 wide, about 181 tall), with the same padding as the other tiles and the icon and name centred. Broadcast channel tiles keep their stock size.
+- More apps: the same app tiles, 16px apart across and down, seven to a line (stock: nine, 8px across and 14px down); `FOLDER_COLS` is read through `folderCols()` so the arrow keys follow the seven columns.
 - Guide is the first Internet TV tile.
 
 Alternative View keeps its own clock and input tiles.
@@ -46,7 +47,7 @@ Geist and Inter are bundled in Light 300, Regular 400, Medium 500 and SemiBold 6
 
 ## Files the patch touches
 
-- `server/assets/home.html` – the `.g6-custom` CSS block, the short date in `dateText()`, the class toggle, and Guide-first ordering.
+- `server/assets/home.html` – the `.g6-custom` CSS block, the short date in `dateText()`, the class toggle, Guide-first ordering, and the More apps column count (`folderCols()`).
 - `server/lib/home.js` – validates and saves `g6CustomLayout` (only a boolean changes it; resetting tiles keeps it).
 - `server/assets/dashboard.html`, `server/assets/ui.html`, `server/assets/ui/home.js` – the toggle in the browser and TV-app Home settings.
 - `docs/dashboard/home.md` – the setting's documentation.

@@ -149,7 +149,7 @@ index bd1b51e..16c8470 100644
        var wxOrder = ['off', 'ha', 'internet'];
        var wxAt = wxOrder.indexOf((homeData && homeData.layout && homeData.layout.weather) || 'ha');
 diff --git a/server/assets/home.html b/server/assets/home.html
-index 4a922cd..bc90337 100644
+index 4a922cd..01128af 100644
 --- a/server/assets/home.html
 +++ b/server/assets/home.html
 @@ -17,6 +17,14 @@
@@ -167,7 +167,7 @@ index 4a922cd..bc90337 100644
  *{margin:0;padding:0;box-sizing:border-box}
  html,body{height:100%;background:#000;overflow:hidden}
  body{font-family:'Manrope',sans-serif;color:#ece7df;-webkit-font-smoothing:antialiased;cursor:default}
-@@ -163,6 +171,54 @@ html.resting #wall .layer{-webkit-animation-play-state:paused;animation-play-sta
+@@ -163,6 +171,56 @@ html.resting #wall .layer{-webkit-animation-play-state:paused;animation-play-sta
  .rows-bottom #rows:before{-webkit-flex:0 0 auto;flex:0 0 auto;height:100%}
  .rows-bottom #rows:after{-webkit-flex:0 0 0;flex:0 0 0}
  
@@ -185,6 +185,8 @@ index 4a922cd..bc90337 100644
 +.g6-custom .dev{width:384px;height:216px}
 +.g6-custom .ch.tv{width:384px;height:216px}
 +.g6-custom .app{width:216px;height:216px;padding:16px 20px 18px;display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column;-webkit-justify-content:center;justify-content:center}
++.g6-custom #folderGrid{width:1624px}
++.g6-custom #folderGrid .tile{display:-webkit-inline-flex;display:inline-flex;margin:0 16px 16px 0}
 +.g6-custom #preview,.g6-custom #now #preview.info{width:864px;height:486px;-webkit-order:-1;order:-1;margin-left:0;margin-right:56px}
 +.g6-custom #when{-webkit-order:2;order:2;margin-left:auto;text-align:right;width:auto;padding-left:24px}
 +.g6-custom #pvNote{line-height:486px;background:#000;font-size:0;font-weight:600;text-transform:uppercase;letter-spacing:.12em}
@@ -222,7 +224,7 @@ index 4a922cd..bc90337 100644
  /* Alternative View (#999): a smaller clock on the right, Last watched to its
     left, and the rows as rounded, translucent tiles, titled only while arranging. */
  .alternative #now{padding:0 90px}
-@@ -731,7 +787,7 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
+@@ -731,7 +789,7 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
    // The remote's keys as webOS reports them to a page.
    var KEY = { left: 37, up: 38, right: 39, down: 40, ok: 13, back: 461, red: 403, green: 404, yellow: 405,
      chUp: 33, chDown: 34, info: 457, play: 415, pause: 19, stop: 413 };
@@ -231,7 +233,16 @@ index 4a922cd..bc90337 100644
    var GUIDE_TILE = 'iptv-guide';
    // Internet TV's Add channels tile: last in its row while arranging, and the row's only tile while it is empty.
    var ADD_TILE = 'iptv-add';
-@@ -809,6 +865,9 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
+@@ -739,6 +797,8 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
+   var FOLDER_TILE = 'more-apps';
+   // Tiles per line in the More apps grid: 9 of 176px fill the 1696px between the margins.
+   var FOLDER_COLS = 9;
++  // Spotlight View's larger app tiles fit seven to a line (its #folderGrid width).
++  function folderCols() { return layout && layout.g6CustomLayout === true ? 7 : FOLDER_COLS; }
+   // Held this long, OK arranges the tiles rather than opening one.
+   var LONG_PRESS_MS = 800;
+   var BEAT_MS = 5000;
+@@ -809,6 +869,9 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
    function dateText(d) {
      var lang = (window.I18N && I18N.lang) ? I18N.lang() : 'en';
      var loc = lang === 'en' ? 'en-US' : lang;
@@ -241,7 +252,7 @@ index 4a922cd..bc90337 100644
      function part(opts) {
        try { return d.toLocaleDateString(loc, opts); } catch (e) { return ''; }
      }
-@@ -900,7 +959,9 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
+@@ -900,7 +963,9 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
      if (kind === 'iptv' && data.sources && data.sources.iptv && (state.arranging || (!out.length && !hasLineup))) {
        out.push({ id: ADD_TILE, add: true, name: t('home.tv.addTitle', 'Add channels') });
      } else if (kind === 'iptv' && (out.length || hasLineup) && !state.arranging) {
@@ -252,7 +263,7 @@ index 4a922cd..bc90337 100644
      }
      return out;
    }
-@@ -1905,7 +1966,8 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
+@@ -1905,7 +1970,8 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
      $('stage').className = (state.arranging ? 'arranging' : '') + (recents.open ? ' recents' : '') +
        (finder.open ? ' finding' : '') + (finder.typing ? ' typing' : '') + (searchOn() ? '' : ' no-search') + (folder.open ? ' folder' : '') +
        (!layout || layout.showClock === false ? ' no-clock' : '') + (layout && layout.rowsBottom === true ? ' rows-bottom' : '') +
@@ -261,6 +272,22 @@ index 4a922cd..bc90337 100644
 +      (player.open ? ' playing' : '') + (adder.open ? ' adding' : '') +
        (adder.open && adder.typing ? ' adtyping' : '') + (guide.open ? ' guiding' : '');
      followPreview();
+   }
+@@ -3884,11 +3950,11 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
+     if (k === KEY.back) return closeFolder();
+     if (!n) return;
+     if (k === KEY.ok) return openFromFolder(folder.apps[c]);
+-    if (k === KEY.left && c % FOLDER_COLS > 0) c--;
+-    else if (k === KEY.right && c % FOLDER_COLS < FOLDER_COLS - 1 && c + 1 < n) c++;
+-    else if (k === KEY.up && c - FOLDER_COLS >= 0) c -= FOLDER_COLS;
++    if (k === KEY.left && c % folderCols() > 0) c--;
++    else if (k === KEY.right && c % folderCols() < folderCols() - 1 && c + 1 < n) c++;
++    else if (k === KEY.up && c - folderCols() >= 0) c -= folderCols();
+     // Down from above a short last line goes to its last tile.
+-    else if (k === KEY.down && Math.floor(c / FOLDER_COLS) < Math.floor((n - 1) / FOLDER_COLS)) c = Math.min(n - 1, c + FOLDER_COLS);
++    else if (k === KEY.down && Math.floor(c / folderCols()) < Math.floor((n - 1) / folderCols())) c = Math.min(n - 1, c + folderCols());
+     folder.col = c;
+     focusFolder();
    }
 diff --git a/server/assets/ui.html b/server/assets/ui.html
 index 7b1bff0..0f9d3d0 100644
