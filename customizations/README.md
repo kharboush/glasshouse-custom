@@ -36,7 +36,8 @@ Alternative View keeps its own clock and input tiles.
 
 A **Spotlight View font** dropdown, next to the Spotlight View toggle in both settings screens (setting key `g6Font`), picks the typeface Home uses while Spotlight View is on:
 
-- **System font** (default): LG Smart UI, the font LG uses for the webOS menus, already installed on the TV (`/usr/share/fonts/LG_Smart_UI-*.ttf`). LG licenses it for the TV only, so it is referenced by name and never copied into this repo. Plain `sans-serif` is not used because on the TV it resolves to LG Display, a narrow single-weight font.
+- **Glasshouse fonts**: no font change at all; Home keeps stock Outfit and Manrope.
+- **System font** (the default when nothing is chosen): LG Smart UI, the font LG uses for the webOS menus, already installed on the TV (`/usr/share/fonts/LG_Smart_UI-*.ttf`). LG licenses it for the TV only, so it is referenced by name and never copied into this repo. Plain `sans-serif` is not used because on the TV it resolves to LG Display, a narrow single-weight font.
 - **Geist**: Vercel, SIL Open Font License (`fonts/OFL-Geist.txt`).
 - **Inter**: Rasmus Andersson, v4.0, SIL Open Font License (`fonts/OFL-Inter.txt`).
 

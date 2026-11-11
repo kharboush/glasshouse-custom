@@ -1,5 +1,5 @@
 diff --git a/docs/dashboard/home.md b/docs/dashboard/home.md
-index f2f753e..a64ffa7 100644
+index f2f753e..0f4877a 100644
 --- a/docs/dashboard/home.md
 +++ b/docs/dashboard/home.md
 @@ -234,7 +234,7 @@ When opening a channel from the Internet TV row or live preview, playback opens
@@ -25,7 +25,7 @@ index f2f753e..a64ffa7 100644
      ![Glasshouse Home with the clock off and the rows along the bottom](../screenshots/home-bottom.jpg)
  
 +* **Spotlight View:** A big live preview up top, with a compact clock in the corner and larger tiles below. Off by default; switching it off restores the stock layout. The choice is saved in the TV's Home layout.
-+* **Spotlight View font:** The typeface Home uses while Spotlight View is on: the TV's system font (the default), Geist or Inter.
++* **Spotlight View font:** The typeface Home uses while Spotlight View is on: Glasshouse's own fonts (no change), the TV's system font (the default), Geist or Inter.
  * **Alternative View:** A compact layout with a smaller clock on the right, status badges to its left, and rounded, translucent tiles. Row titles show only while arranging, so **App count** is greyed out. Off by default, and works with **Rows along the bottom** and the other switches:
  
      ![Glasshouse Home in Alternative View with the rows along the bottom](../screenshots/home-alternative.jpg)
@@ -119,7 +119,7 @@ index 0c81a53..60eafb5 100755
        visitHomeRecentsHidden, visitHomeUploads, visitHomeShuffle, visitHomeLauncher, visitHomeReadiness, visitAudioOverride, visitHomeRecents, visitHomeGuide,
        visitHomeFadeAndInputs] },
 diff --git a/server/assets/dashboard.html b/server/assets/dashboard.html
-index 25b0e4c..f9a5e86 100644
+index 25b0e4c..a5663ee 100644
 --- a/server/assets/dashboard.html
 +++ b/server/assets/dashboard.html
 @@ -1188,6 +1188,14 @@ function glasshouseHomeRows(d) {
@@ -128,7 +128,7 @@ index 25b0e4c..f9a5e86 100644
      r.push(homeSwitchRow(d, 'rowsBottom', t('home.rowsBottom', 'Rows along the bottom'), t('home.rowsBottomDesc', 'The rows of apps and inputs sit along the bottom of the screen, as on LG’s Home, rather than in the middle.'), 'homeShow', d.layout.rowsBottom === true));
 +    r.push(homeSwitchRow(d, 'g6CustomLayout', t('home.g6CustomLayout', 'Spotlight View'), t('home.g6CustomLayoutDesc', 'A big live preview up top, with a compact clock in the corner and larger tiles below. Off keeps the standard Glasshouse layout.'), 'homeShow', d.layout.g6CustomLayout === true));
 +    // Spotlight View's font; OK steps through them.
-+    var fontNames = { system: t('home.g6Font.system', 'System font'), geist: 'Geist', inter: 'Inter' };
++    var fontNames = { default: t('home.g6Font.default', 'Glasshouse fonts'), system: t('home.g6Font.system', 'System font'), geist: 'Geist', inter: 'Inter' };
 +    var fontNow = d.layout.g6Font || 'system';
 +    r.push({ label: t('home.g6Font', 'Spotlight View font'), key: 'g6Font', value: fontNames[fontNow], cls: 'act',
 +             act: can ? 'homeG6Font' : null,
@@ -142,14 +142,14 @@ index 25b0e4c..f9a5e86 100644
      case 'homeAlternative':
        return homeLayout({ view: r.on ? 'standard' : 'alternative' });
 +    case 'homeG6Font':
-+      var fontOrder = ['system', 'geist', 'inter'];
++      var fontOrder = ['default', 'system', 'geist', 'inter'];
 +      var fontAt = fontOrder.indexOf((homeData && homeData.layout && homeData.layout.g6Font) || 'system');
 +      return homeLayout({ g6Font: fontOrder[(fontAt + 1) % fontOrder.length] });
      case 'homeWeather':
        var wxOrder = ['off', 'ha', 'internet'];
        var wxAt = wxOrder.indexOf((homeData && homeData.layout && homeData.layout.weather) || 'ha');
 diff --git a/server/assets/home.html b/server/assets/home.html
-index 9ce9022..0457743 100644
+index 9ce9022..1cceaa7 100644
 --- a/server/assets/home.html
 +++ b/server/assets/home.html
 @@ -17,6 +17,14 @@
@@ -173,7 +173,7 @@ index 9ce9022..0457743 100644
  
 +/* The G6 layout is opt-in: stock rules above stay in force while it is off.
 +   Keep this before Alternative View so that view's own choices still win. */
-+.g6-custom,.g6-custom *{font-family:'LG Smart UI',sans-serif!important}
++.g6-custom.g6-font-system,.g6-custom.g6-font-system *{font-family:'LG Smart UI',sans-serif!important}
 +.g6-custom.g6-font-geist,.g6-custom.g6-font-geist *{font-family:'Geist',sans-serif!important}
 +.g6-custom.g6-font-inter,.g6-custom.g6-font-inter *{font-family:'Inter',sans-serif!important}
 +.g6-custom #now{-webkit-align-items:flex-start;align-items:flex-start;padding:64px;height:602px}
@@ -258,10 +258,10 @@ index 9ce9022..0457743 100644
      followPreview();
    }
 diff --git a/server/assets/ui.html b/server/assets/ui.html
-index 205db73..14c2d01 100644
+index 205db73..46b84b1 100644
 --- a/server/assets/ui.html
 +++ b/server/assets/ui.html
-@@ -1196,6 +1196,24 @@
+@@ -1196,6 +1196,25 @@
        </div>
        <div class="prot-status"><button type="button" class="pill idle" id="home-alternative" onclick="homeAlternative()">&mdash;</button></div>
      </div>
@@ -278,6 +278,7 @@ index 205db73..14c2d01 100644
 +        <div class="prot-desc" data-t="home.g6FontDesc">The typeface Home uses while Spotlight View is on.</div>
 +      </div>
 +      <div class="prot-status"><select class="pill-sel" id="home-g6-font-sel" onchange="homeG6Font(this.value)" aria-label="Spotlight View font" data-t-aria-label="home.g6Font">
++        <option value="default" data-t="home.g6Font.default">Glasshouse fonts</option>
 +        <option value="system" data-t="home.g6Font.system">System font</option>
 +        <option value="geist">Geist</option>
 +        <option value="inter">Inter</option>
@@ -322,15 +323,15 @@ index eb2a07f..94b822c 100644
    homeSaveLayout({ fade: homeLayout.fade !== true });
  }
 diff --git a/server/lib/home.js b/server/lib/home.js
-index cfaf779..f6ca363 100644
+index cfaf779..505d599 100644
 --- a/server/lib/home.js
 +++ b/server/lib/home.js
 @@ -54,6 +54,8 @@ var SORTS = ['custom', 'recent'];
  var SHOW_KEYS = ['showClock', 'showLastOn', 'showAppCount', 'showCec', 'showTvLogos'];
  // Where the weather badge's weather comes from: nowhere, Home Assistant's pushes, or Open-Meteo.
  var WEATHER_SOURCES = ['off', 'ha', 'internet'];
-+// The font Spotlight View sets Home in: the TV's own, or one bundled with the customisation.
-+var G6_FONTS = ['system', 'geist', 'inter'];
++// The font Spotlight View sets Home in: Glasshouse's own (no change), the TV's, or one bundled with the customisation.
++var G6_FONTS = ['default', 'system', 'geist', 'inter'];
  // Each kind of motion on the view, on unless switched off: the wallpaper's
  // slow drift and its cross-fade between parts of the day, rows easing to the
  // chosen tile, and Recent apps, search and the folder sliding in.
