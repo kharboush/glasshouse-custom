@@ -1,5 +1,5 @@
 diff --git a/docs/dashboard/home.md b/docs/dashboard/home.md
-index f2f753e..0f4877a 100644
+index 30e3643..a28bb63 100644
 --- a/docs/dashboard/home.md
 +++ b/docs/dashboard/home.md
 @@ -234,7 +234,7 @@ When opening a channel from the Internet TV row or live preview, playback opens
@@ -18,7 +18,7 @@ index f2f753e..0f4877a 100644
 -    * **Layout:** Alternative View, Rows along the bottom.
 +    * **Layout:** Alternative View, Spotlight View, Spotlight View font, Rows along the bottom.
      * **Shown on Home:** Clock and date, Last watched, App count, CEC addresses, Channel logos, Weather, Picture details.
-     * **Live preview:** Live preview, with Keep the preview on and Preview in the tile once it is on.
+     * **Live preview:** Live preview, with Preview sound, Keep the preview on and Preview in the tile once it is on.
      * **Search.**
 @@ -446,6 +446,8 @@ The **Layout** section configures the on-screen placement of rows and status ele
  
@@ -119,10 +119,10 @@ index 0c81a53..60eafb5 100755
        visitHomeRecentsHidden, visitHomeUploads, visitHomeShuffle, visitHomeLauncher, visitHomeReadiness, visitAudioOverride, visitHomeRecents, visitHomeGuide,
        visitHomeFadeAndInputs] },
 diff --git a/server/assets/dashboard.html b/server/assets/dashboard.html
-index 25b0e4c..a5663ee 100644
+index bd1b51e..16c8470 100644
 --- a/server/assets/dashboard.html
 +++ b/server/assets/dashboard.html
-@@ -1188,6 +1188,14 @@ function glasshouseHomeRows(d) {
+@@ -1193,6 +1193,14 @@ function glasshouseHomeRows(d) {
      }
      r.push(homeSwitchRow(d, 'showClock', t('home.showClock', 'Clock and date'), t('home.showClockDesc', 'At the top of Glasshouse Home. Switched off, the space stays empty.'), 'homeShow', d.layout.showClock !== false));
      r.push(homeSwitchRow(d, 'rowsBottom', t('home.rowsBottom', 'Rows along the bottom'), t('home.rowsBottomDesc', 'The rows of apps and inputs sit along the bottom of the screen, as on LG’s Home, rather than in the middle.'), 'homeShow', d.layout.rowsBottom === true));
@@ -137,7 +137,7 @@ index 25b0e4c..a5663ee 100644
      var altOn = d.layout.view === 'alternative';
      r.push({ label: t('home.alternative', 'Alternative View'),
               value: altOn ? t('common.on', 'On') : t('common.off', 'Off'), cls: altOn ? 'on' : 'off',
-@@ -3438,6 +3446,10 @@ function activate() {
+@@ -3443,6 +3451,10 @@ function activate() {
        return homeLayout({ search: !r.on });
      case 'homeAlternative':
        return homeLayout({ view: r.on ? 'standard' : 'alternative' });
@@ -149,7 +149,7 @@ index 25b0e4c..a5663ee 100644
        var wxOrder = ['off', 'ha', 'internet'];
        var wxAt = wxOrder.indexOf((homeData && homeData.layout && homeData.layout.weather) || 'ha');
 diff --git a/server/assets/home.html b/server/assets/home.html
-index 9ce9022..1cceaa7 100644
+index 4a922cd..0e9f33a 100644
 --- a/server/assets/home.html
 +++ b/server/assets/home.html
 @@ -17,6 +17,14 @@
@@ -247,7 +247,7 @@ index 9ce9022..1cceaa7 100644
      }
      return out;
    }
-@@ -1904,7 +1960,8 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
+@@ -1905,7 +1961,8 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
      $('stage').className = (state.arranging ? 'arranging' : '') + (recents.open ? ' recents' : '') +
        (finder.open ? ' finding' : '') + (finder.typing ? ' typing' : '') + (searchOn() ? '' : ' no-search') + (folder.open ? ' folder' : '') +
        (!layout || layout.showClock === false ? ' no-clock' : '') + (layout && layout.rowsBottom === true ? ' rows-bottom' : '') +
@@ -258,10 +258,10 @@ index 9ce9022..1cceaa7 100644
      followPreview();
    }
 diff --git a/server/assets/ui.html b/server/assets/ui.html
-index 205db73..46b84b1 100644
+index 7b1bff0..0f9d3d0 100644
 --- a/server/assets/ui.html
 +++ b/server/assets/ui.html
-@@ -1196,6 +1196,25 @@
+@@ -1203,6 +1203,25 @@
        </div>
        <div class="prot-status"><button type="button" class="pill idle" id="home-alternative" onclick="homeAlternative()">&mdash;</button></div>
      </div>
@@ -288,10 +288,10 @@ index 205db73..46b84b1 100644
        <div class="prot-main">
          <div class="prot-title" data-t="home.rowsBottom">Rows along the bottom</div>
 diff --git a/server/assets/ui/home.js b/server/assets/ui/home.js
-index eb2a07f..94b822c 100644
+index 448e365..12df211 100644
 --- a/server/assets/ui/home.js
 +++ b/server/assets/ui/home.js
-@@ -232,8 +232,14 @@ function renderHome() {
+@@ -233,8 +233,14 @@ function renderHome() {
        ? t('home.searchBlockedList', 'Unavailable: the ad blocker\u2019s hosts list blocks {host}, which LG\u2019s search needs, so the search mark is hidden on Glasshouse Home. Take {host} out of the list to use it. This switch keeps its setting.', { host: searchBlocked.host })
        : t('home.searchBlockedLevel', 'Unavailable: the ad blocker\u2019s Everything setting blocks {host}, which LG\u2019s search needs, so the search mark is hidden on Glasshouse Home. Set the ad blocker to Ads & telemetry or off to use it. This switch keeps its setting.', { host: searchBlocked.host });
    }
@@ -307,7 +307,7 @@ index eb2a07f..94b822c 100644
      const row = q(id + '-row');
      if (row) row.hidden = !st.supported.ok;
      const btn = q(id);
-@@ -994,6 +1000,14 @@ function homeRowsBottom() {
+@@ -995,6 +1001,14 @@ function homeRowsBottom() {
    homeSaveLayout({ rowsBottom: homeLayout.rowsBottom !== true });
  }
  
@@ -323,7 +323,7 @@ index eb2a07f..94b822c 100644
    homeSaveLayout({ fade: homeLayout.fade !== true });
  }
 diff --git a/server/lib/home.js b/server/lib/home.js
-index cfaf779..505d599 100644
+index 5422c11..3690779 100644
 --- a/server/lib/home.js
 +++ b/server/lib/home.js
 @@ -54,6 +54,8 @@ var SORTS = ['custom', 'recent'];
@@ -335,7 +335,7 @@ index cfaf779..505d599 100644
  // Each kind of motion on the view, on unless switched off: the wallpaper's
  // slow drift and its cross-fade between parts of the day, rows easing to the
  // chosen tile, and Recent apps, search and the folder sliding in.
-@@ -417,6 +419,9 @@ function defaults() {
+@@ -420,6 +422,9 @@ function defaults() {
      wallShuffleMinutes: 10,
      // The rows centred below the top strip, or along the bottom as on LG's Home.
      rowsBottom: false,
@@ -345,7 +345,7 @@ index cfaf779..505d599 100644
      // standard, or alternative: a smaller clock on the right, and the rows
      // as rounded, translucent tiles without their titles.
      view: 'standard',
-@@ -503,6 +508,8 @@ function normalise(raw) {
+@@ -506,6 +511,8 @@ function normalise(raw) {
    d.weather = WEATHER_SOURCES.indexOf(raw.weather) !== -1 ? raw.weather : raw.showWeather === false ? 'off' : 'ha';
    d.weatherPlace = weatherPlaceOf(raw.weatherPlace);
    d.rowsBottom = raw.rowsBottom === true;
@@ -354,7 +354,7 @@ index cfaf779..505d599 100644
    d.view = raw.view === 'alternative' ? 'alternative' : 'standard';
    d.previewAlways = raw.previewAlways === true;
    d.previewInTile = raw.previewInTile === true;
-@@ -653,6 +660,8 @@ function setLayout(body, cb) {
+@@ -657,6 +664,8 @@ function setLayout(body, cb) {
      livePreview: typeof body.livePreview === 'boolean' ? body.livePreview : c.livePreview,
      showClock: typeof body.showClock === 'boolean' ? body.showClock : c.showClock,
      rowsBottom: typeof body.rowsBottom === 'boolean' ? body.rowsBottom : c.rowsBottom,
@@ -363,20 +363,20 @@ index cfaf779..505d599 100644
      view: body.view !== undefined ? body.view : c.view,
      showLastOn: typeof body.showLastOn === 'boolean' ? body.showLastOn : c.showLastOn,
      showAppCount: typeof body.showAppCount === 'boolean' ? body.showAppCount : c.showAppCount,
-@@ -709,7 +718,7 @@ function layoutOf(c) {
+@@ -714,7 +723,7 @@ function layoutOf(c) {
      excludedRecents: c.excludedRecents,
      searchHintSeen: c.searchHintSeen, picture: c.picture, livePreview: c.livePreview, search: c.search, recommended: c.recommended,
      fade: c.fade, wallDrift: c.wallDrift, wallCrossfade: c.wallCrossfade, smoothScroll: c.smoothScroll, slidePanels: c.slidePanels,
 -    darkening: c.darkening, hideUnused: c.hideUnused, showClock: c.showClock, rowsBottom: c.rowsBottom, view: c.view,
 +    darkening: c.darkening, hideUnused: c.hideUnused, showClock: c.showClock, rowsBottom: c.rowsBottom, g6CustomLayout: c.g6CustomLayout, g6Font: c.g6Font, view: c.view,
-     showLastOn: c.showLastOn, showAppCount: c.showAppCount, showCec: c.showCec, showTvLogos: c.showTvLogos, weather: c.weather, weatherPlace: c.weatherPlace, previewAlways: c.previewAlways, previewInTile: c.previewInTile, wallAnim: c.wallAnim,
+     showLastOn: c.showLastOn, showAppCount: c.showAppCount, showCec: c.showCec, showTvLogos: c.showTvLogos, weather: c.weather, weatherPlace: c.weatherPlace, previewAlways: c.previewAlways, previewInTile: c.previewInTile, previewSound: c.previewSound, wallAnim: c.wallAnim,
      animTheme: c.animTheme, animSky: c.animSky, animLight: c.animLight, animThemes: ANIM_THEMES,
      wallShuffleMinutes: c.wallShuffleMinutes, shuffleMinutes: SHUFFLE_MINUTES, colours: c.colours,
 diff --git a/test/test-home.js b/test/test-home.js
-index a5a2727..b308221 100644
+index 993b744..3db74fa 100644
 --- a/test/test-home.js
 +++ b/test/test-home.js
-@@ -2563,6 +2563,29 @@ step('Alternative View is off until chosen, saved, and anything but alternative
+@@ -2564,6 +2564,29 @@ step('Alternative View is off until chosen, saved, and anything but alternative
    });
  });
  
