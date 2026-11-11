@@ -28,7 +28,7 @@ Below the strip:
 
 - Rows (`#rows`) start at 720px, with 64px side offsets.
 - The Guide (`#guide`) starts at 612px, with 64px side margins; it shows 4 channel rows and scrolls the rest.
-- Input tiles and Internet TV tiles are 384×216. Broadcast channel tiles keep their stock size.
+- Input tiles and Internet TV tiles are 384×216. App tiles are 216×216 (stock 168 wide, about 181 tall), with the same padding as the other tiles and the icon and name centred. Broadcast channel tiles keep their stock size.
 - Guide is the first Internet TV tile.
 
 Alternative View keeps its own clock and input tiles.
