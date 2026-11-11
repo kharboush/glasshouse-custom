@@ -1,0 +1,15 @@
+{
+  "id": "io.github.kharboush.picture-panel",
+  "version": "0.1.0",
+  "vendor": "kharboush",
+  "type": "web",
+  "main": "index.html",
+  "title": "Picture Panel",
+  "appDescription": "A picture settings panel shown over the picture (display only for now)",
+  "icon": "icon80.png",
+  "defaultWindowType": "overlay",
+  "transparent": true,
+  "noSplashOnLaunch": true,
+  "disableBackHistoryAPI": true,
+  "resolution": "1920x1080"
+}
