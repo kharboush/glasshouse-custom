@@ -149,7 +149,7 @@ index bd1b51e..16c8470 100644
        var wxOrder = ['off', 'ha', 'internet'];
        var wxAt = wxOrder.indexOf((homeData && homeData.layout && homeData.layout.weather) || 'ha');
 diff --git a/server/assets/home.html b/server/assets/home.html
-index 4a922cd..145ba7b 100644
+index 4a922cd..4e0b92b 100644
 --- a/server/assets/home.html
 +++ b/server/assets/home.html
 @@ -17,6 +17,14 @@
@@ -193,7 +193,7 @@ index 4a922cd..145ba7b 100644
 +.g6-custom #now #preview:after{border:0}
 +.g6-custom #now #preview{outline:1px solid rgba(244,241,234,.16);outline-offset:0}
 +.g6-custom .glyph img.plate{border-radius:0}
-+.g6-custom .tile{border-radius:0;outline:1px solid rgba(244,241,234,.16);outline-offset:0}
++.g6-custom .tile{border-radius:0;outline:1px solid rgba(244,241,234,.16);outline-offset:0;margin-right:16px}
 +.g6-custom .tile.focus{outline-width:2px}
 +.g6-custom #rows{top:696px}
 +.g6-custom #guide{top:612px;padding:0 64px}
