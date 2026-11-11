@@ -130,15 +130,27 @@ index 25b0e4c..1f25ed8 100644
      r.push({ label: t('home.alternative', 'Alternative View'),
               value: altOn ? t('common.on', 'On') : t('common.off', 'Off'), cls: altOn ? 'on' : 'off',
 diff --git a/server/assets/home.html b/server/assets/home.html
-index 9ce9022..1d0f634 100644
+index 9ce9022..93c019d 100644
 --- a/server/assets/home.html
 +++ b/server/assets/home.html
-@@ -163,6 +163,46 @@ html.resting #wall .layer{-webkit-animation-play-state:paused;animation-play-sta
+@@ -17,6 +17,10 @@
+ @font-face{font-family:'Outfit';src:url('/assets/fonts/Outfit-Regular.ttf') format('truetype');font-weight:400;font-display:swap}
+ @font-face{font-family:'Manrope';src:url('/assets/fonts/Manrope-Regular.ttf') format('truetype');font-weight:400;font-display:swap}
+ @font-face{font-family:'Manrope';src:url('/assets/fonts/Manrope-SemiBold.ttf') format('truetype');font-weight:600;font-display:swap}
++@font-face{font-family:'Geist';src:url('/assets/fonts/Geist-Light.ttf') format('truetype');font-weight:300;font-display:swap}
++@font-face{font-family:'Geist';src:url('/assets/fonts/Geist-Regular.ttf') format('truetype');font-weight:400;font-display:swap}
++@font-face{font-family:'Geist';src:url('/assets/fonts/Geist-Medium.ttf') format('truetype');font-weight:500;font-display:swap}
++@font-face{font-family:'Geist';src:url('/assets/fonts/Geist-SemiBold.ttf') format('truetype');font-weight:600;font-display:swap}
+ *{margin:0;padding:0;box-sizing:border-box}
+ html,body{height:100%;background:#000;overflow:hidden}
+ body{font-family:'Manrope',sans-serif;color:#ece7df;-webkit-font-smoothing:antialiased;cursor:default}
+@@ -163,6 +167,47 @@ html.resting #wall .layer{-webkit-animation-play-state:paused;animation-play-sta
  .rows-bottom #rows:before{-webkit-flex:0 0 auto;flex:0 0 auto;height:100%}
  .rows-bottom #rows:after{-webkit-flex:0 0 0;flex:0 0 0}
  
 +/* The G6 layout is opt-in: stock rules above stay in force while it is off.
 +   Keep this before Alternative View so that view's own choices still win. */
++.g6-custom,.g6-custom *{font-family:'Geist',sans-serif!important}
 +.g6-custom #now{-webkit-align-items:flex-start;align-items:flex-start;padding:64px;height:602px}
 +.g6-custom #clock{font-size:48px;letter-spacing:-1px}
 +.g6-custom #date{margin-top:10px;font-size:24px}
@@ -180,7 +192,7 @@ index 9ce9022..1d0f634 100644
  /* Alternative View (#999): a smaller clock on the right, Last watched to its
     left, and the rows as rounded, translucent tiles, titled only while arranging. */
  .alternative #now{padding:0 90px}
-@@ -731,7 +771,7 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
+@@ -731,7 +776,7 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
    // The remote's keys as webOS reports them to a page.
    var KEY = { left: 37, up: 38, right: 39, down: 40, ok: 13, back: 461, red: 403, green: 404, yellow: 405,
      chUp: 33, chDown: 34, info: 457, play: 415, pause: 19, stop: 413 };
@@ -189,7 +201,7 @@ index 9ce9022..1d0f634 100644
    var GUIDE_TILE = 'iptv-guide';
    // Internet TV's Add channels tile: last in its row while arranging, and the row's only tile while it is empty.
    var ADD_TILE = 'iptv-add';
-@@ -809,6 +849,9 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
+@@ -809,6 +854,9 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
    function dateText(d) {
      var lang = (window.I18N && I18N.lang) ? I18N.lang() : 'en';
      var loc = lang === 'en' ? 'en-US' : lang;
@@ -199,7 +211,7 @@ index 9ce9022..1d0f634 100644
      function part(opts) {
        try { return d.toLocaleDateString(loc, opts); } catch (e) { return ''; }
      }
-@@ -900,7 +943,9 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
+@@ -900,7 +948,9 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
      if (kind === 'iptv' && data.sources && data.sources.iptv && (state.arranging || (!out.length && !hasLineup))) {
        out.push({ id: ADD_TILE, add: true, name: t('home.tv.addTitle', 'Add channels') });
      } else if (kind === 'iptv' && (out.length || hasLineup) && !state.arranging) {
@@ -210,7 +222,7 @@ index 9ce9022..1d0f634 100644
      }
      return out;
    }
-@@ -1904,7 +1949,8 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
+@@ -1904,7 +1954,8 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
      $('stage').className = (state.arranging ? 'arranging' : '') + (recents.open ? ' recents' : '') +
        (finder.open ? ' finding' : '') + (finder.typing ? ' typing' : '') + (searchOn() ? '' : ' no-search') + (folder.open ? ' folder' : '') +
        (!layout || layout.showClock === false ? ' no-clock' : '') + (layout && layout.rowsBottom === true ? ' rows-bottom' : '') +
