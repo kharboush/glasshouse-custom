@@ -130,7 +130,7 @@ index 25b0e4c..1f25ed8 100644
      r.push({ label: t('home.alternative', 'Alternative View'),
               value: altOn ? t('common.on', 'On') : t('common.off', 'Off'), cls: altOn ? 'on' : 'off',
 diff --git a/server/assets/home.html b/server/assets/home.html
-index 9ce9022..a1f47d9 100644
+index 9ce9022..59cb111 100644
 --- a/server/assets/home.html
 +++ b/server/assets/home.html
 @@ -163,6 +163,37 @@ html.resting #wall .layer{-webkit-animation-play-state:paused;animation-play-sta
@@ -157,10 +157,10 @@ index 9ce9022..a1f47d9 100644
 +.g6-custom #pvMode{-webkit-flex:0 1 auto;flex:0 1 auto}
 +.g6-custom #weather{-webkit-order:1;order:1;margin-left:40px;text-align:right}
 +.g6-custom #wxMain{-webkit-justify-content:flex-end;justify-content:flex-end}
-+.g6-custom #wxIcon,.g6-custom #wxIcon svg{width:44px;height:44px}
++.g6-custom #wxIcon,.g6-custom #wxIcon svg{width:38.4px;height:38.4px}
 +.g6-custom #wxIcon{margin-right:10px}
-+.g6-custom #wxTemp{font-size:48px;letter-spacing:-1px}
-+.g6-custom #wxLine{margin-top:10px;font-size:24px}
++.g6-custom #wxTemp{font-size:48px;line-height:.8;letter-spacing:-1px}
++.g6-custom #wxLine{margin-top:10px;font-size:24px;line-height:normal}
 +.g6-custom #plate{-webkit-order:1;order:1;margin-left:40px}
 +.g6-custom #plSig,.g6-custom #plStrip{font-size:18px;height:26px;line-height:26px}
 +.g6-custom #plMode{font-size:32px;height:44px;line-height:44px;margin:8px 0 4px}
