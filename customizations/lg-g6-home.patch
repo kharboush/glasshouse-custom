@@ -130,7 +130,7 @@ index 25b0e4c..1f25ed8 100644
      r.push({ label: t('home.alternative', 'Alternative View'),
               value: altOn ? t('common.on', 'On') : t('common.off', 'Off'), cls: altOn ? 'on' : 'off',
 diff --git a/server/assets/home.html b/server/assets/home.html
-index 9ce9022..50977ae 100644
+index 9ce9022..dd59bde 100644
 --- a/server/assets/home.html
 +++ b/server/assets/home.html
 @@ -163,6 +163,44 @@ html.resting #wall .layer{-webkit-animation-play-state:paused;animation-play-sta
@@ -149,7 +149,7 @@ index 9ce9022..50977ae 100644
 +.g6-custom .ch.tv{width:384px;height:216px}
 +.g6-custom #preview,.g6-custom #now #preview.info{width:864px;height:486px;-webkit-order:-1;order:-1;margin-left:0;margin-right:56px}
 +.g6-custom #when{-webkit-order:2;order:2;margin-left:auto;text-align:right;width:auto;padding-left:24px}
-+.g6-custom #pvNote{line-height:486px}
++.g6-custom #pvNote{line-height:486px;background:#000}
 +.g6-custom #rows{top:696px}
 +.g6-custom #guide{top:612px;padding:0 64px}
 +.g6-custom #gBody{left:64px;right:64px}

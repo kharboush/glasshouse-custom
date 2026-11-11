@@ -18,6 +18,7 @@ Top strip (`#now`, 602px tall, 64px padding), left to right:
 | Date | Short form, e.g. "Wed, Nov 11" (locale-aware) | Long form, e.g. "Wednesday 11 November" |
 | Picture details on the preview (`#pvInfo`) | One line 12px under the preview, left-aligned: 18px Manrope in the dim grey `#6b665e`, picture mode SemiBold, every item separated by a dot (e.g. "Filmmaker · OLED light 50 · 4K · HDR10 · 60Hz") | Three formatted lines left of the preview (which would fall off-screen here) |
 | Weather (`#weather`) | Just left of the clock, matching it line for line: icon at the clock line height (38.4px), 48px temperature, 24px line 10px below | 112px icon, 176px temperature, 28px line |
+| "No picture" panel (`#pvNote`) | Solid black | Near-black `#14120f` |
 | Picture details without preview (`#plate`) | Just left of the clock: 32px mode, 18px lines | 52px mode, 23px lines |
 
 Below the strip:
