@@ -16,7 +16,7 @@ Top strip (`#now`, 602px tall, 64px padding), left to right:
 | Source text (`#source`) | Title 32px, source ("via") line 24px; takes the remaining width | Title 70px, via 26px |
 | Clock (`#when`) | 48px clock, 24px date, right-aligned in the top-right corner, shrinks to fit (frees width for the source text) | 176px clock, 28px date, fixed 520px on the left |
 | Date | Short form, e.g. "Wed, Nov 11" (locale-aware) | Long form, e.g. "Wednesday 11 November" |
-| Picture details on the preview (`#pvInfo`) | Directly under the source text (24px below the "via" line, e.g. HDMI), left-aligned with it; the label and via lines get fixed 30px and 32px line heights so this position is exact | Left of the preview (which would fall off-screen here) |
+| Picture details on the preview (`#pvInfo`) | Directly under the source text (24px below the "via" line, e.g. HDMI), left-aligned with it; wraps onto further lines instead of truncating; the label and via lines get fixed 30px and 32px line heights so this position is exact | Left of the preview (which would fall off-screen here) |
 | Weather (`#weather`) | Just left of the clock, matching it line for line: icon at the clock line height (38.4px), 48px temperature, 24px line 10px below | 112px icon, 176px temperature, 28px line |
 | Picture details without preview (`#plate`) | Just left of the clock: 32px mode, 18px lines | 52px mode, 23px lines |
 
