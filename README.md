@@ -13,3 +13,7 @@ Copy the `customizations/` folder into the root of a Glasshouse checkout, then r
 ```
 
 See [customizations/README.md](customizations/README.md) for what the layout changes, how to deploy to the TV, and how to refresh the patch.
+
+## Also here: Settings Restyle
+
+[lg-settings-restyle/](lg-settings-restyle/) is a separate Homebrew Channel app that gives LG's own Settings the same look, applied again by a boot hook at every start. See its [README](lg-settings-restyle/README.md).

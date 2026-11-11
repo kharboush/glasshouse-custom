@@ -6,6 +6,6 @@ HERE=$(cd "$(dirname "$(readlink -f "$0")")" && pwd)
 W=/var/lib/lg-settings-restyle
 mkdir -p "$W"
 LOG="$W/restyle.log"
-[ "$(wc -c < "$LOG" 2>/dev/null || echo 0)" -gt 32768 ] && mv -f "$LOG" "$LOG.old"
+[ -f "$LOG" ] && [ "$(wc -c < "$LOG")" -gt 32768 ] && mv -f "$LOG" "$LOG.old"
 ( echo "$(date): boot"; sh "$HERE/restyle.sh" ) >>"$LOG" 2>&1 </dev/null &
 exit 0

@@ -1,0 +1,14 @@
+{
+  "id": "io.github.kharboush.lg-settings-restyle",
+  "version": "1.0.0",
+  "type": "web",
+  "title": "Settings Restyle",
+  "appDescription": "A darker, squarer look for LG's Settings, applied at every start",
+  "iconUri": "https://raw.githubusercontent.com/kharboush/glasshouse-custom/main/lg-settings-restyle/app/icon130.png",
+  "sourceUrl": "https://github.com/kharboush/glasshouse-custom",
+  "rootRequired": true,
+  "ipkUrl": "io.github.kharboush.lg-settings-restyle_1.0.0_all.ipk",
+  "ipkHash": {
+    "sha256": "28b7a6a0c945af8f527e0426c3f716316b3eb7e055dbcd41295b859a87d8f09d"
+  }
+}
