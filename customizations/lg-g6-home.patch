@@ -1,0 +1,315 @@
+diff --git a/docs/dashboard/home.md b/docs/dashboard/home.md
+index f2f753e..77b39f8 100644
+--- a/docs/dashboard/home.md
++++ b/docs/dashboard/home.md
+@@ -234,7 +234,7 @@ When opening a channel from the Internet TV row or live preview, playback opens
+ 
+ ### Electronic Programme Guide (EPG)
+ 
+-Whenever the lineup contains channels, a **Guide** tile remains accessible on the Internet TV row (even if no channels are currently starred):
++Whenever the lineup contains channels, a **Guide** tile remains accessible on the Internet TV row (even if no channels are currently starred). It follows the channels by default, or leads the row while **G6 custom layout** is on:
+ 
+ ![The guide on a G3](../screenshots/iptv-home-guide.jpg)
+ 
+@@ -424,7 +424,7 @@ The Home tab's **Home customisation** section holds what applies to whichever Ho
+ 
+ * While Glasshouse Home is on:
+     * **Starting up:** Open Home at power-on, Hide LG's Home while the TV starts.
+-    * **Layout:** Alternative View, Rows along the bottom.
++    * **Layout:** Alternative View, G6 custom layout, Rows along the bottom.
+     * **Shown on Home:** Clock and date, Last watched, App count, CEC addresses, Channel logos, Weather, Picture details.
+     * **Live preview:** Live preview, with Keep the preview on and Preview in the tile once it is on.
+     * **Search.**
+@@ -446,6 +446,7 @@ The **Layout** section configures the on-screen placement of rows and status ele
+ 
+     ![Glasshouse Home with the clock off and the rows along the bottom](../screenshots/home-bottom.jpg)
+ 
++* **G6 custom layout:** Opts into additive overrides over the standard layout: a 864×486 (16:9) preview at the top left inside 64px padding; the source text beside it (32px title, 24px source line) with room to fit; a 48px clock and 24px short date (such as "Wed, Nov 11") right-aligned in the top-right corner; 384×216 input and Internet TV tiles; rows and the Guide moved down below the top strip; and Guide first on the Internet TV row. Broadcast channel tiles keep their standard size. Off by default; switching it off restores the stock layout. The choice is saved in the TV's Home layout.
+ * **Alternative View:** A compact layout with a smaller clock on the right, status badges to its left, and rounded, translucent tiles. Row titles show only while arranging, so **App count** is greyed out. Off by default, and works with **Rows along the bottom** and the other switches:
+ 
+     ![Glasshouse Home in Alternative View with the rows along the bottom](../screenshots/home-alternative.jpg)
+diff --git a/scripts/check-dashboards.js b/scripts/check-dashboards.js
+index 0c81a53..60eafb5 100755
+--- a/scripts/check-dashboards.js
++++ b/scripts/check-dashboards.js
+@@ -508,6 +508,75 @@ async function visitHomePreviewOptions(browser, base, problems) {
+   await page.close();
+ }
+ 
++// The G6 setting adds its layout only while on, including the Guide's place.
++async function visitHomeG6Layout(browser, base, problems) {
++  const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
++  const layout = { rows: ['app', 'dev', 'ch', 'iptv'], order: { app: [], dev: [], ch: [], iptv: [] },
++    hidden: { app: [], dev: [], ch: [], iptv: [] }, channels: ['broadcast'], hintSeen: true, searchHintSeen: true,
++    g6CustomLayout: false, view: 'standard', livePreview: false };
++  let version = 1;
++  await page.route('**/api/home/**', route => {
++    const url = new URL(route.request().url());
++    const reply = body => route.fulfill({ json: body });
++    if (url.pathname.endsWith('/catalogue')) return reply({ ok: true, layout, layoutVersion: version,
++      apps: [{ id: 'app', title: 'App' }], devices: [{ id: 'player', name: 'Player', port: 1 }],
++      channels: [{ id: 'broadcast', name: 'Broadcast', number: '1' }],
++      iptv: [{ id: 'internet', name: 'Internet', pl: 'playlist', key: 'internet' }], iptvStatus: { lineup: 1 },
++      sources: { channels: 1, iptv: 1 },
++      order: { app: ['app'], dev: ['player'], ch: ['broadcast'], iptv: ['internet'] } });
++    return reply({ ok: true, build: 'g6-layout', layoutVersion: version });
++  });
++  async function changeLayout(change) {
++    Object.assign(layout, change);
++    version++;
++    const updated = page.waitForResponse(r => new URL(r.url()).pathname === '/api/home/catalogue');
++    await page.clock.fastForward(5000);
++    await updated;
++    await page.waitForTimeout(100);
++  }
++  async function geometry() {
++    return page.evaluate(() => {
++      const css = id => getComputedStyle(document.getElementById(id));
++      const size = selector => {
++        const r = document.querySelector(selector).getBoundingClientRect();
++        return [r.width, r.height];
++      };
++      return { now: [parseFloat(css('now').height), parseFloat(css('now').paddingTop), css('now').alignItems],
++        clock: parseFloat(css('clock').fontSize), title: parseFloat(css('srcTitle').fontSize),
++        preview: [parseFloat(css('preview').width), parseFloat(css('preview').height)],
++        note: parseFloat(css('pvNote').lineHeight), rows: parseFloat(css('rows').top),
++        dev: size('.tile.dev'), tv: size('.tile.ch.tv'), broadcast: size('.row[data-key="ch"] .tile.ch'),
++        guide: Array.from(document.querySelectorAll('.row[data-key="iptv"] .tile .nm')).map(el => el.textContent),
++        on: document.getElementById('stage').classList.contains('g6-custom') };
++    });
++  }
++  function expect(actual, expected, label) {
++    if (JSON.stringify(actual) !== JSON.stringify(expected)) problems.push('Home G6 layout: ' + label + ': ' + JSON.stringify(actual));
++  }
++  try {
++    await page.clock.install();
++    await page.goto(base + '/assets/home.html');
++    await page.waitForSelector('.tile.ch.tv');
++    let g = await geometry();
++    expect([g.now, g.clock, g.title, g.preview, g.note, g.rows, g.dev, g.tv, g.broadcast, g.guide, g.on],
++      [[262, 0, 'flex-end'], 176, 70, [356, 200], 200, 296, [470, 124], [224, 176], [224, 176], ['Internet', 'Guide'], false], 'stock when off');
++    await changeLayout({ g6CustomLayout: true });
++    g = await geometry();
++    expect([g.now, g.clock, g.title, g.preview, g.note, g.rows, g.dev, g.tv, g.broadcast, g.guide, g.on],
++      [[602, 62, 'flex-start'], 48, 32, [864, 486], 486, 696, [384, 216], [384, 216], [224, 176], ['Guide', 'Internet'], true], 'additive overrides when on');
++    await changeLayout({ view: 'alternative' });
++    g = await geometry();
++    expect([g.clock, g.dev], [100, [420, 108]], 'Alternative View keeps its own clock and input tiles');
++    await changeLayout({ view: 'standard', g6CustomLayout: false });
++    g = await geometry();
++    expect([g.now, g.clock, g.title, g.preview, g.note, g.rows, g.dev, g.tv, g.broadcast, g.guide, g.on],
++      [[262, 0, 'flex-end'], 176, 70, [356, 200], 200, 296, [470, 124], [224, 176], [224, 176], ['Internet', 'Guide'], false], 'stock again when switched off');
++  } catch (e) {
++    problems.push('Home G6 layout: ' + e.message);
++  }
++  await page.close();
++}
++
+ // Each animated background draws, the pictures step aside, and Off puts them back.
+ async function visitHomeAnimations(browser, base, problems) {
+   const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
+@@ -2916,7 +2985,7 @@ function groups(web, tv) {
+     { job: 'tabs', tabs: web.map(t => ({ path: '/?tab=' + t, label: 'web ' + t })), visits: [visitHomeAnimations] },
+     { job: 'tabs', tabs: tv.map(t => ({ path: '/assets/dashboard.html?tab=' + t, label: 'TV ' + t })),
+       visits: [visitTvDashboard, visitTvAudio, visitTvPictureWrites, visitPictureUnavailable, visitTvNonOled] },
+-    { job: 'home', tabs: [], visits: [visitHomePicture, visitHomePreview, visitHomePreviewOptions, visitHomeOrder, visitHomeAvailability, visitHomeSearch, visitHomeWeather, visitHomeWeatherSetting] },
++    { job: 'home', tabs: [], visits: [visitHomePicture, visitHomePreview, visitHomePreviewOptions, visitHomeG6Layout, visitHomeOrder, visitHomeAvailability, visitHomeSearch, visitHomeWeather, visitHomeWeatherSetting] },
+     { job: 'home', tabs: [], visits: [visitHomeArrangement, visitHomeVisibility, visitHomeColours, visitHomeInputsEditor, visitHomeEditor,
+       visitHomeRecentsHidden, visitHomeUploads, visitHomeShuffle, visitHomeLauncher, visitHomeReadiness, visitAudioOverride, visitHomeRecents, visitHomeGuide,
+       visitHomeFadeAndInputs] },
+diff --git a/server/assets/dashboard.html b/server/assets/dashboard.html
+index 25b0e4c..53dfb9b 100644
+--- a/server/assets/dashboard.html
++++ b/server/assets/dashboard.html
+@@ -1188,6 +1188,7 @@ function glasshouseHomeRows(d) {
+     }
+     r.push(homeSwitchRow(d, 'showClock', t('home.showClock', 'Clock and date'), t('home.showClockDesc', 'At the top of Glasshouse Home. Switched off, the space stays empty.'), 'homeShow', d.layout.showClock !== false));
+     r.push(homeSwitchRow(d, 'rowsBottom', t('home.rowsBottom', 'Rows along the bottom'), t('home.rowsBottomDesc', 'The rows of apps and inputs sit along the bottom of the screen, as on LG’s Home, rather than in the middle.'), 'homeShow', d.layout.rowsBottom === true));
++    r.push(homeSwitchRow(d, 'g6CustomLayout', t('home.g6CustomLayout', 'G6 custom layout'), t('home.g6CustomLayoutDesc', 'Larger 864 × 486 preview at top left, a small right-aligned clock with a short date, compact source text, larger input and Internet TV tiles, a Guide below the preview, and Guide first in Internet TV. Off keeps the standard Glasshouse layout.'), 'homeShow', d.layout.g6CustomLayout === true));
+     var altOn = d.layout.view === 'alternative';
+     r.push({ label: t('home.alternative', 'Alternative View'),
+              value: altOn ? t('common.on', 'On') : t('common.off', 'Off'), cls: altOn ? 'on' : 'off',
+diff --git a/server/assets/home.html b/server/assets/home.html
+index 9ce9022..5fd6256 100644
+--- a/server/assets/home.html
++++ b/server/assets/home.html
+@@ -163,6 +163,25 @@ html.resting #wall .layer{-webkit-animation-play-state:paused;animation-play-sta
+ .rows-bottom #rows:before{-webkit-flex:0 0 auto;flex:0 0 auto;height:100%}
+ .rows-bottom #rows:after{-webkit-flex:0 0 0;flex:0 0 0}
+ 
++/* The G6 layout is opt-in: stock rules above stay in force while it is off.
++   Keep this before Alternative View so that view's own choices still win. */
++.g6-custom #now{-webkit-align-items:flex-start;align-items:flex-start;padding:64px;height:602px}
++.g6-custom #clock{font-size:48px;letter-spacing:-1px}
++.g6-custom #date{margin-top:10px;font-size:24px}
++.g6-custom #srcTitle{font-size:32px}
++.g6-custom #srcVia{font-size:24px}
++.g6-custom .dev{width:384px;height:216px}
++.g6-custom .ch.tv{width:384px;height:216px}
++.g6-custom #preview,.g6-custom #now #preview.info{width:864px;height:486px;-webkit-order:-1;order:-1;margin-left:0;margin-right:56px}
++.g6-custom #when{-webkit-order:2;order:2;margin-left:auto;text-align:right;width:auto;padding-left:24px}
++.g6-custom #pvNote{line-height:486px}
++.g6-custom #rows{top:696px}
++.g6-custom #guide{top:612px;padding:0 64px}
++.g6-custom #gBody{left:64px;right:64px}
++.g6-custom .row h2{padding:0 64px}
++.g6-custom .wrap{margin:0 42px}
++.g6-custom .slot{margin:0 64px}
++
+ /* Alternative View (#999): a smaller clock on the right, Last watched to its
+    left, and the rows as rounded, translucent tiles, titled only while arranging. */
+ .alternative #now{padding:0 90px}
+@@ -731,7 +750,7 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
+   // The remote's keys as webOS reports them to a page.
+   var KEY = { left: 37, up: 38, right: 39, down: 40, ok: 13, back: 461, red: 403, green: 404, yellow: 405,
+     chUp: 33, chDown: 34, info: 457, play: 415, pause: 19, stop: 413 };
+-  // The Internet TV row's last tile while it has channels: the guide.
++  // The guide is the Internet TV row's last tile, or its first in the G6 layout.
+   var GUIDE_TILE = 'iptv-guide';
+   // Internet TV's Add channels tile: last in its row while arranging, and the row's only tile while it is empty.
+   var ADD_TILE = 'iptv-add';
+@@ -809,6 +828,9 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
+   function dateText(d) {
+     var lang = (window.I18N && I18N.lang) ? I18N.lang() : 'en';
+     var loc = lang === 'en' ? 'en-US' : lang;
++    if (layout && layout.g6CustomLayout === true) {
++      try { var short = d.toLocaleDateString(loc, { weekday: 'short', month: 'short', day: 'numeric' }); if (short) return short; } catch (e) { /* fall through */ }
++    }
+     function part(opts) {
+       try { return d.toLocaleDateString(loc, opts); } catch (e) { return ''; }
+     }
+@@ -900,7 +922,9 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
+     if (kind === 'iptv' && data.sources && data.sources.iptv && (state.arranging || (!out.length && !hasLineup))) {
+       out.push({ id: ADD_TILE, add: true, name: t('home.tv.addTitle', 'Add channels') });
+     } else if (kind === 'iptv' && (out.length || hasLineup) && !state.arranging) {
+-      out.push({ id: GUIDE_TILE, guide: true, name: t('home.tv.guide', 'Guide') });
++      var guideTile = { id: GUIDE_TILE, guide: true, name: t('home.tv.guide', 'Guide') };
++      if (layout.g6CustomLayout === true) out.unshift(guideTile);
++      else out.push(guideTile);
+     }
+     return out;
+   }
+@@ -1904,7 +1928,8 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
+     $('stage').className = (state.arranging ? 'arranging' : '') + (recents.open ? ' recents' : '') +
+       (finder.open ? ' finding' : '') + (finder.typing ? ' typing' : '') + (searchOn() ? '' : ' no-search') + (folder.open ? ' folder' : '') +
+       (!layout || layout.showClock === false ? ' no-clock' : '') + (layout && layout.rowsBottom === true ? ' rows-bottom' : '') +
+-      (layout && layout.view === 'alternative' ? ' alternative' : '') + (player.open ? ' playing' : '') + (adder.open ? ' adding' : '') +
++      (layout && layout.view === 'alternative' ? ' alternative' : '') + (layout && layout.g6CustomLayout === true ? ' g6-custom' : '') +
++      (player.open ? ' playing' : '') + (adder.open ? ' adding' : '') +
+       (adder.open && adder.typing ? ' adtyping' : '') + (guide.open ? ' guiding' : '');
+     followPreview();
+   }
+diff --git a/server/assets/ui.html b/server/assets/ui.html
+index 205db73..490e5ed 100644
+--- a/server/assets/ui.html
++++ b/server/assets/ui.html
+@@ -1196,6 +1196,13 @@
+       </div>
+       <div class="prot-status"><button type="button" class="pill idle" id="home-alternative" onclick="homeAlternative()">&mdash;</button></div>
+     </div>
++    <div class="prot-row home-gh-row" id="home-g6-custom-layout-row" hidden>
++      <div class="prot-main">
++        <div class="prot-title" data-t="home.g6CustomLayout">G6 custom layout</div>
++        <div class="prot-desc" data-t="home.g6CustomLayoutDesc">Larger 864 × 486 preview at top left, a small right-aligned clock with a short date, compact source text, larger input and Internet TV tiles, a Guide below the preview, and Guide first in Internet TV. Off keeps the standard Glasshouse layout.</div>
++      </div>
++      <div class="prot-status"><button type="button" class="pill idle" id="home-g6-custom-layout" onclick="homeG6CustomLayout()">&mdash;</button></div>
++    </div>
+     <div class="prot-row home-gh-row" id="home-rows-bottom-row" hidden>
+       <div class="prot-main">
+         <div class="prot-title" data-t="home.rowsBottom">Rows along the bottom</div>
+diff --git a/server/assets/ui/home.js b/server/assets/ui/home.js
+index eb2a07f..4bbe2f8 100644
+--- a/server/assets/ui/home.js
++++ b/server/assets/ui/home.js
+@@ -233,7 +233,7 @@ function renderHome() {
+       : t('home.searchBlockedLevel', 'Unavailable: the ad blocker\u2019s Everything setting blocks {host}, which LG\u2019s search needs, so the search mark is hidden on Glasshouse Home. Set the ad blocker to Ads & telemetry or off to use it. This switch keeps its setting.', { host: searchBlocked.host });
+   }
+   // Fading, as Picture details.
+-  [['home-fade', 'fade'], ['home-rows-bottom', 'rowsBottom']].forEach(([id, field]) => {
++  [['home-fade', 'fade'], ['home-g6-custom-layout', 'g6CustomLayout'], ['home-rows-bottom', 'rowsBottom']].forEach(([id, field]) => {
+     const row = q(id + '-row');
+     if (row) row.hidden = !st.supported.ok;
+     const btn = q(id);
+@@ -994,6 +994,10 @@ function homeRowsBottom() {
+   homeSaveLayout({ rowsBottom: homeLayout.rowsBottom !== true });
+ }
+ 
++function homeG6CustomLayout() {
++  homeSaveLayout({ g6CustomLayout: homeLayout.g6CustomLayout !== true });
++}
++
+ function homeFade() {
+   homeSaveLayout({ fade: homeLayout.fade !== true });
+ }
+diff --git a/server/lib/home.js b/server/lib/home.js
+index cfaf779..b77f846 100644
+--- a/server/lib/home.js
++++ b/server/lib/home.js
+@@ -417,6 +417,8 @@ function defaults() {
+     wallShuffleMinutes: 10,
+     // The rows centred below the top strip, or along the bottom as on LG's Home.
+     rowsBottom: false,
++    // Additive G6 sizing, preview placement and Guide ordering over the stock view.
++    g6CustomLayout: false,
+     // standard, or alternative: a smaller clock on the right, and the rows
+     // as rounded, translucent tiles without their titles.
+     view: 'standard',
+@@ -503,6 +505,7 @@ function normalise(raw) {
+   d.weather = WEATHER_SOURCES.indexOf(raw.weather) !== -1 ? raw.weather : raw.showWeather === false ? 'off' : 'ha';
+   d.weatherPlace = weatherPlaceOf(raw.weatherPlace);
+   d.rowsBottom = raw.rowsBottom === true;
++  d.g6CustomLayout = raw.g6CustomLayout === true;
+   d.view = raw.view === 'alternative' ? 'alternative' : 'standard';
+   d.previewAlways = raw.previewAlways === true;
+   d.previewInTile = raw.previewInTile === true;
+@@ -653,6 +656,7 @@ function setLayout(body, cb) {
+     livePreview: typeof body.livePreview === 'boolean' ? body.livePreview : c.livePreview,
+     showClock: typeof body.showClock === 'boolean' ? body.showClock : c.showClock,
+     rowsBottom: typeof body.rowsBottom === 'boolean' ? body.rowsBottom : c.rowsBottom,
++    g6CustomLayout: typeof body.g6CustomLayout === 'boolean' ? body.g6CustomLayout : c.g6CustomLayout,
+     view: body.view !== undefined ? body.view : c.view,
+     showLastOn: typeof body.showLastOn === 'boolean' ? body.showLastOn : c.showLastOn,
+     showAppCount: typeof body.showAppCount === 'boolean' ? body.showAppCount : c.showAppCount,
+@@ -709,7 +713,7 @@ function layoutOf(c) {
+     excludedRecents: c.excludedRecents,
+     searchHintSeen: c.searchHintSeen, picture: c.picture, livePreview: c.livePreview, search: c.search, recommended: c.recommended,
+     fade: c.fade, wallDrift: c.wallDrift, wallCrossfade: c.wallCrossfade, smoothScroll: c.smoothScroll, slidePanels: c.slidePanels,
+-    darkening: c.darkening, hideUnused: c.hideUnused, showClock: c.showClock, rowsBottom: c.rowsBottom, view: c.view,
++    darkening: c.darkening, hideUnused: c.hideUnused, showClock: c.showClock, rowsBottom: c.rowsBottom, g6CustomLayout: c.g6CustomLayout, view: c.view,
+     showLastOn: c.showLastOn, showAppCount: c.showAppCount, showCec: c.showCec, showTvLogos: c.showTvLogos, weather: c.weather, weatherPlace: c.weatherPlace, previewAlways: c.previewAlways, previewInTile: c.previewInTile, wallAnim: c.wallAnim,
+     animTheme: c.animTheme, animSky: c.animSky, animLight: c.animLight, animThemes: ANIM_THEMES,
+     wallShuffleMinutes: c.wallShuffleMinutes, shuffleMinutes: SHUFFLE_MINUTES, colours: c.colours,
+diff --git a/test/test-home.js b/test/test-home.js
+index a5a2727..b308221 100644
+--- a/test/test-home.js
++++ b/test/test-home.js
+@@ -2563,6 +2563,29 @@ step('Alternative View is off until chosen, saved, and anything but alternative
+   });
+ });
+ 
++step('the G6 layout is additive, opt-in, validated and saved', function (done) {
++  start(null);
++  assert.strictEqual(home.layout().g6CustomLayout, false);
++  assert.strictEqual(home.normalise({ g6CustomLayout: 'yes' }).g6CustomLayout, false);
++  home.setLayout({ g6CustomLayout: true }, function (r) {
++    assert.strictEqual(r.layout.g6CustomLayout, true);
++    assert.strictEqual(home.normalise(JSON.parse(fs.readFileSync(path.join(dir, 'home.json'), 'utf8'))).g6CustomLayout, true);
++    home.stop();
++    home.init(lastInit);
++    assert.strictEqual(home.layout().g6CustomLayout, true, 'reloaded from the saved layout');
++    home.setLayout({ g6CustomLayout: 1, rowsBottom: true }, function (r2) {
++      assert.strictEqual(r2.layout.g6CustomLayout, true, 'only a boolean changes it');
++      home.setLayout({ reset: true }, function (r3) {
++        assert.strictEqual(r3.layout.g6CustomLayout, true, 'resetting tiles keeps the view option');
++        home.setLayout({ g6CustomLayout: false }, function (r4) {
++          assert.strictEqual(r4.layout.g6CustomLayout, false);
++          done();
++        });
++      });
++    });
++  });
++});
++
+ step('live preview stays off until switched on, and is saved', function (done) {
+   start(null);
+   assert.strictEqual(home.layout().livePreview, false);
