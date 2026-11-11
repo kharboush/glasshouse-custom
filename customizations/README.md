@@ -21,7 +21,7 @@ Top strip (`#now`, 602px tall, 64px padding), left to right:
 | No-picture panel (`#pvNote`) | Solid black; label reads "NO SIGNAL" (swapped in with CSS), 18px SemiBold in capitals, slightly spaced | Near-black `#14120f`; label "No picture", 23px regular |
 | Preview outline | The same 1px, 16% white line, drawn just outside the preview (`outline` on `#preview`) so the TV's video layer cannot cover it; the stock inner border (`#preview:after`) is removed because it flickered as the preview switched between "No picture" and video | 1px, 16% white, inside the preview |
 | Full-colour channel logos (`.glyph img.plate`), on tiles and in the Guide | Square corners | 6px rounded corners |
-| Picture details without preview (`#plate`) | Just left of the clock: 32px mode, 18px lines | 52px mode, 23px lines |
+| Picture details without preview (`#plate`), shown with no source or while switching | Hidden (the panel says "No signal" then; the line under the preview shows details while a picture plays) | Beside the clock: 52px mode, 23px lines |
 
 Below the strip:
 
