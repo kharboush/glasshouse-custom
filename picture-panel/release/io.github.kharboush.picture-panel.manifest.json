@@ -1,14 +1,14 @@
 {
   "id": "io.github.kharboush.picture-panel",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "web",
   "title": "Picture Panel",
   "appDescription": "A picture settings panel shown over the picture: mode, brightness, contrast, colour temperature and TruMotion. Needs Glasshouse",
   "iconUri": "https://raw.githubusercontent.com/kharboush/glasshouse-custom/main/picture-panel/app/icon130.png",
   "sourceUrl": "https://github.com/kharboush/glasshouse-custom",
   "rootRequired": true,
-  "ipkUrl": "io.github.kharboush.picture-panel_1.0.0_all.ipk",
+  "ipkUrl": "io.github.kharboush.picture-panel_1.0.1_all.ipk",
   "ipkHash": {
-    "sha256": "9de49c2b65878b4fb2a7d666aea0a7f610c97728d4d9f7f946420c224dde5128"
+    "sha256": "a35cdde02b10c2a396ace8f8dd7cfa047ca88b90027efb2c73ef0b96b506e398"
   }
 }

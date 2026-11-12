@@ -2,7 +2,9 @@
 
 A picture settings panel shown as an **overlay window** over whatever is playing, in the Spotlight View look (square, black, subtle outlines). It reads and sets the TV's real values for Picture Mode, OLED Pixel Brightness, Black Level, Auto Dynamic Contrast, Peak Brightness, Color Temperature and TruMotion.
 
-- Up and Down move between rows; Left and Right (or OK) change the value; Back closes. A Magic Remote pointer can click rows and the arrows.
+- Up and Down move between rows; Left and Right (or OK) change the value; Back closes. A Magic Remote pointer can click rows and the arrows. There is no on-screen help text.
+- Settings the TV has switched off for the current picture mode or input (TruMotion, Peak Brightness and Auto Dynamic Contrast in Game mode, for example) are shown greyed and are not changed; focusing one says "Not available in <mode> mode." This is read from the `active` flag the TV gives each setting, so a change is never sent only to be refused.
+- The last row, **All Settings**, opens LG's full Settings app (`com.palm.app.settings`) and closes the panel.
 - The choices are the ones the TV itself offers (this G6 has no "Clear" TruMotion, for example). Colour temperature runs from Warm 50 to Cool 50. Black Level shows "Not on this input" unless the input on screen is an HDMI input, because LG keeps it per input and, for apps and the tuner, per colour system.
 - Settings are per picture mode and per input, so the panel shows and changes those of the input on screen. Changing the picture mode re-reads everything.
 - It closes itself after two minutes without a key or pointer.
@@ -11,7 +13,7 @@ Needs [Glasshouse](https://github.com/rorygallagher2024/glasshouse) running on t
 
 ## Install and use
 
-Install the package (`release/io.github.kharboush.picture-panel_1.0.0_all.ipk`, or the manifest in the same folder, with the Homebrew Channel, or the TV's `dev/install`). That is all: the app puts what it needs on Glasshouse's server itself the first time it is opened, and again if that is ever missing or out of date.
+Install the package (`release/io.github.kharboush.picture-panel_1.0.1_all.ipk`, or the manifest in the same folder, with the Homebrew Channel, or the TV's `dev/install`). That is all: the app puts what it needs on Glasshouse's server itself the first time it is opened, and again if that is ever missing or out of date.
 
 Open **Picture Panel** from the app list, or assign it to a remote button in Glasshouse's remote keys (it is listed there like any app). To open it from a command:
 

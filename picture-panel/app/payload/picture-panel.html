@@ -19,17 +19,20 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
   outline:1px solid rgba(244,241,234,.16)}
 .row.focus{outline:2px solid #ece7df;background:#141310}
 .row.na .lbl,.row.na .val{color:#3a3732}
+.row.off .lbl,.row.off .val{color:#6b665e}
+.row.focus.off .lbl{color:#a39d93}
 .lbl{font-size:21px;color:#a39d93}
 .row.focus .lbl{color:#ece7df}
 .ctl{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center}
 .arrow{width:40px;height:40px;line-height:38px;text-align:center;font-size:24px;color:#3a3732;cursor:pointer}
 .row.focus .arrow{color:#ece7df}
-.row.na .arrow{visibility:hidden}
+.row.na .arrow,.row.off .arrow{visibility:hidden}
 .val{min-width:200px;text-align:center;font-size:21px;font-weight:600}
 .bar{display:inline-block;vertical-align:middle;width:110px;height:4px;background:#2a2825;margin-right:14px;position:relative}
 .bar i{position:absolute;left:0;top:0;bottom:0;background:#a39d93}
 .row.focus .bar i{background:#ece7df}
-#foot{padding:6px 24px 8px;font-size:16px;color:#6b665e}
+#foot{display:none;padding:6px 24px 8px;font-size:16px;color:#6b665e}
+#foot.show{display:block}
 #foot.err{color:#e9ad55}
 </style>
 </head>
@@ -37,7 +40,7 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
 <div id="panel">
   <div id="head"><b>Picture</b><span id="sub">Reading the TV&hellip;</span></div>
   <div id="rows"></div>
-  <div id="foot">Up and Down move &middot; Left and Right change &middot; Back closes</div>
+  <div id="foot"></div>
 </div>
 <script>
 /*
@@ -55,13 +58,13 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
     { id: 'dynamicContrast', label: 'Auto Dynamic Contrast', kind: 'choice' },
     { id: 'peakBrightness', label: 'Peak Brightness', kind: 'choice' },
     { id: 'colorTemperature', label: 'Color Temperature', kind: 'temp' },
-    { id: 'truMotionMode', label: 'TruMotion', kind: 'choice' }
+    { id: 'truMotionMode', label: 'TruMotion', kind: 'choice' },
+    { id: 'allSettings', label: 'All Settings', kind: 'link', app: 'com.palm.app.settings' }
   ];
   var sel = 0, idleTimer = null, loaded = false;
   var rowsEl = document.getElementById('rows');
   var subEl = document.getElementById('sub');
   var footEl = document.getElementById('foot');
-  var FOOT = footEl.innerHTML;
   var els = [], pending = {};
 
   function http(method, url, body, cb) {
@@ -79,7 +82,7 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
     x.send(body ? JSON.stringify(body) : null);
   }
 
-  function say(text, bad) { footEl.className = bad ? 'err' : ''; footEl.innerHTML = text || FOOT; }
+  function say(text, bad) { footEl.className = text ? (bad ? 'show err' : 'show') : ''; footEl.textContent = text || ''; }
 
   function choiceAt(c) {
     var ch = c.row.choices || [], i;
@@ -87,6 +90,7 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
     return -1;
   }
   function text(c) {
+    if (c.def.kind === 'link') return '';
     if (!c.row) return c.def.missing || 'Not available';
     if (c.def.kind === 'range') return String(c.row.value);
     if (c.def.kind === 'temp') {
@@ -100,18 +104,20 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
   }
   function paint(i) {
     var c = ctl[i], e = els[i];
-    e.row.className = 'row' + (i === sel ? ' focus' : '') + (c.row ? '' : ' na');
+    var cls = 'row' + (i === sel ? ' focus' : '');
+    if (c.def.kind !== 'link') cls += !c.row ? ' na' : (c.row.active === false ? ' off' : '');
+    e.row.className = cls;
     e.val.textContent = text(c);
     if (e.fill && c.row) e.fill.style.width = Math.max(0, Math.min(100, 100 * (c.row.value - c.row.min) / (c.row.max - c.row.min))) + '%';
   }
   function paintAll() { for (var i = 0; i < ctl.length; i++) paint(i); }
 
-  var ctl = DEFS.map(function (d) { return { def: d, row: null }; });
+  var ctl = DEFS.map(function (d) { return { def: d, row: d.kind === 'link' ? {} : null }; });
 
   function apply(rows) {
     var by = {};
     rows.forEach(function (r) { by[r.id] = r; });
-    ctl.forEach(function (c) { c.row = by[c.def.id] || null; });
+    ctl.forEach(function (c) { c.row = c.def.kind === 'link' ? {} : (by[c.def.id] || null); });
     paintAll();
   }
 
@@ -126,6 +132,7 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
       subEl.textContent = 'Applies to the input on screen';
       apply(r.rows || []);
       if (!quiet) say('');
+      if (ctl[sel].row && ctl[sel].row.active === false) hint();
     });
   }
 
@@ -144,7 +151,9 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
 
   function change(i, dir) {
     var c = ctl[i];
+    if (c.def.kind === 'link') { if (dir > 0) openSettings(); return; }
     if (!c.row || !loaded) return;
+    if (c.row.active === false) { hint(); return; }
     if (c.def.kind === 'choice') {
       var n = c.row.choices.length, at = choiceAt(c);
       if (!n) return;
@@ -163,6 +172,25 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
     }
   }
 
+  // The TV marks a setting inactive when the picture mode or input switches it off
+  // (TruMotion in Game mode, for example). Say so, instead of letting a change fail.
+  function hint() {
+    var c = ctl[sel];
+    if (c.def.kind !== 'link' && c.row && c.row.active === false) {
+      var mode = ctl[0].row ? text(ctl[0]) : '';
+      say('Not available' + (mode ? ' in ' + mode + ' mode' : ' right now') + '.', false);
+    } else {
+      say('');
+    }
+  }
+
+  function openSettings() {
+    http('POST', '/api/control', { action: 'launchApp', value: 'com.palm.app.settings' }, function (ok, r) {
+      if (!ok || (r && r.ok === false)) return say('Could not open Settings.', true);
+      setTimeout(leave, 400);
+    });
+  }
+
   function build() {
     ctl.forEach(function (c, i) {
       var row = document.createElement('div'), lbl = document.createElement('div'), box = document.createElement('div');
@@ -171,7 +199,9 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
       row.className = 'row'; lbl.className = 'lbl'; lbl.textContent = c.def.label;
       box.className = 'ctl'; left.className = 'arrow'; right.className = 'arrow'; val.className = 'val';
       left.innerHTML = '&#8249;'; right.innerHTML = '&#8250;';
-      if (c.def.kind === 'range') {
+      if (c.def.kind === 'link') {
+        box.appendChild(right);
+      } else if (c.def.kind === 'range') {
         var bar = document.createElement('span'); bar.className = 'bar';
         fill = document.createElement('i'); bar.appendChild(fill);
         box.appendChild(left); box.appendChild(bar); box.appendChild(val); box.appendChild(right);
@@ -182,7 +212,7 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
       row.appendChild(lbl); row.appendChild(box); rowsEl.appendChild(row);
       els.push({ row: row, val: val, fill: fill });
       // Magic Remote pointer: click a row to select it, an arrow to change it.
-      row.addEventListener('mousedown', function () { sel = i; paintAll(); poke(); });
+      row.addEventListener('mousedown', function () { sel = i; paintAll(); hint(); poke(); if (c.def.kind === 'link') openSettings(); });
       left.addEventListener('mousedown', function (e) { e.stopPropagation(); sel = i; change(i, -1); paintAll(); poke(); });
       right.addEventListener('mousedown', function (e) { e.stopPropagation(); sel = i; change(i, 1); paintAll(); poke(); });
     });
@@ -199,8 +229,8 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
   document.addEventListener('keydown', function (e) {
     var k = e.keyCode || e.which;
     poke();
-    if (k === 38) { if (sel > 0) sel--; paintAll(); }
-    else if (k === 40) { if (sel < ctl.length - 1) sel++; paintAll(); }
+    if (k === 38) { if (sel > 0) sel--; paintAll(); hint(); }
+    else if (k === 40) { if (sel < ctl.length - 1) sel++; paintAll(); hint(); }
     else if (k === 37) { change(sel, -1); }
     else if (k === 39 || k === 13) { change(sel, 1); }
     else if (k === 461 || k === 27 || k === 8) { leave(); }
