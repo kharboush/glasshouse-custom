@@ -1,11 +1,11 @@
 {
   "id": "io.github.kharboush.picture-panel",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "vendor": "kharboush",
   "type": "web",
   "main": "index.html",
   "title": "Picture Panel",
-  "appDescription": "A picture settings panel shown over the picture (display only for now)",
+  "appDescription": "A picture settings panel shown over the picture that reads and sets the real values",
   "icon": "icon80.png",
   "defaultWindowType": "overlay",
   "transparent": true,

@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Picture Panel</title>
+<style>
+html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden;
+  font-family:'LG Smart UI',sans-serif;color:#ece7df;-webkit-font-smoothing:antialiased}
+#panel{position:absolute;left:32px;bottom:32px;width:640px;background:rgba(0,0,0,.94);
+  outline:1px solid rgba(244,241,234,.16);padding-bottom:12px}
+#head{display:-webkit-flex;display:flex;-webkit-align-items:baseline;align-items:baseline;
+  -webkit-justify-content:space-between;justify-content:space-between;padding:22px 24px 16px}
+#head b{font-size:26px;font-weight:600}
+#head span{font-size:17px;color:#6b665e}
+.row{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;
+  -webkit-justify-content:space-between;justify-content:space-between;
+  height:58px;margin:0 16px 8px;padding:0 8px 0 22px;cursor:default;
+  outline:1px solid rgba(244,241,234,.16)}
+.row.focus{outline:2px solid #ece7df;background:#141310}
+.row.na .lbl,.row.na .val{color:#3a3732}
+.lbl{font-size:21px;color:#a39d93}
+.row.focus .lbl{color:#ece7df}
+.ctl{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center}
+.arrow{width:40px;height:40px;line-height:38px;text-align:center;font-size:24px;color:#3a3732;cursor:pointer}
+.row.focus .arrow{color:#ece7df}
+.row.na .arrow{visibility:hidden}
+.val{min-width:200px;text-align:center;font-size:21px;font-weight:600}
+.bar{display:inline-block;vertical-align:middle;width:110px;height:4px;background:#2a2825;margin-right:14px;position:relative}
+.bar i{position:absolute;left:0;top:0;bottom:0;background:#a39d93}
+.row.focus .bar i{background:#ece7df}
+#foot{padding:6px 24px 8px;font-size:16px;color:#6b665e}
+#foot.err{color:#e9ad55}
+</style>
+</head>
+<body>
+<div id="panel">
+  <div id="head"><b>Picture</b><span id="sub">Reading the TV&hellip;</span></div>
+  <div id="rows"></div>
+  <div id="foot">Up and Down move &middot; Left and Right change &middot; Back closes</div>
+</div>
+<script>
+/*
+ * The Picture Panel, served by Glasshouse so its requests are same-origin with the
+ * API (POST /api/control refuses other origins). Reads the TV's own values and
+ * choices from /api/lgsettings and sends changes through /api/control, the way
+ * Glasshouse's dashboard does. ES5 only.
+ */
+(function () {
+  var DEFS = [
+    { id: 'pictureMode', label: 'Picture Mode', kind: 'choice' },
+    { id: 'backlight', label: 'OLED Pixel Brightness', kind: 'range' },
+    { id: 'blackLevel', label: 'Black Level', kind: 'choice', names: { auto: 'Auto', low: 'Low', high: 'High' },
+      missing: 'Not on this input' },
+    { id: 'dynamicContrast', label: 'Auto Dynamic Contrast', kind: 'choice' },
+    { id: 'peakBrightness', label: 'Peak Brightness', kind: 'choice' },
+    { id: 'colorTemperature', label: 'Color Temperature', kind: 'temp' },
+    { id: 'truMotionMode', label: 'TruMotion', kind: 'choice' }
+  ];
+  var sel = 0, idleTimer = null, loaded = false;
+  var rowsEl = document.getElementById('rows');
+  var subEl = document.getElementById('sub');
+  var footEl = document.getElementById('foot');
+  var FOOT = footEl.innerHTML;
+  var els = [], pending = {};
+
+  function http(method, url, body, cb) {
+    var x = new XMLHttpRequest();
+    x.open(method, url, true);
+    if (body) x.setRequestHeader('Content-Type', 'application/json');
+    x.timeout = 12000;
+    x.onreadystatechange = function () {
+      if (x.readyState !== 4) return;
+      var r = null;
+      try { r = JSON.parse(x.responseText); } catch (e) { r = null; }
+      cb(x.status >= 200 && x.status < 300 ? r : null, r);
+    };
+    x.ontimeout = function () { cb(null, null); };
+    x.send(body ? JSON.stringify(body) : null);
+  }
+
+  function say(text, bad) { footEl.className = bad ? 'err' : ''; footEl.innerHTML = text || FOOT; }
+
+  function choiceAt(c) {
+    var ch = c.row.choices || [], i;
+    for (i = 0; i < ch.length; i++) if (ch[i].value === c.row.value) return i;
+    return -1;
+  }
+  function text(c) {
+    if (!c.row) return c.def.missing || 'Not available';
+    if (c.def.kind === 'range') return String(c.row.value);
+    if (c.def.kind === 'temp') {
+      var v = c.row.value;
+      return v === 0 ? 'Medium' : (v < 0 ? 'Warm ' + (-v) : 'Cool ' + v);
+    }
+    var i = choiceAt(c);
+    if (i < 0) return String(c.row.value);
+    var ch = c.row.choices[i];
+    return (c.def.names && c.def.names[ch.value]) || ch.label || String(ch.value);
+  }
+  function paint(i) {
+    var c = ctl[i], e = els[i];
+    e.row.className = 'row' + (i === sel ? ' focus' : '') + (c.row ? '' : ' na');
+    e.val.textContent = text(c);
+    if (e.fill && c.row) e.fill.style.width = Math.max(0, Math.min(100, 100 * (c.row.value - c.row.min) / (c.row.max - c.row.min))) + '%';
+  }
+  function paintAll() { for (var i = 0; i < ctl.length; i++) paint(i); }
+
+  var ctl = DEFS.map(function (d) { return { def: d, row: null }; });
+
+  function apply(rows) {
+    var by = {};
+    rows.forEach(function (r) { by[r.id] = r; });
+    ctl.forEach(function (c) { c.row = by[c.def.id] || null; });
+    paintAll();
+  }
+
+  function load(quiet) {
+    http('GET', '/api/lgsettings?section=picture&t=' + Date.now(), null, function (r) {
+      if (!r || !r.ok) {
+        subEl.textContent = 'Could not read the TV';
+        if (!quiet) say('Glasshouse did not answer. Is it running?', true);
+        return;
+      }
+      loaded = true;
+      subEl.textContent = 'Applies to the input on screen';
+      apply(r.rows || []);
+      if (!quiet) say('');
+    });
+  }
+
+  function send(c, value) {
+    http('POST', '/api/control', { action: 'lgSetting', value: { id: c.def.id, value: value } }, function (ok, r) {
+      if (!ok || (r && r.ok === false)) {
+        say('The TV did not accept that' + (r && r.error ? ': ' + r.error : '') + '.', true);
+        load(true);
+        return;
+      }
+      say('');
+      // A picture mode brings its own set of every other value with it.
+      if (c.def.id === 'pictureMode') setTimeout(function () { load(true); }, 700);
+    });
+  }
+
+  function change(i, dir) {
+    var c = ctl[i];
+    if (!c.row || !loaded) return;
+    if (c.def.kind === 'choice') {
+      var n = c.row.choices.length, at = choiceAt(c);
+      if (!n) return;
+      at = (at + dir + n) % n;
+      c.row.value = c.row.choices[at].value;
+      paint(i);
+      send(c, c.row.value);
+    } else {
+      var v = Math.max(c.row.min, Math.min(c.row.max, c.row.value + dir));
+      if (v === c.row.value) return;
+      c.row.value = v;
+      paint(i);
+      // A held key changes a number many times a second; the TV hears the last one.
+      if (pending[c.def.id]) clearTimeout(pending[c.def.id]);
+      pending[c.def.id] = setTimeout(function () { pending[c.def.id] = null; send(c, c.row.value); }, 250);
+    }
+  }
+
+  function build() {
+    ctl.forEach(function (c, i) {
+      var row = document.createElement('div'), lbl = document.createElement('div'), box = document.createElement('div');
+      var left = document.createElement('div'), right = document.createElement('div'), val = document.createElement('div');
+      var fill = null;
+      row.className = 'row'; lbl.className = 'lbl'; lbl.textContent = c.def.label;
+      box.className = 'ctl'; left.className = 'arrow'; right.className = 'arrow'; val.className = 'val';
+      left.innerHTML = '&#8249;'; right.innerHTML = '&#8250;';
+      if (c.def.kind === 'range') {
+        var bar = document.createElement('span'); bar.className = 'bar';
+        fill = document.createElement('i'); bar.appendChild(fill);
+        box.appendChild(left); box.appendChild(bar); box.appendChild(val); box.appendChild(right);
+        val.style.minWidth = '60px';
+      } else {
+        box.appendChild(left); box.appendChild(val); box.appendChild(right);
+      }
+      row.appendChild(lbl); row.appendChild(box); rowsEl.appendChild(row);
+      els.push({ row: row, val: val, fill: fill });
+      // Magic Remote pointer: click a row to select it, an arrow to change it.
+      row.addEventListener('mousedown', function () { sel = i; paintAll(); poke(); });
+      left.addEventListener('mousedown', function (e) { e.stopPropagation(); sel = i; change(i, -1); paintAll(); poke(); });
+      right.addEventListener('mousedown', function (e) { e.stopPropagation(); sel = i; change(i, 1); paintAll(); poke(); });
+    });
+    paintAll();
+  }
+
+  function leave() {
+    if (window.PalmSystem && typeof window.PalmSystem.platformBack === 'function') { try { window.PalmSystem.platformBack(); } catch (e) { /* fall through */ } }
+    window.close();
+  }
+  // A forgotten panel closes itself after two minutes without a key or pointer.
+  function poke() { if (idleTimer) clearTimeout(idleTimer); idleTimer = setTimeout(leave, 120000); }
+
+  document.addEventListener('keydown', function (e) {
+    var k = e.keyCode || e.which;
+    poke();
+    if (k === 38) { if (sel > 0) sel--; paintAll(); }
+    else if (k === 40) { if (sel < ctl.length - 1) sel++; paintAll(); }
+    else if (k === 37) { change(sel, -1); }
+    else if (k === 39 || k === 13) { change(sel, 1); }
+    else if (k === 461 || k === 27 || k === 8) { leave(); }
+    e.preventDefault();
+  });
+
+  build();
+  load(false);
+  poke();
+})();
+</script>
+</body>
+</html>
