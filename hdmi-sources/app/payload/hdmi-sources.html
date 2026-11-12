@@ -86,7 +86,7 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
     var path = d.via ? 'HDMI ' + d.port + ', through ' + d.via : 'HDMI ' + d.port;
     var icon = window.glasshouseDevIcon ? window.glasshouseDevIcon(d) : '';
     return '<div class="dhead">' + icon + '<div class="dtx"><div class="nm">' + esc(d.name) + '</div><div class="path">' + esc(path) + '</div></div></div>' +
-      '<div class="st"><em>' + (last ? 'Last watched' : 'Connected') + '</em><span>' + (d.address ? esc('CEC ' + d.address) : '') + '</span></div>';
+      '<div class="st"><em>' + (last ? 'Currently active' : 'Connected') + '</em><span>' + (d.address ? esc('CEC ' + d.address) : '') + '</span></div>';
   }
 
   function paint() {
