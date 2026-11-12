@@ -8,26 +8,25 @@
 html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden;
   font-family:'LG Smart UI',sans-serif;color:#ece7df;-webkit-font-smoothing:antialiased}
 #row{position:absolute;left:32px;bottom:32px;display:-webkit-flex;display:flex}
-/* Home's input tile, in Spotlight View's form: 384x216, square, the subtle outline, 16px apart. */
-.tile{width:384px;height:216px;box-sizing:border-box;margin-right:16px;padding:16px 20px 18px;
+/* Home's input tile in Spotlight View's form (square, the subtle outline, 16px apart), made smaller: no
+   status row and no more width than the name needs, so 320x112. The active source has a dot at the right. */
+.tile{position:relative;width:320px;height:112px;box-sizing:border-box;margin-right:16px;padding:20px;
   display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column;
-  -webkit-justify-content:space-between;justify-content:space-between;
+  -webkit-justify-content:center;justify-content:center;
   background:rgba(0,0,0,.95);outline:1px solid rgba(244,241,234,.16);cursor:default}
 /* Unselected tiles are dimmed as in Home, but only their contents: dimming the whole tile
    would dim the outline too, to nearly nothing over black. */
-.tile .dhead,.tile .st{opacity:.8}
+.tile .dhead{opacity:.8}
 .tile.focus{background:#141310;outline:2px solid #ece7df}
-.tile.focus .dhead,.tile.focus .st{opacity:1}
+.tile.focus .dhead{opacity:1}
 .dhead{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;min-width:0}
 .dtx{-webkit-flex:1 1 auto;flex:1 1 auto;min-width:0}
 .dico{-webkit-flex:0 0 auto;flex:0 0 auto;width:56px;height:56px;margin-right:18px;color:#ece7df;font-style:normal}
 .dico svg{display:block;width:100%;height:100%}
-.nm{font-size:30px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nm{font-size:26px;font-weight:400;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .path{font-size:20px;color:#a39d93;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.st{font-size:19px;color:#6b665e;display:-webkit-flex;display:flex;-webkit-justify-content:space-between;justify-content:space-between}
-.st em{font-style:normal}
-.tile.last .st em{color:#e9ad55}
-.tile.last .st em:before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:#e9ad55;margin-right:10px;vertical-align:2px}
+.dot{position:absolute;right:20px;top:50%;margin-top:-4px;width:8px;height:8px;border-radius:50%;background:#e9ad55}
+.tile.last .dhead{padding-right:22px}
 /* Nothing connected, or an input that would not open. */
 #msg{display:none;position:absolute;left:32px;bottom:32px;width:560px;padding:22px 26px;background:rgba(0,0,0,.95);
   outline:1px solid rgba(244,241,234,.16);line-height:1.4}
@@ -77,16 +76,25 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
     msgEl.className = bad ? 'show err' : 'show';
   }
 
+  // The Home tile: the same tile as a source, with a house icon in the icons' own line style.
+  var HOME_ICON = '<i class="dico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" ' +
+    'stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 11.2 12 4l8.5 7.2"/><path d="M6 9.8V20h12V9.8"/><path d="M10 20v-5.5h4V20"/></svg></i>';
+
   function isLast(d, now) {
     return !!(now && now.kind === 'input' && now.port === d.port && (!now.devices || now.devices.indexOf(d.id) !== -1));
   }
 
   // The tile, as Home builds it: icon, name and path above, status and CEC address below.
   function tileHtml(d, last) {
-    var path = d.via ? 'HDMI ' + d.port + ', through ' + d.via : 'HDMI ' + d.port;
-    var icon = window.glasshouseDevIcon ? window.glasshouseDevIcon(d) : '';
-    return '<div class="dhead">' + icon + '<div class="dtx"><div class="nm">' + esc(d.name) + '</div><div class="path">' + esc(path) + '</div></div></div>' +
-      '<div class="st"><em>' + (last ? 'Currently active' : 'Connected') + '</em><span>' + (d.address ? esc('CEC ' + d.address) : '') + '</span></div>';
+    var icon, name, path;
+    if (d.home) { icon = HOME_ICON; name = 'Home'; path = 'Home screen'; }
+    else {
+      icon = window.glasshouseDevIcon ? window.glasshouseDevIcon(d) : '';
+      name = d.name;
+      path = d.via ? 'HDMI ' + d.port + ', through ' + d.via : 'HDMI ' + d.port;
+    }
+    return '<div class="dhead">' + icon + '<div class="dtx"><div class="nm">' + esc(name) + '</div><div class="path">' + esc(path) +
+      '</div></div></div>' + (last ? '<span class="dot"></span>' : '');
   }
 
   function paint() {
@@ -135,6 +143,7 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
           // On first load the selection starts on the source in use; later reads keep it where it is.
           if (first) sel = 0;
           first = false;
+          out.unshift({ home: true, id: 'home', name: 'Home' });
           show(out);
         }
         if (!pending) return done();
@@ -152,7 +161,10 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
     var d = list[sel];
     if (!d || busy) return;
     busy = true;
-    http('POST', '/api/home/open', { kind: 'dev', id: d.id }, function (ok, r) {
+    // Home opens the TV's Home screen; a source opens its input, as Home itself does.
+    var url = d.home ? '/api/control' : '/api/home/open';
+    var body = d.home ? { action: 'launchApp', value: 'com.webos.app.home' } : { kind: 'dev', id: d.id };
+    http('POST', url, body, function (ok, r) {
       busy = false;
       if (!ok || (r && r.ok === false)) return say('That did not open', r && r.error ? r.error : '', true);
       setTimeout(leave, 300);
