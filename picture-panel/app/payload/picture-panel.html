@@ -167,6 +167,7 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
   // named as such; otherwise the codec.
   var AUDIO = { pcm: 'PCM', ac3: 'Dolby Digital', eac3: 'Dolby Digital+', mat: 'Dolby TrueHD', truehd: 'Dolby TrueHD', dts: 'DTS', dtshd: 'DTS-HD' };
   function immersiveName(i) {
+    if (i && typeof i === 'object') { if (i.display) return String(i.display); i = i.label || ''; }
     var k = String(i || '').toLowerCase().replace(/[^a-z]/g, '');
     if (!k) return '';
     if (k.indexOf('atmos') !== -1) return 'Dolby Atmos';
