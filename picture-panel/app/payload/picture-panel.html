@@ -7,12 +7,8 @@
 <style>
 html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden;
   font-family:'LG Smart UI',sans-serif;color:#ece7df;-webkit-font-smoothing:antialiased}
-#panel{position:absolute;left:32px;bottom:32px;width:640px;background:rgba(0,0,0,.94);
+#panel{position:absolute;left:32px;bottom:32px;width:640px;background:rgba(0,0,0,.95);
   outline:1px solid rgba(244,241,234,.16);padding-bottom:12px}
-#head{display:-webkit-flex;display:flex;-webkit-align-items:baseline;align-items:baseline;
-  -webkit-justify-content:space-between;justify-content:space-between;padding:22px 24px 16px}
-#head b{font-size:26px;font-weight:600}
-#head span{font-size:17px;color:#6b665e}
 .row{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;
   -webkit-justify-content:space-between;justify-content:space-between;
   height:58px;margin:0 16px 8px;padding:0 8px 0 22px;cursor:default;
@@ -28,20 +24,28 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
 .row.focus .arrow{color:#ece7df}
 .row.na .arrow,.row.off .arrow{visibility:hidden}
 .val{min-width:200px;text-align:center;font-size:21px;font-weight:600}
-.bar{display:inline-block;vertical-align:middle;width:110px;height:4px;background:#2a2825;margin-right:14px;position:relative}
-.bar i{position:absolute;left:0;top:0;bottom:0;background:#a39d93}
-.row.focus .bar i{background:#ece7df}
-#foot{display:none;padding:6px 24px 8px;font-size:16px;color:#6b665e}
-#foot.show{display:block}
-#foot.err{color:#e9ad55}
+#info{margin:0 16px 4px;padding-top:20px}
+#ihead{display:-webkit-flex;display:flex;-webkit-justify-content:space-between;justify-content:space-between;
+  padding:0 6px 10px;font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:#6b665e}
+#cells{display:grid;grid-template-columns:1fr 1fr 1fr 1.5fr}
+.cell{box-sizing:border-box;padding:0 8px 14px 6px}
+.cell .k{font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:#6b665e}
+.cell .v{font-size:20px;font-weight:600;color:#ece7df;margin-top:3px;white-space:nowrap}
+.cell .v.none{color:#3a3732}
+#tip{display:none;position:absolute;top:0;left:704px;width:440px;padding:18px 22px;background:rgba(0,0,0,.95);
+  outline:1px solid rgba(244,241,234,.16);line-height:1.4}
+#tip.show{display:block}
+#tip.err{outline-color:#e9ad55}
+#tip b{display:block;font-size:22px;font-weight:600;color:#ece7df}
+#tip span{display:block;font-size:19px;color:#a39d93;margin-top:4px}
 </style>
 </head>
 <body>
 <div id="panel">
-  <div id="head"><b>Picture</b><span id="sub">Reading the TV&hellip;</span></div>
+  <div id="info"><div id="ihead"><span>Signal</span><span id="isrc"></span></div><div id="cells"></div></div>
   <div id="rows"></div>
-  <div id="foot"></div>
 </div>
+<div id="tip"><b id="tipT"></b><span id="tipX"></span></div>
 <script>
 /*
  * The Picture Panel, served by Glasshouse so its requests are same-origin with the
@@ -51,20 +55,27 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
  */
 (function () {
   var DEFS = [
-    { id: 'pictureMode', label: 'Picture Mode', kind: 'choice' },
-    { id: 'backlight', label: 'OLED Pixel Brightness', kind: 'range' },
+    { id: 'pictureMode', label: 'Picture Mode', kind: 'choice', core: true },
+    { id: 'gameGenre', label: 'Game Genre', kind: 'choice', hide: true, gameOnly: true },
+    { id: 'backlight', label: 'OLED Pixel Brightness', kind: 'range', core: true },
     { id: 'blackLevel', label: 'Black Level', kind: 'choice', names: { auto: 'Auto', low: 'Low', high: 'High' },
       missing: 'Not on this input' },
     { id: 'dynamicContrast', label: 'Auto Dynamic Contrast', kind: 'choice' },
     { id: 'peakBrightness', label: 'Peak Brightness', kind: 'choice' },
-    { id: 'colorTemperature', label: 'Color Temperature', kind: 'temp' },
-    { id: 'truMotionMode', label: 'TruMotion', kind: 'choice' },
-    { id: 'allSettings', label: 'All Settings', kind: 'link', app: 'com.palm.app.settings' }
+    { id: 'hdrDynamicToneMapping', label: 'Dynamic Tone Mapping', kind: 'choice', hide: true },
+    { id: 'colorTemperature', label: 'Color Temperature', kind: 'temp', core: true },
+    { id: 'truMotionMode', label: 'TruMotion', kind: 'choice', core: true },
+    { id: 'allSettings', label: 'All Settings', kind: 'link', action: 'settings' },
+    { id: 'more', label: 'See more', kind: 'link', action: 'more', always: true }
   ];
-  var sel = 0, idleTimer = null, loaded = false;
+  var CELLS = [
+    { id: 'res', label: 'Resolution' }, { id: 'hz', label: 'Refresh rate' }, { id: 'vrr', label: 'VRR' }, { id: 'hdr', label: 'Dynamic range' },
+    { id: 'allm', label: 'Low latency' }, { id: 'color', label: 'Color' }, { id: 'bits', label: 'Bit depth' }, { id: 'audio', label: 'Audio' }
+  ];
+  var cellEls = {}, sig = null, now = null, fps = null, aud = null;
+  var sel = 0, idleTimer = null, loaded = false, expanded = false;
   var rowsEl = document.getElementById('rows');
-  var subEl = document.getElementById('sub');
-  var footEl = document.getElementById('foot');
+  var tipEl = document.getElementById('tip'), tipT = document.getElementById('tipT'), tipX = document.getElementById('tipX');
   var els = [], pending = {};
 
   function http(method, url, body, cb) {
@@ -82,7 +93,17 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
     x.send(body ? JSON.stringify(body) : null);
   }
 
-  function say(text, bad) { footEl.className = text ? (bad ? 'show err' : 'show') : ''; footEl.textContent = text || ''; }
+  // Messages and hints show in their own box, a title over a line of detail, directly to the
+  // right of the panel and level with its top, wherever the panel ends up.
+  function say(title, text, bad) {
+    if (!title) { tipEl.className = ''; return; }
+    var r = document.getElementById('panel').getBoundingClientRect();
+    tipEl.style.top = r.top + 'px';
+    tipEl.style.left = (r.right + 16) + 'px';
+    tipT.textContent = title;
+    tipX.textContent = text || '';
+    tipEl.className = bad ? 'show err' : 'show';
+  }
 
   function choiceAt(c) {
     var ch = c.row.choices || [], i;
@@ -91,6 +112,7 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
   }
   function text(c) {
     if (c.def.kind === 'link') return '';
+    if (!loaded) return '\u2014';       // until the TV has answered
     if (!c.row) return c.def.missing || 'Not available';
     if (c.def.kind === 'range') return String(c.row.value);
     if (c.def.kind === 'temp') {
@@ -107,10 +129,104 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
     var cls = 'row' + (i === sel ? ' focus' : '');
     if (c.def.kind !== 'link') cls += !c.row ? ' na' : (c.row.active === false ? ' off' : '');
     e.row.className = cls;
+    e.row.style.display = visible(i) ? '' : 'none';
+    if (c.def.action === 'more') e.lbl.textContent = expanded ? 'See less' : 'See more';
     e.val.textContent = text(c);
-    if (e.fill && c.row) e.fill.style.width = Math.max(0, Math.min(100, 100 * (c.row.value - c.row.min) / (c.row.max - c.row.min))) + '%';
   }
   function paintAll() { for (var i = 0; i < ctl.length; i++) paint(i); }
+
+  // A row marked hide is left out when the TV does not offer it here; Game Genre also only
+  // shows in a game picture mode (game, HDR game, Dolby Vision game).
+  function isGameMode() { return !!(ctl[0].row && /game/i.test(String(ctl[0].row.value))); }
+  function visible(i) {
+    var c = ctl[i];
+    if (!expanded && !c.def.core && !c.def.always) return false;
+    if (c.def.hide && !c.row) return false;
+    if (c.def.gameOnly && !isGameMode()) return false;
+    return true;
+  }
+  // Moves the selection to the next shown row, wrapping at either end.
+  function step(dir) {
+    var n = ctl.length, i = sel, k;
+    for (k = 0; k < n; k++) {
+      i = (i + dir + n) % n;
+      if (visible(i)) { sel = i; return; }
+    }
+  }
+
+  // ---- the signal block: read only, refreshed while the panel is open
+  var HDR = { hdr10: 'HDR10', hdr10plus: 'HDR10+', dolby_vision: 'Dolby Vision', hlg: 'HLG', sdr: 'SDR' };
+  function num(n) { return String(Math.round(n * 100) / 100); }
+  function vrrName(t) {
+    var k = String(t || '').toLowerCase().replace(/[^a-z]/g, '');
+    if (!k || k === 'off' || k === 'fixed') return '';
+    if (k === 'gsync') return 'G-SYNC';
+    if (k === 'freesync') return 'FreeSync';
+    if (k === 'hdmi' || k === 'hdmivrr') return 'HDMI VRR';
+    return String(t);
+  }
+  // Audio: what the TV is receiving, from Glasshouse's live reading. Atmos-type content is
+  // named as such; otherwise the codec.
+  var AUDIO = { pcm: 'PCM', ac3: 'Dolby Digital', eac3: 'Dolby Digital+', mat: 'Dolby TrueHD', truehd: 'Dolby TrueHD', dts: 'DTS', dtshd: 'DTS-HD' };
+  function immersiveName(i) {
+    var k = String(i || '').toLowerCase().replace(/[^a-z]/g, '');
+    if (!k) return '';
+    if (k.indexOf('atmos') !== -1) return 'Dolby Atmos';
+    if (k === 'dtsx') return 'DTS:X';
+    return String(i);
+  }
+  function audioText() {
+    var inp = aud && aud.live && aud.live.input;
+    if (!inp || !inp.codec) return null;
+    return immersiveName(inp.immersive) || AUDIO[String(inp.codec).toLowerCase()] || String(inp.codec);
+  }
+  function paintInfo() {
+    var s = sig, t = fps ? vrrName(fps.vrrType) : '';
+    var v = {
+      res: s && s.width ? s.width + '\u00d7' + s.height : null,
+      hz: s && s.hz ? num(s.hz) + ' Hz' : null,
+      vrr: s ? (t || (s.vrr ? 'On' : 'Off')) : null,
+      hdr: s ? (HDR[s.hdr] || (s.hdr ? String(s.hdr).toUpperCase() : 'SDR')) : null,
+      allm: s ? (s.allm ? 'On' : 'Off') : null,
+      color: s && s.chroma ? s.chroma : null,
+      bits: s && s.bits ? s.bits + '-bit' : null,
+      audio: audioText()
+    };
+    CELLS.forEach(function (c) {
+      var el = cellEls[c.id];
+      el.textContent = v[c.id] === null ? '\u2014' : v[c.id];
+      el.className = 'v' + (v[c.id] === null ? ' none' : '');
+    });
+    var src = '';
+    if (now && now.kind === 'input' && now.port) src = 'HDMI ' + now.port + (now.title ? ' \u00b7 ' + now.title : '');
+    else if (now) src = now.title || '';
+    document.getElementById('isrc').textContent = src;
+  }
+  function loadInfo() {
+    loadFps();
+    http('GET', '/api/audio?t=' + Date.now(), null, function (r) { aud = r && r.ok ? r : null; paintInfo(); });
+    http('GET', '/api/home/now?t=' + Date.now(), null, function (n) {
+      now = n && n.kind ? n : null;
+      if (!now) { sig = null; return paintInfo(); }
+      var q = '/api/home/picture?kind=' + encodeURIComponent(now.kind) + '&port=' + (now.port || 0) +
+        '&app=' + encodeURIComponent(now.appId || '') + '&t=' + Date.now();
+      http('GET', q, null, function (p) { sig = p && p.ok && p.signal ? p.signal : null; paintInfo(); });
+    });
+  }
+  // Glasshouse's game reading: here only for the kind of VRR in use (G-SYNC, FreeSync, HDMI VRR).
+  function loadFps() {
+    http('GET', '/api/game/fps?t=' + Date.now(), null, function (r) { fps = r && r.fps ? r.fps : null; paintInfo(); });
+  }
+  function buildInfo() {
+    var box = document.getElementById('cells');
+    CELLS.forEach(function (c) {
+      var cell = document.createElement('div'), k = document.createElement('div'), val = document.createElement('div');
+      cell.className = 'cell' + (c.wide ? ' wide' : ''); k.className = 'k'; k.textContent = c.label; val.className = 'v none';
+      val.textContent = '\u2014';
+      cell.appendChild(k); cell.appendChild(val); box.appendChild(cell);
+      cellEls[c.id] = val;
+    });
+  }
 
   var ctl = DEFS.map(function (d) { return { def: d, row: d.kind === 'link' ? {} : null }; });
 
@@ -118,28 +234,31 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
     var by = {};
     rows.forEach(function (r) { by[r.id] = r; });
     ctl.forEach(function (c) { c.row = c.def.kind === 'link' ? {} : (by[c.def.id] || null); });
+    if (!visible(sel)) step(1);
     paintAll();
   }
 
   function load(quiet) {
     http('GET', '/api/lgsettings?section=picture&t=' + Date.now(), null, function (r) {
       if (!r || !r.ok) {
-        subEl.textContent = 'Could not read the TV';
-        if (!quiet) say('Glasshouse did not answer. Is it running?', true);
+        if (!quiet) say('Could not read the TV', 'Glasshouse did not answer. Is it running?', true);
         return;
       }
       loaded = true;
-      subEl.textContent = 'Applies to the input on screen';
-      apply(r.rows || []);
-      if (!quiet) say('');
-      if (ctl[sel].row && ctl[sel].row.active === false) hint();
+      var rows = r.rows || [];
+      http('GET', '/api/lgsettings?section=game&t=' + Date.now(), null, function (g) {
+        if (g && g.ok) rows = rows.concat(g.rows || []);
+        apply(rows);
+        if (!quiet) say('');
+        if (ctl[sel].row && ctl[sel].row.active === false) hint();
+      });
     });
   }
 
   function send(c, value) {
     http('POST', '/api/control', { action: 'lgSetting', value: { id: c.def.id, value: value } }, function (ok, r) {
       if (!ok || (r && r.ok === false)) {
-        say('The TV did not accept that' + (r && r.error ? ': ' + r.error : '') + '.', true);
+        say('The TV did not accept that', r && r.error ? r.error : '', true);
         load(true);
         return;
       }
@@ -151,7 +270,7 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
 
   function change(i, dir) {
     var c = ctl[i];
-    if (c.def.kind === 'link') { if (dir > 0) openSettings(); return; }
+    if (c.def.kind === 'link') { if (dir > 0) activate(c); return; }
     if (!c.row || !loaded) return;
     if (c.row.active === false) { hint(); return; }
     if (c.def.kind === 'choice') {
@@ -162,7 +281,9 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
       paint(i);
       send(c, c.row.value);
     } else {
-      var v = Math.max(c.row.min, Math.min(c.row.max, c.row.value + dir));
+      // Colour temperature is stored warm-negative, but the number shown (Warm 10) goes up
+      // to the right, so its arrows are flipped: Left lowers what is shown, Right raises it.
+      var v = Math.max(c.row.min, Math.min(c.row.max, c.row.value + (c.def.kind === 'temp' ? -dir : dir)));
       if (v === c.row.value) return;
       c.row.value = v;
       paint(i);
@@ -178,15 +299,20 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
     var c = ctl[sel];
     if (c.def.kind !== 'link' && c.row && c.row.active === false) {
       var mode = ctl[0].row ? text(ctl[0]) : '';
-      say('Not available' + (mode ? ' in ' + mode + ' mode' : ' right now') + '.', false);
+      say(c.def.label, 'Not available' + (mode ? ' in ' + mode + ' mode' : ' right now') + '.', false);
     } else {
       say('');
     }
   }
 
+  function activate(c) {
+    if (c.def.action === 'more') { expanded = !expanded; paintAll(); hint(); }
+    else openSettings();
+  }
+
   function openSettings() {
     http('POST', '/api/control', { action: 'launchApp', value: 'com.palm.app.settings' }, function (ok, r) {
-      if (!ok || (r && r.ok === false)) return say('Could not open Settings.', true);
+      if (!ok || (r && r.ok === false)) return say('Could not open Settings', r && r.error ? r.error : '', true);
       setTimeout(leave, 400);
     });
   }
@@ -201,18 +327,13 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
       left.innerHTML = '&#8249;'; right.innerHTML = '&#8250;';
       if (c.def.kind === 'link') {
         box.appendChild(right);
-      } else if (c.def.kind === 'range') {
-        var bar = document.createElement('span'); bar.className = 'bar';
-        fill = document.createElement('i'); bar.appendChild(fill);
-        box.appendChild(left); box.appendChild(bar); box.appendChild(val); box.appendChild(right);
-        val.style.minWidth = '60px';
       } else {
         box.appendChild(left); box.appendChild(val); box.appendChild(right);
       }
       row.appendChild(lbl); row.appendChild(box); rowsEl.appendChild(row);
-      els.push({ row: row, val: val, fill: fill });
+      els.push({ row: row, val: val, fill: fill, lbl: lbl });
       // Magic Remote pointer: click a row to select it, an arrow to change it.
-      row.addEventListener('mousedown', function () { sel = i; paintAll(); hint(); poke(); if (c.def.kind === 'link') openSettings(); });
+      row.addEventListener('mousedown', function () { sel = i; paintAll(); hint(); poke(); if (c.def.kind === 'link') activate(c); });
       left.addEventListener('mousedown', function (e) { e.stopPropagation(); sel = i; change(i, -1); paintAll(); poke(); });
       right.addEventListener('mousedown', function (e) { e.stopPropagation(); sel = i; change(i, 1); paintAll(); poke(); });
     });
@@ -229,8 +350,8 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
   document.addEventListener('keydown', function (e) {
     var k = e.keyCode || e.which;
     poke();
-    if (k === 38) { if (sel > 0) sel--; paintAll(); hint(); }
-    else if (k === 40) { if (sel < ctl.length - 1) sel++; paintAll(); hint(); }
+    if (k === 38) { step(-1); paintAll(); hint(); }
+    else if (k === 40) { step(1); paintAll(); hint(); }
     else if (k === 37) { change(sel, -1); }
     else if (k === 39 || k === 13) { change(sel, 1); }
     else if (k === 461 || k === 27 || k === 8) { leave(); }
@@ -238,7 +359,10 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
   });
 
   build();
+  buildInfo();
   load(false);
+  loadInfo();
+  setInterval(loadInfo, 3000);
   poke();
 })();
 </script>
