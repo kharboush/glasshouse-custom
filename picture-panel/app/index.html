@@ -11,30 +11,82 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
 </style>
 </head>
 <body>
-<div id="m">Glasshouse is not answering.<small>The Picture Panel is shown by Glasshouse, which has to be running. Closing.</small></div>
+<div id="m"><span id="t"></span><small id="s"></small></div>
 <script>
 /*
- * A thin launcher. The panel itself is a page on Glasshouse's server
- * (assets/picture-panel.html), because Glasshouse only accepts changes from
- * pages it serves. This page checks the server is up, then opens it, keeping
- * the overlay window. ES5 only.
+ * A launcher. The panel itself is a page on Glasshouse's server
+ * (assets/picture-panel.html), because Glasshouse only accepts changes from pages
+ * it serves. This page makes sure that page is there and is this app's version,
+ * asking the Homebrew Channel (which runs as root) to put it there when it is not,
+ * as Glasshouse's own Homebrew Channel app does. Then it opens it, keeping the
+ * overlay window. ES5 only, and no backticks: the Homebrew Channel's compatibility
+ * check reads them as needing a newer TV browser.
  */
 (function () {
+  var APP_VERSION = '@VERSION@';                 // filled in when the app is built
   var BASE = 'http://localhost:8080';
-  function fail() {
-    document.getElementById('m').style.display = 'block';
-    setTimeout(function () { window.close(); }, 6000);
+  var PAGE = BASE + '/assets/picture-panel.html';
+  var EXEC = 'luna://org.webosbrew.hbchannel.service/exec';
+  var appDir = decodeURIComponent(location.pathname.replace(/\/[^\/]*$/, ''));
+  var box = document.getElementById('m');
+
+  function say(title, detail) {
+    document.getElementById('t').textContent = title;
+    document.getElementById('s').textContent = detail || '';
+    box.style.display = 'block';
   }
-  var x = new XMLHttpRequest();
-  x.open('GET', BASE + '/api/caps?t=' + Date.now(), true);
-  x.timeout = 3000;
-  x.onload = function () {
-    if (x.status >= 200 && x.status < 400) location.replace(BASE + '/assets/picture-panel.html?t=' + Date.now());
-    else fail();
-  };
-  x.onerror = fail;
-  x.ontimeout = fail;
-  x.send();
+  function fail(title, detail) {
+    say(title, detail);
+    setTimeout(function () { window.close(); }, 7000);
+  }
+  function open() { location.replace(PAGE + '?t=' + Date.now()); }
+
+  function get(url, cb) {                         // cb(status, text)
+    var x = new XMLHttpRequest(), done = false;
+    function end(s, t) { if (!done) { done = true; cb(s, t); } }
+    x.open('GET', url + (url.indexOf('?') < 0 ? '?' : '&') + 't=' + Date.now(), true);
+    x.timeout = 3000;
+    x.onload = function () { end(x.status, x.responseText); };
+    x.onerror = function () { end(0, ''); };
+    x.ontimeout = function () { end(0, ''); };
+    x.send();
+  }
+  // Waits for Glasshouse to answer, for up to that many tries.
+  function waitUp(tries, cb) {
+    get(BASE + '/api/caps', function (s) {
+      if (s >= 200 && s < 400) return cb(true);
+      if (tries <= 1) return cb(false);
+      setTimeout(function () { waitUp(tries - 1, cb); }, 1000);
+    });
+  }
+
+  function install() {
+    say('Setting up the Picture Panel…', 'First time, or after an update.');
+    var bridge;
+    try { bridge = new PalmServiceBridge(); } catch (e) { bridge = null; }
+    if (!bridge) return fail('Could not set it up.', 'The Homebrew Channel is needed.');
+    var timer = setTimeout(function () { fail('Setup did not finish.', 'Open the Picture Panel again.'); }, 60000);
+    bridge.onservicecallback = function (msg) {
+      clearTimeout(timer);
+      var reply = {}, result = null;
+      try { reply = JSON.parse(msg); } catch (e) { reply = {}; }
+      if (reply.returnValue === false) return fail('The Homebrew Channel would not run the setup.', 'Check that it is installed and up to date.');
+      var lines = String(reply.stdoutString || '').replace(/\s+$/, '').split('\n');
+      try { result = JSON.parse(lines[lines.length - 1]); } catch (e) { result = null; }
+      if (!result || !result.ok) return fail('Setup failed' + (result && result.error ? ': ' + result.error : '') + '.', '');
+      // An update restarts Glasshouse; give it a moment to come back.
+      waitUp(30, function (up) { if (up) open(); else fail('Glasshouse did not come back.', 'Open the Picture Panel again.'); });
+    };
+    bridge.call(EXEC, JSON.stringify({ command: 'sh "' + appDir + '/payload/install.sh"' }));
+  }
+
+  waitUp(8, function (up) {
+    if (!up) return fail('Glasshouse is not answering.', 'The Picture Panel is shown by Glasshouse, which has to be running.');
+    get(PAGE, function (status, text) {
+      if (status === 200 && text.indexOf('picture-panel ' + APP_VERSION) !== -1) return open();
+      install();
+    });
+  });
 })();
 </script>
 </body>
