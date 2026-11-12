@@ -25,8 +25,6 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
 .row.na .arrow,.row.off .arrow{visibility:hidden}
 .val{min-width:200px;text-align:center;font-size:21px;font-weight:600}
 #info{margin:0 16px 4px;padding-top:20px}
-#ihead{display:-webkit-flex;display:flex;-webkit-justify-content:space-between;justify-content:space-between;
-  padding:0 6px 10px;font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:#6b665e}
 #cells{display:grid;grid-template-columns:1fr 1fr 1fr 1.5fr}
 .cell{box-sizing:border-box;padding:0 8px 14px 6px}
 .cell .k{font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:#6b665e}
@@ -42,7 +40,7 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
 </head>
 <body>
 <div id="panel">
-  <div id="info"><div id="ihead"><span>Signal</span><span id="isrc"></span></div><div id="cells"></div></div>
+  <div id="info"><div id="cells"></div></div>
   <div id="rows"></div>
 </div>
 <div id="tip"><b id="tipT"></b><span id="tipX"></span></div>
@@ -197,10 +195,6 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
       el.textContent = v[c.id] === null ? '\u2014' : v[c.id];
       el.className = 'v' + (v[c.id] === null ? ' none' : '');
     });
-    var src = '';
-    if (now && now.kind === 'input' && now.port) src = 'HDMI ' + now.port + (now.title ? ' \u00b7 ' + now.title : '');
-    else if (now) src = now.title || '';
-    document.getElementById('isrc').textContent = src;
   }
   function loadInfo() {
     loadFps();
@@ -344,8 +338,8 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
     if (window.PalmSystem && typeof window.PalmSystem.platformBack === 'function') { try { window.PalmSystem.platformBack(); } catch (e) { /* fall through */ } }
     window.close();
   }
-  // A forgotten panel closes itself after two minutes without a key or pointer.
-  function poke() { if (idleTimer) clearTimeout(idleTimer); idleTimer = setTimeout(leave, 120000); }
+  // A forgotten panel closes itself after a minute without a key or pointer.
+  function poke() { if (idleTimer) clearTimeout(idleTimer); idleTimer = setTimeout(leave, 60000); }
 
   document.addEventListener('keydown', function (e) {
     var k = e.keyCode || e.which;

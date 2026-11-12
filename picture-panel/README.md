@@ -6,7 +6,7 @@ Needs [Glasshouse](https://github.com/rorygallagher2024/glasshouse) running on t
 
 ## What it shows
 
-**Signal** (top, two lines, refreshed every 3 seconds, for the input on screen, named at the top right):
+**Signal** (top, two lines, refreshed every 3 seconds, for the input on screen):
 
 | Resolution | Refresh rate | VRR | Dynamic range |
 |---|---|---|---|
@@ -35,11 +35,11 @@ Settings are per picture mode and per input, so the panel shows and changes thos
 
 - Up and Down move between rows and wrap at both ends; Left and Right (or OK) change the value, or open Settings / See more on those rows; Back closes. A Magic Remote pointer can click rows and arrows.
 - Settings the TV has switched off for the current mode or input (TruMotion, Peak Brightness and Auto Dynamic Contrast in Game mode, for example) are shown greyed and are not changed. Focusing one shows a box beside the panel: the setting's name over "Not available in HDR Game mode." This is read from the `active` flag the TV gives each setting, so a change is never sent only to be refused. Errors use the same box, with an amber outline.
-- It always opens on the short list, and closes itself after two minutes without a key or pointer.
+- It always opens on the short list, and closes itself after 60 seconds without a key or pointer.
 
 ## Install
 
-Install the package (`release/io.github.kharboush.picture-panel_1.1.0_all.ipk`, or the manifest in the same folder, with the Homebrew Channel, or the TV's `dev/install`). That is all: the app puts what it needs on Glasshouse's server itself the first time it is opened, and again if that is ever missing or out of date.
+Install the package (`release/io.github.kharboush.picture-panel_1.1.1_all.ipk`, or the manifest in the same folder, with the Homebrew Channel, or the TV's `dev/install`). That is all: the app puts what it needs on Glasshouse's server itself the first time it is opened, and again if that is ever missing or out of date.
 
 Open **Picture Panel** from the app list, or assign it to a remote button in Glasshouse's remote keys (it is listed there like any app). To open it from a command:
 
@@ -47,7 +47,7 @@ Open **Picture Panel** from the app list, or assign it to a remote button in Gla
 luna-send -n 1 luna://com.webos.applicationManager/launch '{"id":"io.github.kharboush.picture-panel"}'
 ```
 
-If you open it just as Glasshouse is restarting (it takes about 20 seconds), it says so and closes; open it again.
+If you open it while Glasshouse is down for some other reason, it says so and closes; open it again once Glasshouse is back. After installing a new version the first open replaces the page itself and waits up to a minute for Glasshouse to come back.
 
 ## How it works
 
@@ -70,4 +70,4 @@ writes `dist/<id>_<version>_all.ipk` and its manifest (also kept in `release/`, 
 
 ## Tested
 
-On the TV (G6, webOS 11.2.0): installing the package, a clean first open with the page removed (the app put it back and opened the panel as an overlay), an update from one version to the next (the app replaced the page and reopened), reading values through the API, a write and read-back of a setting, and that the bundled page is identical to the one on Glasshouse. The layout was checked in a browser. Not tried: a Glasshouse update with the panel installed, opening the panel from a remapped remote button, and changing Game Genre or Dynamic Tone Mapping from the panel.
+On the TV (G6, webOS 11.2.0): installing the package, a clean first open with the page removed (the app put it back and opened the panel as an overlay), an update from one version to the next (1.1.0 to 1.1.1: the app replaced the page, restarted Glasshouse, waited for it and reopened by itself), reading values through the API, a write and read-back of a setting, and that the bundled page is identical to the one on Glasshouse. The layout was checked in a browser. Not tried: a Glasshouse update with the panel installed, opening the panel from a remapped remote button, and changing Game Genre or Dynamic Tone Mapping from the panel.

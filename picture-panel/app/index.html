@@ -65,7 +65,7 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
     var bridge;
     try { bridge = new PalmServiceBridge(); } catch (e) { bridge = null; }
     if (!bridge) return fail('Could not set it up.', 'The Homebrew Channel is needed.');
-    var timer = setTimeout(function () { fail('Setup did not finish.', 'Open the Picture Panel again.'); }, 60000);
+    var timer = setTimeout(function () { fail('Setup did not finish.', 'Open the Picture Panel again.'); }, 150000);
     bridge.onservicecallback = function (msg) {
       clearTimeout(timer);
       var reply = {}, result = null;
@@ -74,8 +74,8 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
       var lines = String(reply.stdoutString || '').replace(/\s+$/, '').split('\n');
       try { result = JSON.parse(lines[lines.length - 1]); } catch (e) { result = null; }
       if (!result || !result.ok) return fail('Setup failed' + (result && result.error ? ': ' + result.error : '') + '.', '');
-      // An update restarts Glasshouse; give it a moment to come back.
-      waitUp(30, function (up) { if (up) open(); else fail('Glasshouse did not come back.', 'Open the Picture Panel again.'); });
+      // An update restarts Glasshouse, which takes 20 to 30 seconds to come back; wait up to a minute.
+      waitUp(60, function (up) { if (up) open(); else fail('Glasshouse did not come back.', 'Open the Picture Panel again.'); });
     };
     bridge.call(EXEC, JSON.stringify({ command: 'sh "' + appDir + '/payload/install.sh"' }));
   }

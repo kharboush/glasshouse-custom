@@ -17,3 +17,10 @@ See [customizations/README.md](customizations/README.md) for what the layout cha
 ## Also here: Settings Restyle
 
 [lg-settings-restyle/](lg-settings-restyle/) is a separate Homebrew Channel app that gives LG's own Settings the same look, applied again by a boot hook at every start. See its [README](lg-settings-restyle/README.md).
+
+## Also here: Picture Panel and HDMI Sources
+
+Two overlay apps for Glasshouse on the same TV, both in the Spotlight View look, and both closing themselves after 60 seconds untouched. Each installs as a Homebrew Channel package that puts its own page on Glasshouse's server, so nothing needs copying by hand:
+
+- [picture-panel/](picture-panel/) shows the signal the TV is receiving and the picture settings (picture mode, OLED pixel brightness, colour temperature, TruMotion, and the rest under "See more"), and changes them. See its [README](picture-panel/README.md).
+- [hdmi-sources/](hdmi-sources/) shows the connected HDMI sources as Home's input tiles and switches to the one you pick. See its [README](hdmi-sources/README.md).
