@@ -75,15 +75,21 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
       try { result = JSON.parse(lines[lines.length - 1]); } catch (e) { result = null; }
       if (!result || !result.ok) return fail('Setup failed' + (result && result.error ? ': ' + result.error : '') + '.', '');
       // An update restarts Glasshouse, which takes 20 to 30 seconds to come back; wait up to a minute.
-      waitUp(60, function (up) { if (up) open(); else fail('Glasshouse did not come back.', 'Open the Picture Panel again.'); });
+      waitUp(60, function (up) { if (up) { remember(); open(); } else fail('Glasshouse did not come back.', 'Open the Picture Panel again.'); });
     };
     bridge.call(EXEC, JSON.stringify({ command: 'sh "' + appDir + '/payload/install.sh"' }));
   }
 
+  // Once this version's page has been confirmed, later opens go straight to it.
+  var KEY = 'picture-panel-ok';
+  function verified() { try { return localStorage.getItem(KEY) === APP_VERSION; } catch (e) { return false; } }
+  function remember() { try { localStorage.setItem(KEY, APP_VERSION); } catch (e) { /* not kept */ } }
+  if (verified()) return open();
+
   waitUp(8, function (up) {
     if (!up) return fail('Glasshouse is not answering.', 'The Picture Panel is shown by Glasshouse, which has to be running.');
     get(PAGE, function (status, text) {
-      if (status === 200 && text.indexOf('picture-panel ' + APP_VERSION) !== -1) return open();
+      if (status === 200 && text.indexOf('picture-panel ' + APP_VERSION) !== -1) { remember(); return open(); }
       install();
     });
   });

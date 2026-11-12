@@ -6,17 +6,23 @@ Needs [Glasshouse](https://github.com/rorygallagher2024/glasshouse) running on t
 
 ## What it shows
 
-**Signal** (top, two lines, refreshed every 3 seconds, for the input on screen):
+**Signal** (top, three lines of four, refreshed every 3 seconds, for what is on screen):
 
-| Resolution | Refresh rate | VRR | Dynamic range |
+| Resolution | Refresh rate | FPS | VRR |
 |---|---|---|---|
-| **Low latency** | **Color** | **Bit depth** | **Audio** |
+| **Dynamic range** | **Low latency** | **Color** | **Bit depth** |
+| **HDMI** | **Speed** | **Audio** | **Audio output** |
 
+- What is on screen is the TV's own foreground app, not Glasshouse's "last input". On an app or Home the picture is read the same way (Home gives 1080p SDR, for example).
+- FPS is the frame rate Glasshouse's game reading reports, and shows only on an HDMI input in game content. Under VRR the refresh rate stays at the link's rate (120 Hz) while FPS moves.
 - VRR is the kind in use as the TV names it (G-SYNC, FreeSync, HDMI VRR) or Off; a plain On only when the TV says VRR is active without saying which.
 - Dynamic range is SDR, HDR10, HDR10+, HLG or Dolby Vision.
-- Audio is what the TV is receiving: PCM, Dolby Digital, Dolby Digital+, Dolby TrueHD, DTS, DTS-HD, and Dolby Atmos or DTS:X when the TV flags the content as such. Glasshouse has no channel count or sample rate to show.
+- HDMI is the version of the link on that input (2.1 for FRL, 2.0 or 1.4 for TMDS) and Speed its bandwidth, from the TV's stats. Both are dashes off an HDMI input.
+- Audio is what the TV is receiving on its HDMI inputs: PCM, Dolby Digital, Dolby Digital+, Dolby TrueHD, DTS, DTS-HD, and Dolby Atmos or DTS:X when flagged. It is None for silence on an HDMI input and a dash elsewhere, where the sound is made inside the TV. Glasshouse has no channel count or sample rate.
+- Audio output is the TV's output setting (TV Speaker, Optical, Bluetooth...); over ARC it is the soundbar's name when Glasshouse has found one.
+- The last values the TV gave, for both the settings and the Signal block, are shown at once when the panel opens and replaced when the TV answers. A change is never sent until the TV has answered.
 
-**Settings**, a short list to start with and **See more** for the rest:
+**Settings**, a short list to start with and **See more** (an arrow at the bottom) for the rest:
 
 | Short list | See more adds |
 |---|---|
@@ -27,7 +33,7 @@ Needs [Glasshouse](https://github.com/rorygallagher2024/glasshouse) running on t
 | | Dynamic Tone Mapping |
 | | All Settings, which opens LG's full Settings and closes the panel |
 
-The choices are the ones the TV itself offers (this G6 has no "Clear" TruMotion, for example). OLED Pixel Brightness is a plain number. Color Temperature runs from Warm 50 to Cool 50, and its arrows follow the number shown: Left lowers it (Warm 10 to Warm 9), Right raises it. Black Level shows "Not on this input" unless an HDMI input is on screen, because LG keeps it per input and, for apps and the tuner, per colour system. Rows the TV does not offer here (Dynamic Tone Mapping outside HDR) are left out.
+The choices are the ones the TV itself offers (this G6 has no "Clear" TruMotion, for example). OLED Pixel Brightness is a plain number. Color Temperature runs from Warm 50 through Neutral to Cool 50, and its arrows follow the number shown: Left lowers it (Warm 10 to Warm 9), Right raises it. Black Level shows "Not on this input" unless an HDMI input is on screen, because LG keeps it per input and, for apps and the tuner, per colour system. Rows the TV does not offer here (Dynamic Tone Mapping outside HDR) are left out.
 
 Settings are per picture mode and per input, so the panel shows and changes those of the input on screen. Changing the picture mode re-reads everything.
 
@@ -39,7 +45,7 @@ Settings are per picture mode and per input, so the panel shows and changes thos
 
 ## Install
 
-Install the package (`release/io.github.kharboush.picture-panel_1.1.3_all.ipk`, or the manifest in the same folder, with the Homebrew Channel, or the TV's `dev/install`). That is all: the app puts what it needs on Glasshouse's server itself the first time it is opened, and again if that is ever missing or out of date.
+Install the package (`release/io.github.kharboush.picture-panel_1.1.16_all.ipk`, or the manifest in the same folder, with the Homebrew Channel, or the TV's `dev/install`). That is all: the app puts what it needs on Glasshouse's server itself the first time it is opened, and again if that is ever missing or out of date.
 
 Open **Picture Panel** from the app list, or assign it to a remote button in Glasshouse's remote keys (it is listed there like any app). To open it from a command:
 
@@ -56,7 +62,7 @@ Two parts, because Glasshouse only accepts changes from pages it serves (`POST /
 | Part | Where | What |
 |---|---|---|
 | `app/payload/picture-panel.html` | Copied to `/var/lib/tvweb/assets/picture-panel.html` | The panel. Reads `GET /api/lgsettings?section=picture` and `section=game`, sets with `POST /api/control` `{action:'lgSetting', value:{id, value}}`, the same calls Glasshouse's dashboard makes. The signal comes from `/api/home/now`, `/api/home/picture`, `/api/game/fps` (for the VRR kind) and `/api/audio`. |
-| `app/index.html` | The installed app, with an **overlay** window (`defaultWindowType: overlay`, `transparent: true` in `appinfo.json`) | The launcher. Checks that Glasshouse is up and that the page there is this app's version (a marker in the page); if not, asks the Homebrew Channel's exec service to run `payload/install.sh` as root, which copies the page in (and restarts Glasshouse, which keeps served assets in memory, only when replacing an older copy). Then opens the page, keeping the overlay window. |
+| `app/index.html` | The installed app, with an **overlay** window (`defaultWindowType: overlay`, `transparent: true` in `appinfo.json`) | The launcher. Checks that Glasshouse is up and that the page there is this app's version (a marker in the page); if not, asks the Homebrew Channel's exec service to run `payload/install.sh` as root, which copies the page in (and restarts Glasshouse, which keeps served assets in memory, only when replacing an older copy). Then opens the page, keeping the overlay window. Once a version's page has been confirmed, the launcher remembers that and later opens go straight to the panel. |
 
 Glasshouse updates leave files they do not ship alone, so the page survives them; the launcher puts it back anyway if it ever goes missing. `payload/uninstall.sh` removes the page; uninstalling the app from the Homebrew Channel does not run it, and the page is a few KB.
 

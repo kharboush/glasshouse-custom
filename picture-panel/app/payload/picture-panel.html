@@ -18,6 +18,10 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
 .row.off .lbl,.row.off .val{color:#6b665e}
 .row.focus.off .lbl{color:#a39d93}
 .lbl{font-size:21px;color:#a39d93}
+.row.more{-webkit-justify-content:center;justify-content:center;padding:0 22px}
+.row.more .ctl{display:-webkit-flex;display:flex}
+.row.more .lbl{display:none}
+.row.more .arrow,.row.more.focus .arrow{width:56px;height:56px;line-height:52px;font-size:44px;color:#ece7df;visibility:visible}
 .row.focus .lbl{color:#ece7df}
 .ctl{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center}
 .arrow{width:40px;height:40px;line-height:38px;text-align:center;font-size:24px;color:#3a3732;cursor:pointer}
@@ -28,7 +32,7 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
 #cells{display:grid;grid-template-columns:1fr 1fr 1fr 1.5fr}
 .cell{box-sizing:border-box;padding:0 8px 14px 6px}
 .cell .k{font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:#6b665e}
-.cell .v{font-size:20px;font-weight:600;color:#ece7df;margin-top:3px;white-space:nowrap}
+.cell .v{font-size:20px;font-weight:600;color:#ece7df;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cell .v.none{color:#3a3732}
 #tip{display:none;position:absolute;top:0;left:704px;width:440px;padding:18px 22px;background:rgba(0,0,0,.95);
   outline:1px solid rgba(244,241,234,.16);line-height:1.4}
@@ -67,11 +71,12 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
     { id: 'more', label: 'See more', kind: 'link', action: 'more', always: true }
   ];
   var CELLS = [
-    { id: 'res', label: 'Resolution' }, { id: 'hz', label: 'Refresh rate' }, { id: 'vrr', label: 'VRR' }, { id: 'hdr', label: 'Dynamic range' },
-    { id: 'allm', label: 'Low latency' }, { id: 'color', label: 'Color' }, { id: 'bits', label: 'Bit depth' }, { id: 'audio', label: 'Audio' }
+    { id: 'res', label: 'Resolution' }, { id: 'hz', label: 'Refresh rate' }, { id: 'fps', label: 'FPS' }, { id: 'vrr', label: 'VRR' },
+    { id: 'hdr', label: 'Dynamic range' }, { id: 'allm', label: 'Low latency' }, { id: 'color', label: 'Color' }, { id: 'bits', label: 'Bit depth' },
+    { id: 'hdmi', label: 'HDMI' }, { id: 'speed', label: 'Speed' }, { id: 'audio', label: 'Audio' }, { id: 'out', label: 'Audio output' }
   ];
   var cellEls = {}, sig = null, now = null, fps = null, aud = null;
-  var sel = 0, idleTimer = null, loaded = false, expanded = false;
+  var sel = 0, idleTimer = null, loaded = false, shown = false, expanded = false;
   var rowsEl = document.getElementById('rows');
   var tipEl = document.getElementById('tip'), tipT = document.getElementById('tipT'), tipX = document.getElementById('tipX');
   var els = [], pending = {};
@@ -110,12 +115,12 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
   }
   function text(c) {
     if (c.def.kind === 'link') return '';
-    if (!loaded) return '\u2014';       // until the TV has answered
+    if (!loaded && !shown) return '\u2014';       // until the TV has answered
     if (!c.row) return c.def.missing || 'Not available';
     if (c.def.kind === 'range') return String(c.row.value);
     if (c.def.kind === 'temp') {
       var v = c.row.value;
-      return v === 0 ? 'Medium' : (v < 0 ? 'Warm ' + (-v) : 'Cool ' + v);
+      return v === 0 ? 'Neutral' : (v < 0 ? 'Warm ' + (-v) : 'Cool ' + v);
     }
     var i = choiceAt(c);
     if (i < 0) return String(c.row.value);
@@ -124,11 +129,11 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
   }
   function paint(i) {
     var c = ctl[i], e = els[i];
-    var cls = 'row' + (i === sel ? ' focus' : '');
+    var cls = 'row' + (c.def.action === 'more' ? ' more' : '') + (i === sel ? ' focus' : '');
     if (c.def.kind !== 'link') cls += !c.row ? ' na' : (c.row.active === false ? ' off' : '');
     e.row.className = cls;
     e.row.style.display = visible(i) ? '' : 'none';
-    if (c.def.action === 'more') e.lbl.textContent = expanded ? 'See less' : 'See more';
+    if (c.def.action === 'more') { e.lbl.textContent = ''; e.arrow.style.webkitTransform = e.arrow.style.transform = expanded ? 'rotate(-90deg)' : 'rotate(90deg)'; }
     e.val.textContent = text(c);
   }
   function paintAll() { for (var i = 0; i < ctl.length; i++) paint(i); }
@@ -177,13 +182,43 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
   function audioText() {
     var inp = aud && aud.live && aud.live.input;
     if (!inp || !inp.codec) return null;
-    if (/^(none|off|unknown)$/i.test(String(inp.codec))) return 'None';
+    if (/^\(?(null|none|off|unknown)\)?$/i.test(String(inp.codec))) return stats && /^com\.webos\.app\.hdmi\d$/.test(String(stats.app_id || '')) ? 'None' : null;
     var im = immersiveName(inp.immersive);
     if (/^(none|off)$/i.test(im)) im = '';
     return im || AUDIO[String(inp.codec).toLowerCase()] || String(inp.codec);
   }
+  var sigDone = false, audDone = false, statsDone = false, lastInfo = null, stats = null, link = null;
+  // The HDMI link of the input on screen, from the TV's own stats: FRL is HDMI 2.1, TMDS at 6 Gbps is 2.0, lower is 1.4.
+  function linkOf(st, port) {
+    var l = null;
+    ((st && st.hdmi_links) || []).forEach(function (x) { if (x.input === port) l = x; });
+    if (!l || !l.phy_mode) return null;
+    var m = /^FRL\s+(\d+)G\s+(\d)L/i.exec(l.phy_mode), n = /^FRL\s+(\d+)\s*Gbps/i.exec(l.phy_mode), t = /^(\d+)G/.exec(l.phy_mode);
+    if (m) return { ver: '2.1', speed: (m[1] * m[2]) + ' Gbps' };
+    if (n) return { ver: '2.1', speed: n[1] + ' Gbps' };
+    if (t) return { ver: Number(t[1]) >= 6 ? '2.0' : '1.4', speed: t[1] + ' Gbps' };
+    return null;
+  }
+  // Where the sound goes, from the TV's output setting. Over eARC/ARC it is the soundbar's name when Glasshouse
+  // has found one; the receiver is not named for any other output, since it may be connected but unused.
+  var OUTS = { tv_speaker: 'TV Speaker', external_optical: 'Optical', tv_external_speaker: 'TV + Optical',
+    external_arc: 'HDMI ARC', bt_soundbar: 'Bluetooth', tv_speaker_bluetooth: 'TV + Bluetooth',
+    mobile_phone: 'Mobile Phone', flex_connector: 'Flex Connector' };
+  function outName() {
+    var snd = stats && stats.sound;
+    if (!snd || !snd.output_raw) return null;
+    var r = aud && aud.receiver;
+    if (snd.output_raw === 'external_arc' && r && r.connected && r.name) return String(r.name);
+    return OUTS[snd.output_raw] || String(snd.output || snd.output_raw);
+  }
+  try { lastInfo = JSON.parse(localStorage.getItem('picture-panel-info') || 'null'); } catch (e) { lastInfo = null; }
   function paintInfo() {
-    var s = sig, t = fps ? vrrName(fps.vrrType) : '';
+    // What is on screen comes from the TV's own foreground app: Glasshouse's "now" keeps naming the last
+    // input after leaving it. Off an HDMI input there is no signal to describe.
+    var hm = stats && /^com\.webos\.app\.hdmi(\d)$/.exec(String(stats.app_id || ''));
+    var offInput = !!stats && !hm;
+    var s = sig, t = fps && !offInput ? vrrName(fps.vrrType) : '';
+    link = hm && stats.signal_timing ? linkOf(stats, Number(hm[1])) : null;
     var v = {
       res: s && s.width ? s.width + '\u00d7' + s.height : null,
       hz: s && s.hz ? num(s.hz) + ' Hz' : null,
@@ -192,8 +227,16 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
       allm: s ? (s.allm ? 'On' : 'Off') : null,
       color: s && s.chroma ? s.chroma : null,
       bits: s && s.bits ? s.bits + '-bit' : null,
-      audio: audioText()
+      audio: audioText(),
+      fps: fps && !offInput && fps.frameRate ? String(Math.round(fps.frameRate)) : null,
+      hdmi: link ? link.ver : null,
+      speed: link ? link.speed : null,
+      out: outName()
     };
+    // Until the TV has answered for the signal and the audio, the last readings stand in for dashes.
+    var fresh = sigDone && audDone && statsDone;
+    if (fresh) { try { localStorage.setItem('picture-panel-info', JSON.stringify(v)); } catch (e) { /* not kept */ } }
+    else if (lastInfo) { for (var key in v) if (v[key] === null && lastInfo[key] != null) v[key] = lastInfo[key]; }
     CELLS.forEach(function (c) {
       var el = cellEls[c.id];
       el.textContent = v[c.id] === null ? '\u2014' : v[c.id];
@@ -202,13 +245,18 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
   }
   function loadInfo() {
     loadFps();
-    http('GET', '/api/audio?t=' + Date.now(), null, function (r) { aud = r && r.ok ? r : null; paintInfo(); });
-    http('GET', '/api/home/now?t=' + Date.now(), null, function (n) {
-      now = n && n.kind ? n : null;
-      if (!now) { sig = null; return paintInfo(); }
-      var q = '/api/home/picture?kind=' + encodeURIComponent(now.kind) + '&port=' + (now.port || 0) +
-        '&app=' + encodeURIComponent(now.appId || '') + '&t=' + Date.now();
-      http('GET', q, null, function (p) { sig = p && p.ok && p.signal ? p.signal : null; paintInfo(); });
+    http('GET', '/api/audio?t=' + Date.now(), null, function (r) { aud = r && r.ok ? r : null; audDone = true; paintInfo(); });
+    // What is on screen is the TV's own foreground app (Glasshouse's "now" keeps the last input after leaving it).
+    // Its picture is read the same way for an input or an app: Home gives its 1080p SDR, for example.
+    http('GET', '/api/stats?t=' + Date.now(), null, function (r) {
+      stats = r && r.ok ? r : null;
+      statsDone = true;
+      var id = stats ? String(stats.app_id || '') : '', m = /^com\.webos\.app\.hdmi(\d)$/.exec(id);
+      if (!stats || !id) { sig = null; sigDone = true; return paintInfo(); }
+      paintInfo();
+      var q = '/api/home/picture?kind=' + (m ? 'input' : 'app') + '&port=' + (m ? m[1] : 0) +
+        '&app=' + encodeURIComponent(id) + '&t=' + Date.now();
+      http('GET', q, null, function (p) { sig = p && p.ok && p.signal ? p.signal : null; sigDone = true; paintInfo(); });
     });
   }
   // Glasshouse's game reading: here only for the kind of VRR in use (G-SYNC, FreeSync, HDMI VRR).
@@ -237,20 +285,24 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
   }
 
   function load(quiet) {
-    http('GET', '/api/lgsettings?section=picture&t=' + Date.now(), null, function (r) {
-      if (!r || !r.ok) {
+    // Both sections are asked for at once.
+    var pic, game, left = 2;
+    function done() {
+      if (--left) return;
+      if (!pic || !pic.ok) {
         if (!quiet) say('Could not read the TV', 'Glasshouse did not answer. Is it running?', true);
         return;
       }
       loaded = true;
-      var rows = r.rows || [];
-      http('GET', '/api/lgsettings?section=game&t=' + Date.now(), null, function (g) {
-        if (g && g.ok) rows = rows.concat(g.rows || []);
-        apply(rows);
-        if (!quiet) say('');
-        if (ctl[sel].row && ctl[sel].row.active === false) hint();
-      });
-    });
+      var rows = pic.rows || [];
+      if (game && game.ok) rows = rows.concat(game.rows || []);
+      apply(rows);
+      try { localStorage.setItem('picture-panel-rows', JSON.stringify(rows)); } catch (e) { /* not kept */ }
+      if (!quiet) say('');
+      if (ctl[sel].row && ctl[sel].row.active === false) hint();
+    }
+    http('GET', '/api/lgsettings?section=picture&t=' + Date.now(), null, function (r) { pic = r; done(); });
+    http('GET', '/api/lgsettings?section=game&t=' + Date.now(), null, function (g) { game = g; done(); });
   }
 
   function send(c, value) {
@@ -329,7 +381,7 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
         box.appendChild(left); box.appendChild(val); box.appendChild(right);
       }
       row.appendChild(lbl); row.appendChild(box); rowsEl.appendChild(row);
-      els.push({ row: row, val: val, fill: fill, lbl: lbl });
+      els.push({ row: row, val: val, fill: fill, lbl: lbl, arrow: right });
       // Magic Remote pointer: click a row to select it, an arrow to change it.
       row.addEventListener('mousedown', function () { sel = i; paintAll(); hint(); poke(); if (c.def.kind === 'link') activate(c); });
       left.addEventListener('mousedown', function (e) { e.stopPropagation(); sel = i; change(i, -1); paintAll(); poke(); });
@@ -358,6 +410,12 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
 
   build();
   buildInfo();
+  if (lastInfo) paintInfo();
+  // The last values the TV gave are shown at once; changes wait for the TV's own answer (loaded).
+  try {
+    var saved = JSON.parse(localStorage.getItem('picture-panel-rows') || 'null');
+    if (saved && saved.length) { shown = true; apply(saved); }
+  } catch (e) { /* nothing kept */ }
   load(false);
   loadInfo();
   setInterval(loadInfo, 3000);
