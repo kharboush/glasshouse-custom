@@ -6,13 +6,17 @@ Needs [Glasshouse](https://github.com/rorygallagher2024/glasshouse) running on t
 
 ## What it shows
 
-- **Home** first: a tile with a house icon and "Home screen", which opens the TV's Home screen (Glasshouse Home).
-- Then **one tile per connected source**: the device icon, chosen from its name by Glasshouse's own `devicons.js` (a streamer, a soundbar, a PC, a console...), the name, and below it `HDMI 3` (or `HDMI 3, through <device>` for a device behind another).
+- **Home** first, always: a square tile (112×112) with just a house icon, which opens the TV's Home screen (Glasshouse Home).
+- Then **one tile per HDMI input, all four**, most recently used first (ports never used keep their order): the device icon, chosen from its name by Glasshouse's own `devicons.js` (a streamer, a soundbar, a PC, a console...), the name, and below it `HDMI 3` (or `HDMI 3, through <device>` for a device behind another). A port with no connected device reads **Inactive** there.
 - The source on screen has a single **amber dot**, centred at the right edge of its tile. There is no status text and no CEC address.
 
 The selected tile has the 2px white outline and `#141310` fill, the others the subtle outline. Unselected tiles are dimmed, but only their contents, so the outline keeps its strength.
 
-**Which sources count as connected.** The G6 reports all four ports as plugged in, so that alone cannot tell them apart. A source is shown when something answers on its port: a CEC device, a live signal, or it is the input on screen. A device with no CEC that is switched off is therefore left out until it has a signal.
+**Names are kept.** When the TV gives a port a real name (a CEC device), the panel saves it; when the TV later gives none, or only "HDMI 3", the saved name stands in, and a new real name replaces it.
+
+**Last used.** Glasshouse knows only the last input, not a history, so the panel keeps its own record in the page's storage: when each tile was last on screen (as Glasshouse reports it, whenever the panel reads it) or opened from here. Switching with the remote while the panel is closed registers only the input you end up on.
+
+**Which sources count as connected** (for Inactive). The G6 reports all four ports as plugged in, so that alone cannot tell them apart. A source is active when something answers on its port: a CEC device, a live signal, or it is the input on screen. A device with no CEC that is switched off reads Inactive until it has a signal.
 
 ## Using it
 
@@ -22,7 +26,7 @@ The selected tile has the 2px white outline and `#141310` fill, the others the s
 
 ## Install
 
-Install the package (`release/io.github.kharboush.hdmi-sources_0.2.0_all.ipk`, or the manifest in the same folder, with the Homebrew Channel, or the TV's `dev/install`). That is all: the app puts what it needs on Glasshouse's server itself the first time it is opened, and again if that is ever missing or out of date.
+Install the package (`release/io.github.kharboush.hdmi-sources_0.3.4_all.ipk`, or the manifest in the same folder, with the Homebrew Channel, or the TV's `dev/install`). That is all: the app puts what it needs on Glasshouse's server itself the first time it is opened, and again if that is ever missing or out of date.
 
 Open **HDMI Sources** from the app list, or assign it to a remote button in Glasshouse's remote keys. To open it from a command:
 
@@ -51,4 +55,4 @@ writes `dist/<id>_<version>_all.ipk` and its manifest (also kept in `release/`, 
 
 ## Tested
 
-On the TV (G6, webOS 11.2.0): a clean first open (the app put its page on Glasshouse and opened as an overlay), updates from one version to the next (the app replaced the page and reopened by itself, most recently 0.1.1 to 0.2.0), the bundled page identical to the one on Glasshouse, and the tiles' data and layout in a browser. **Not tried:** pressing OK to switch an input or to open Home, the remote's keys on the TV, a Glasshouse update with the app installed, and opening it from a remapped remote button.
+On the TV (G6, webOS 11.2.0): a clean first open (the app put its page on Glasshouse and opened as an overlay), updates from one version to the next (the app replaced the page and reopened by itself, most recently 0.3.3 to 0.3.4), the bundled page identical to the one on Glasshouse, and the tiles' data and layout in a browser. **Not tried:** pressing OK to switch an input or to open Home, the remote's keys on the TV, a Glasshouse update with the app installed, and opening it from a remapped remote button.

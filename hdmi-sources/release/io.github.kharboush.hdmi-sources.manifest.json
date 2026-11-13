@@ -1,14 +1,14 @@
 {
   "id": "io.github.kharboush.hdmi-sources",
-  "version": "0.2.0",
+  "version": "0.3.4",
   "type": "web",
   "title": "HDMI Sources",
   "appDescription": "The connected HDMI sources, drawn like Glasshouse Home's input tiles, shown over the picture. Needs Glasshouse",
   "iconUri": "https://raw.githubusercontent.com/kharboush/glasshouse-custom/main/hdmi-sources/app/icon130.png",
   "sourceUrl": "https://github.com/kharboush/glasshouse-custom",
   "rootRequired": true,
-  "ipkUrl": "io.github.kharboush.hdmi-sources_0.2.0_all.ipk",
+  "ipkUrl": "io.github.kharboush.hdmi-sources_0.3.4_all.ipk",
   "ipkHash": {
-    "sha256": "9a8e60f9c26f256c5c462c4ab93b7dfa2f51dff82c9aba95ab2714fd781fc65a"
+    "sha256": "09434be139505d4179d4808a8305f5dec002aa04cecc4498e0e9c9a74aed1580"
   }
 }

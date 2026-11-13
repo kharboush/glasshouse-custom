@@ -27,6 +27,9 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
 .path{font-size:20px;color:#a39d93;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .dot{position:absolute;right:20px;top:50%;margin-top:-4px;width:8px;height:8px;border-radius:50%;background:#e9ad55}
 .tile.last .dhead{padding-right:22px}
+/* Home is only a square with its icon. */
+.tile.home{width:112px;padding:0;-webkit-align-items:center;align-items:center}
+.tile.home .dico{margin-right:0}
 /* Nothing connected, or an input that would not open. */
 #msg{display:none;position:absolute;left:32px;bottom:32px;width:560px;padding:22px 26px;background:rgba(0,0,0,.95);
   outline:1px solid rgba(244,241,234,.16);line-height:1.4}
@@ -67,6 +70,25 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
     x.ontimeout = function () { cb(null, null); };
     x.send(body ? JSON.stringify(body) : null);
   }
+  // Glasshouse knows only the last input, not a history, so the panel keeps its own: when each tile was last
+  // on screen (read from Glasshouse's "now") or opened from here. Kept in the page's own storage.
+  var KEY = 'hdmi-sources-used', used = {};
+  try { used = JSON.parse(localStorage.getItem(KEY) || '{}') || {}; } catch (e) { used = {}; }
+  function record(id, ts) {
+    if (!(ts > (used[id] || 0))) return;
+    used[id] = ts;
+    try { localStorage.setItem(KEY, JSON.stringify(used)); } catch (e) { /* not kept */ }
+  }
+  // A port's name is kept when it has a real one (a CEC device), and stands in when the TV gives none or only "HDMI 3".
+  var NKEY = 'hdmi-sources-names', names = {};
+  try { names = JSON.parse(localStorage.getItem(NKEY) || '{}') || {}; } catch (e) { names = {}; }
+  function remember(d) {
+    var plain = !d.name || /^HDMI\s*\d+$/i.test(String(d.name));
+    if (!plain) {
+      if (names[d.port] !== d.name) { names[d.port] = d.name; try { localStorage.setItem(NKEY, JSON.stringify(names)); } catch (e) { /* not kept */ } }
+    } else if (names[d.port]) d.name = names[d.port];
+    else if (!d.name) d.name = 'HDMI ' + d.port;
+  }
   function esc(s) { return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
 
   function say(title, text, bad) {
@@ -87,18 +109,18 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
   // The tile, as Home builds it: icon, name and path above, status and CEC address below.
   function tileHtml(d, last) {
     var icon, name, path;
-    if (d.home) { icon = HOME_ICON; name = 'Home'; path = 'Home screen'; }
+    if (d.home) return '<div class="dhead">' + HOME_ICON + '</div>';
     else {
       icon = window.glasshouseDevIcon ? window.glasshouseDevIcon(d) : '';
       name = d.name;
-      path = d.via ? 'HDMI ' + d.port + ', through ' + d.via : 'HDMI ' + d.port;
+      path = !d.on ? 'Inactive' : d.via ? 'HDMI ' + d.port + ', through ' + d.via : (d.name === 'HDMI ' + d.port ? '' : 'HDMI ' + d.port);
     }
     return '<div class="dhead">' + icon + '<div class="dtx"><div class="nm">' + esc(name) + '</div><div class="path">' + esc(path) +
       '</div></div></div>' + (last ? '<span class="dot"></span>' : '');
   }
 
   function paint() {
-    for (var i = 0; i < els.length; i++) els[i].className = 'tile' + (list[i].last ? ' last' : '') + (i === sel ? ' focus' : '');
+    for (var i = 0; i < els.length; i++) els[i].className = 'tile' + (list[i].last ? ' last' : '') + (list[i].home ? ' home' : '') + (i === sel ? ' focus' : '');
   }
 
   function show(next) {
@@ -109,7 +131,7 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
     list.forEach(function (d, i) {
       var el = document.createElement('div');
       el.innerHTML = tileHtml(d, d.last);
-      el.className = 'tile';
+      el.className = 'tile' + (d.home ? ' home' : '');
       // Magic Remote pointer: moving onto a tile selects it, clicking opens it.
       el.addEventListener('mouseenter', function () { sel = i; paint(); poke(); });
       el.addEventListener('click', function () { sel = i; paint(); openSource(); });
@@ -132,19 +154,23 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
         return;
       }
       http('GET', '/api/home/now?t=' + Date.now(), null, function (now) {
-        var devs = c.devices.filter(function (d) { return !d.tuner && !d.unused && d.port >= 1 && d.port <= 4; });
+        var devs = c.devices.filter(function (d) { return !d.tuner && d.port >= 1 && d.port <= 4; });
         var signal = {}, pending = devs.length;
         function done() {
           var out = [];
           devs.forEach(function (d) {
-            var last = isLast(d, now);
-            if (d.address || signal[d.port] || last) { d.last = last; out.push(d); }
+            remember(d);
+            d.last = isLast(d, now);
+            // Connected when something answers on the port: a CEC device, a live signal, or it is on screen.
+            d.on = !!(d.address || signal[d.port] || d.last);
+            if (d.last && now.since) record(d.id, now.since);
+            out.push(d);
           });
-          // On first load the selection starts on the source in use; later reads keep it where it is.
-          if (first) sel = 0;
+          // Home is always first; the ports follow, most recently used first, the never-used in port order.
+          var rank = out.map(function (d, n) { return { d: d, n: n }; });
+          rank.sort(function (a, b) { return ((used[b.d.id] || 0) - (used[a.d.id] || 0)) || (a.n - b.n); });
           first = false;
-          out.unshift({ home: true, id: 'home', name: 'Home' });
-          show(out);
+          show([{ home: true, id: 'home', name: 'Home' }].concat(rank.map(function (r) { return r.d; })));
         }
         if (!pending) return done();
         devs.forEach(function (d) {
@@ -162,6 +188,7 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
     if (!d || busy) return;
     busy = true;
     // Home opens the TV's Home screen; a source opens its input, as Home itself does.
+    record(d.id, Date.now());
     var url = d.home ? '/api/control' : '/api/home/open';
     var body = d.home ? { action: 'launchApp', value: 'com.webos.app.home' } : { kind: 'dev', id: d.id };
     http('POST', url, body, function (ok, r) {

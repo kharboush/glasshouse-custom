@@ -23,4 +23,4 @@ See [customizations/README.md](customizations/README.md) for what the layout cha
 Two overlay apps for Glasshouse on the same TV, both in the Spotlight View look, and both closing themselves after 60 seconds untouched. Each installs as a Homebrew Channel package that puts its own page on Glasshouse's server, so nothing needs copying by hand:
 
 - [picture-panel/](picture-panel/) shows the signal the TV is receiving and the picture settings (picture mode, OLED pixel brightness, colour temperature, TruMotion, and the rest under "See more"), and changes them. See its [README](picture-panel/README.md).
-- [hdmi-sources/](hdmi-sources/) is a small switcher: a Home tile and the connected HDMI sources, with a dot on the one on screen. See its [README](hdmi-sources/README.md).
+- [hdmi-sources/](hdmi-sources/) is a small switcher: a square Home tile and all four HDMI inputs, most recently used first, with a dot on the one on screen and "Inactive" on empty ports. See its [README](hdmi-sources/README.md).
