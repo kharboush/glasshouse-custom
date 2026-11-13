@@ -24,31 +24,34 @@ Needs [Glasshouse](https://github.com/rorygallagher2024/glasshouse) running on t
 - Audio output is the TV's output setting (TV Speaker, Optical, Bluetooth...); over ARC it is the soundbar's name when Glasshouse has found one.
 - The last values the TV gave for the Signal block are shown at once when the panel opens and replaced when the TV answers. The settings are not kept: they show a dash until the TV answers, and no change is sent before then.
 
-**Settings**, in four pages of up to four rows. The strip above the rows names the page and has up and down arrows; going Down past the last row of a page turns to the next, and past the first row of a page back to the one before, wrapping at both ends. It always opens on the first page.
+**Settings**, in three pages of up to five rows, titled "Picture Settings 1/3" to "3/3", in the order of LG's own Picture menu. Beside the title are up and down arrows; going Down past the last row of a page turns to the next, and past the first row of a page back to the one before, wrapping at both ends. It always opens on the first page.
 
-| Picture | Brightness | Tuning | More |
-|---|---|---|---|
-| Picture Mode | Black Level | Sharpness | Game Genre (game picture modes only) |
-| OLED Pixel Brightness | Peak Brightness | Gamma | All Settings, which opens LG's full Settings and closes the panel |
-| Color Temperature | Auto Dynamic Contrast | Filmmaker Ambient Light | |
-| TruMotion | Expression Enhancer | Dynamic Tone Mapping (HDR only) | |
+| 1/3 | 2/3 | 3/3 |
+|---|---|---|
+| Picture Mode | Auto Dynamic Contrast | Color Temperature |
+| Brightness (LG's OLED Pixel Brightness) | Expression Enhancer | Sharpness |
+| Contrast | Gamma | TruMotion |
+| Black Level | Dynamic Tone Mapping (HDR only) | Game Genre (game picture modes only) |
+| Peak Brightness | Filmmaker Ambient Light | All Settings, which opens LG's full Settings and closes the panel |
 
-The choices are the ones the TV itself offers (this G6 has no "Clear" TruMotion, for example). OLED Pixel Brightness, Black Level and Sharpness are plain numbers. Color Temperature runs from Warm 50 through Neutral to Cool 50, and its arrows follow the number shown: Left lowers it (Warm 10 to Warm 9), Right raises it. Gamma shows BT.1886 or 2.2. A setting the TV does not offer here is shown as a dash, with the reason where there is one ("HDR only", "Game modes only").
+The choices are the ones the TV itself offers (this G6 has no "Clear" TruMotion, for example). Brightness, Contrast, Black Level and Sharpness are plain numbers. Color Temperature runs from Warm 50 through Neutral to Cool 50, and its arrows follow the number shown: Left lowers it (Warm 10 to Warm 9), Right raises it. Gamma shows BT.1886 or 2.2. A setting the TV does not offer here is shown as a dash, with the reason where there is one ("HDR only", "Game modes only"). The panel keeps the height of five rows on every page.
 
-Filmmaker Ambient Light is not one of Glasshouse's settings, so the panel reads and sets it through the Homebrew Channel's exec service (the TV's own `luna-send`), the way the launcher installs the page. It needs nothing from Glasshouse.
+Selecting a row for a second shows a box beside the panel: the setting's name, Glasshouse's own description of it (read from the TV's reply, not kept in the page), and a short recommendation line from this panel where there is one (for example "Use High for HDR and Off for SDR." for Peak Brightness). The box goes away as soon as you move.
+
+Filmmaker Ambient Light is not one of Glasshouse's settings, so the panel reads and sets it through the Homebrew Channel's exec service (the TV's own `luna-send`), the way the launcher installs the page. It needs nothing from Glasshouse. LG hides and greys it outside Filmmaker Mode, so the panel asks the TV whether it applies and shows it greyed when it does not.
 
 Settings are per picture mode and per input, so the panel shows and changes those of the input on screen. Changing the picture mode re-reads everything.
 
 ## Using it
 
-- Up and Down move between rows and pages; Left and Right (or OK) change the value, or open Settings on that row; Back closes. A Magic Remote pointer can click rows, arrows and either end of the page strip.
+- Up and Down move between rows and pages; Left and Right (or OK) change the value, or open Settings on that row; Back closes. A Magic Remote pointer can click rows and arrows, and its scroll wheel and the channel up and down keys act as Up and Down.
 - Picture Mode waits half a second after the last press before it is sent, so flicking through modes only applies the one you stop on. Until the TV has been read again for that mode, every other setting shows a dash and is greyed.
-- Settings the TV has switched off for the current mode or input (TruMotion, Peak Brightness and Auto Dynamic Contrast in Game mode, for example) are shown greyed and are not changed. Focusing one shows a box beside the panel: the setting's name over "Not available in HDR Game mode." This is read from the `active` flag the TV gives each setting, so a change is never sent only to be refused. Errors use the same box, with an amber outline.
+- Settings the TV has switched off for the current mode or input (TruMotion, Peak Brightness and Auto Dynamic Contrast in Game mode, for example) are shown greyed and are not changed. Their box says "Not available in HDR Game mode." under the description. This is read from the `active` flag the TV gives each setting, so a change is never sent only to be refused. Errors use the same box, with an amber outline.
 - It closes itself after 60 seconds without a key or pointer.
 
 ## Install
 
-Install the package (`release/io.github.kharboush.picture-panel_1.3.3_all.ipk`, or the manifest in the same folder, with the Homebrew Channel, or the TV's `dev/install`). That is all: the app puts what it needs on Glasshouse's server itself the first time it is opened, and again if that is ever missing or out of date.
+Install the package (`release/io.github.kharboush.picture-panel_1.7.2_all.ipk`, or the manifest in the same folder, with the Homebrew Channel, or the TV's `dev/install`). That is all: the app puts what it needs on Glasshouse's server itself the first time it is opened, and again if that is ever missing or out of date.
 
 Open **Picture Panel** from the app list, or assign it to a remote button in Glasshouse's remote keys (it is listed there like any app). To open it from a command:
 

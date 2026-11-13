@@ -18,6 +18,7 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
 .row.off .lbl,.row.off .val{color:#6b665e}
 .row.focus.off .lbl{color:#a39d93}
 .lbl{font-size:21px;color:#a39d93}
+#rows{min-height:330px}
 #dots{display:-webkit-flex;display:flex;-webkit-justify-content:space-between;justify-content:space-between;-webkit-align-items:center;align-items:center;margin:0 16px;padding:0 0 14px 6px}
 #pgArrows{display:-webkit-flex;display:flex}
 .pg{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;cursor:pointer;font-size:21px;color:#a39d93}
@@ -43,6 +44,7 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
 #tip.err{outline-color:#e9ad55}
 #tip b{display:block;font-size:22px;font-weight:600;color:#ece7df}
 #tip span{display:block;font-size:19px;color:#a39d93;margin-top:4px}
+#tip span.rec{color:#ece7df;margin-top:10px}
 </style>
 </head>
 <body>
@@ -51,7 +53,7 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
   <div id="dots"><span id="pgNum"></span><div id="pgArrows"><div class="pg" id="prevPg"><span class="ar">&#8250;</span></div><div class="pg" id="nextPg"><span class="ar">&#8250;</span></div></div></div>
   <div id="rows"></div>
 </div>
-<div id="tip"><b id="tipT"></b><span id="tipX"></span></div>
+<div id="tip"><b id="tipT"></b><span id="tipX"></span><span class="rec" id="tipR"></span></div>
 <script>
 /*
  * The Picture Panel, served by Glasshouse so its requests are same-origin with the
@@ -60,24 +62,26 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
  * Glasshouse's dashboard does. ES5 only.
  */
 (function () {
-  // Three pages of four. A row that only applies sometimes keeps its place, greyed, with the reason.
+  // Three pages of up to five, all "Picture Settings". A row that only applies sometimes keeps its
+  // place, greyed, with the reason.
   var DEFS = [
     { id: 'pictureMode', label: 'Picture Mode', kind: 'choice', page: 0 },
-    { id: 'backlight', label: 'OLED Pixel Brightness', kind: 'range', page: 0 },
-    { id: 'colorTemperature', label: 'Color Temperature', kind: 'temp', page: 0 },
-    { id: 'truMotionMode', label: 'TruMotion', kind: 'choice', page: 0 },
-    { id: 'brightness', label: 'Black Level', kind: 'range', page: 1 },
-    { id: 'peakBrightness', label: 'Peak Brightness', kind: 'choice', page: 1 },
-    { id: 'dynamicContrast', label: 'Auto Dynamic Contrast', kind: 'choice', page: 1 },
-    { id: 'expressionEnhancer', label: 'Expression Enhancer', kind: 'choice', page: 1, names: { off: 'Off', detail: 'Detail', highlight: 'Brightness' } },
+    { id: 'backlight', rec: 'HDR wants it high. SDR follows the room.', label: 'Brightness', kind: 'range', page: 0 },
+    { id: 'contrast', rec: '100 suits HDR. Lower it if SDR looks flat.', label: 'Contrast', kind: 'range', page: 0 },
+    { id: 'brightness', label: 'Black Level', kind: 'range', page: 0 },
+    { id: 'peakBrightness', rec: 'Use High for HDR and Off for SDR.', label: 'Peak Brightness', kind: 'choice', page: 0 },
+    { id: 'dynamicContrast', rec: 'Off keeps scenes as graded.', label: 'Auto Dynamic Contrast', kind: 'choice', page: 1 },
+    { id: 'expressionEnhancer', rec: 'Off keeps the HDR grade intact.', label: 'Expression Enhancer', kind: 'choice', page: 1, names: { off: 'Off', detail: 'Detail', highlight: 'Brightness' } },
+    { id: 'gamma', rec: 'BT.1886 suits dark rooms. 2.2 suits lit ones.', label: 'Gamma', kind: 'choice', page: 1, names: { high2: 'BT.1886', mediumHavingLevel: '2.2' } },
+    { id: 'hdrDynamicToneMapping', rec: 'Off is accurate. On is brighter.', label: 'Dynamic Tone Mapping', kind: 'choice', page: 1, missing: 'HDR only' },
+    { id: 'filmmakerAmbientLight', tip: "Adapts Filmmaker Mode's picture to the light in the room.", label: 'Filmmaker Ambient Light', kind: 'choice', page: 1, luna: true },
+    { id: 'colorTemperature', label: 'Color Temperature', kind: 'temp', page: 2 },
     { id: 'sharpness', label: 'Sharpness', kind: 'range', page: 2 },
-    { id: 'gamma', label: 'Gamma', kind: 'choice', page: 2, names: { high2: 'BT.1886', mediumHavingLevel: '2.2' } },
-    { id: 'filmmakerAmbientLight', label: 'Filmmaker Ambient Light', kind: 'choice', page: 2, luna: true },
-    { id: 'hdrDynamicToneMapping', label: 'Dynamic Tone Mapping', kind: 'choice', page: 2, missing: 'HDR only' },
-    { id: 'gameGenre', label: 'Game Genre', kind: 'choice', page: 3, gameOnly: true, missing: 'Game modes only' },
-    { id: 'allSettings', label: 'All Settings', kind: 'link', action: 'settings', page: 3 }
+    { id: 'truMotionMode', rec: 'Turn it on for sports and fast action.', label: 'TruMotion', kind: 'choice', page: 2 },
+    { id: 'gameGenre', label: 'Game Genre', kind: 'choice', page: 2, gameOnly: true, missing: 'Game modes only' },
+    { id: 'allSettings', tip: "Opens LG's full Settings and closes the panel.", label: 'All Settings', kind: 'link', action: 'settings', page: 2 }
   ];
-  var PAGES = 4, PAGE_NAMES = ['Picture', 'Brightness', 'Tuning', 'More'];
+  var PAGES = 3;
   var CELLS = [
     { id: 'res', label: 'Resolution' }, { id: 'hz', label: 'Refresh rate' }, { id: 'fps', label: 'Frame rate' }, { id: 'vrr', label: 'VRR' },
     { id: 'hdr', label: 'Dynamic range' }, { id: 'allm', label: 'Low latency' }, { id: 'color', label: 'Color' }, { id: 'bits', label: 'Bit depth' },
@@ -86,7 +90,7 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
   var cellEls = {}, sig = null, now = null, fps = null, aud = null;
   var sel = 0, idleTimer = null, loaded = false, shown = false, page = 0, stale = false;
   var rowsEl = document.getElementById('rows');
-  var tipEl = document.getElementById('tip'), tipT = document.getElementById('tipT'), tipX = document.getElementById('tipX');
+  var tipEl = document.getElementById('tip'), tipT = document.getElementById('tipT'), tipX = document.getElementById('tipX'), tipR = document.getElementById('tipR');
   var els = [], pending = {}, gen = 0;
 
   // Filmmaker Ambient Light is not one of Glasshouse's rows, so it is read and set the way the
@@ -108,8 +112,19 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
         var out = String(r && r.stdoutString || '').replace(/\s+$/, '').split('\n');
         v = JSON.parse(out[out.length - 1]).settings.filmmakerAmbientLight;
       } catch (e) { v = null; }
-      cb(v === 'on' || v === 'off' ? { id: 'filmmakerAmbientLight', value: v,
-        choices: [{ value: 'on', label: 'On' }, { value: 'off', label: 'Off' }] } : null);
+      if (v !== 'on' && v !== 'off') return cb(null);
+      // LG hides and greys this setting outside Filmmaker Mode, so it is asked whether it applies here,
+      // as Glasshouse does for its own rows, and shown greyed when it does not.
+      exec(SETTINGS + "getSystemSettingDesc '{\"category\":\"picture\",\"keys\":[\"filmmakerAmbientLight\"]}'", function (d) {
+        var active = true;
+        try {
+          var o = String(d && d.stdoutString || '').replace(/\s+$/, '').split('\n');
+          var ui = JSON.parse(o[o.length - 1]).results[0].ui;
+          active = !(ui && (ui.active === false || ui.visible === false));
+        } catch (e) { active = true; }
+        cb({ id: 'filmmakerAmbientLight', value: v, active: active,
+          choices: [{ value: 'on', label: 'On' }, { value: 'off', label: 'Off' }] });
+      });
     });
   }
   function writeAmbient(value, cb) {
@@ -140,13 +155,15 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
 
   // Messages and hints show in their own box, a title over a line of detail, directly to the
   // right of the panel and level with its top, wherever the panel ends up.
-  function say(title, text, bad) {
+  function say(title, text, bad, extra) {
     if (!title) { tipEl.className = ''; return; }
     var r = document.getElementById('panel').getBoundingClientRect();
     tipEl.style.top = r.top + 'px';
     tipEl.style.left = (r.right + 16) + 'px';
     tipT.textContent = title;
     tipX.textContent = text || '';
+    tipR.textContent = extra || '';
+    tipR.style.display = extra ? 'block' : 'none';
     tipEl.className = bad ? 'show err' : 'show';
   }
 
@@ -160,6 +177,7 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
     if ((!loaded && !shown) || (stale && c.def.id !== 'pictureMode')) return '\u2014';   // until the TV has answered
     if (!usable(c)) return c.def.missing || 'Not available';
     if (c.def.kind === 'range') return String(c.row.value);
+    if (c.def.kind === 'switch') return c.row.on ? 'On' : 'Off';
     if (c.def.kind === 'temp') {
       var v = c.row.value;
       return v === 0 ? 'Neutral' : (v < 0 ? 'Warm ' + (-v) : 'Cool ' + v);
@@ -181,7 +199,7 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
     page = ctl[sel].def.page;
     for (var i = 0; i < ctl.length; i++) paint(i);
     // The strip under the rows: the page's name on the left, up and down arrows on the right.
-    document.getElementById('pgNum').textContent = PAGE_NAMES[page];
+    document.getElementById('pgNum').textContent = 'Picture Settings ' + (page + 1) + '/' + PAGES;
   }
 
   // Game Genre only applies in a game picture mode (game, HDR game, Dolby Vision game).
@@ -195,6 +213,11 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
   }
   // Up and Down run through all twelve rows, so going past a page's last row turns to the next
   // page and past its first to the one before, wrapping at both ends.
+  function turn(d) {
+    var p = (page + d + PAGES) % PAGES;
+    for (var k = 0; k < ctl.length; k++) if (ctl[k].def.page === p) { sel = k; break; }
+    paintAll(); hint(); poke();
+  }
   function step(dir) { sel = (sel + dir + ctl.length) % ctl.length; }
 
   // ---- the signal block: read only, refreshed while the panel is open
@@ -361,8 +384,7 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
       if (game && game.ok) rows = rows.concat(game.rows || []);
       if (amb) rows.push(amb);
       apply(rows);
-      if (!quiet) say('');
-      if (ctl[sel].row && ctl[sel].row.active === false) hint();
+      if (!quiet) hint();
     }
     http('GET', '/api/lgsettings?section=picture&t=' + Date.now(), null, function (r) { pic = r; done(); });
     http('GET', '/api/lgsettings?section=game&t=' + Date.now(), null, function (g) { game = g; done(); });
@@ -372,16 +394,17 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
   function send(c, value) {
     if (c.def.luna) {
       return writeAmbient(value, function (ok) {
-        if (!ok) { say('The TV did not accept that', '', true); load(true); } else say('');
+        if (!ok) { say('The TV did not accept that', '', true); load(true); } else hint();
       });
     }
-    http('POST', '/api/control', { action: 'lgSetting', value: { id: c.def.id, value: value } }, function (ok, r) {
+    var body = c.def.kind === 'switch' ? { id: c.def.id, on: value } : { id: c.def.id, value: value };
+    http('POST', '/api/control', { action: 'lgSetting', value: body }, function (ok, r) {
       if (!ok || (r && r.ok === false)) {
         say('The TV did not accept that', r && r.error ? r.error : '', true);
         load(true);
         return;
       }
-      say('');
+      hint();
       // A picture mode brings its own set of every other value with it.
       if (c.def.id === 'pictureMode') { var g = gen; setTimeout(function () { if (g === gen) load(true); }, 700); }
     });
@@ -393,7 +416,11 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
     if (!usable(c) || !loaded) return;
     if (c.row.active === false) { hint(); return; }
     gen++;
-    if (c.def.kind === 'choice') {
+    if (c.def.kind === 'switch') {
+      c.row.on = !c.row.on;
+      paint(i);
+      send(c, c.row.on);
+    } else if (c.def.kind === 'choice') {
       var n = c.row.choices.length, at = choiceAt(c);
       if (!n) return;
       at = (at + dir + n) % n;
@@ -422,14 +449,22 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
 
   // The TV marks a setting inactive when the picture mode or input switches it off
   // (TruMotion in Game mode, for example). Say so, instead of letting a change fail.
+  // The blurb for the selected row appears after a second on it, so moving through the rows does not
+  // flash a box at every step. Errors (say) show at once.
+  var hintTimer = null;
   function hint() {
-    var c = ctl[sel];
-    if (c.def.kind !== 'link' && c.row && c.row.active === false) {
-      var mode = ctl[0].row ? text(ctl[0]) : '';
-      say(c.def.label, 'Not available' + (mode ? ' in ' + mode + ' mode' : ' right now') + '.', false);
-    } else {
-      say('');
-    }
+    if (hintTimer) clearTimeout(hintTimer);
+    say('');
+    hintTimer = setTimeout(function () {
+      hintTimer = null;
+      var c = ctl[sel], desc = (c.row && c.row.desc) || c.def.tip || '';
+      if (c.def.kind !== 'link' && usable(c) && c.row.active === false) {
+        var mode = ctl[0].row ? text(ctl[0]) : '';
+        say(c.def.label, desc, false, 'Not available' + (mode ? ' in ' + mode + ' mode' : ' right now') + '.');
+      } else if (desc || c.def.rec) {
+        say(c.def.label, desc, false, c.def.rec || '');
+      }
+    }, 1000);
   }
 
   function activate(c) {
@@ -464,11 +499,6 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
       right.addEventListener('mousedown', function (e) { e.stopPropagation(); sel = i; change(i, 1); paintAll(); poke(); });
     });
     // Magic Remote pointer: either side of the strip opens the page it names, at its first row.
-    function turn(d) {
-      var p = (page + d + PAGES) % PAGES;
-      for (var k = 0; k < ctl.length; k++) if (ctl[k].def.page === p) { sel = k; break; }
-      paintAll(); hint(); poke();
-    }
     document.getElementById('prevPg').addEventListener('mousedown', function () { turn(-1); });
     document.getElementById('nextPg').addEventListener('mousedown', function () { turn(1); });
     paintAll();
@@ -486,9 +516,22 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
     poke();
     if (k === 38) { step(-1); paintAll(); hint(); }
     else if (k === 40) { step(1); paintAll(); hint(); }
+    else if (k === 33) { step(-1); paintAll(); hint(); }   // channel up / page up: like Up
+    else if (k === 34) { step(1); paintAll(); hint(); }    // channel down / page down: like Down
     else if (k === 37) { change(sel, -1); }
     else if (k === 39 || k === 13) { change(sel, 1); }
     else if (k === 461 || k === 27 || k === 8) { leave(); }
+    e.preventDefault();
+  });
+
+  // The Magic Remote's scroll wheel moves between rows like the Up and Down keys, turning pages at the ends.
+  var wheelAt = 0;
+  document.addEventListener('wheel', function (e) {
+    var t = new Date().getTime();
+    if (t - wheelAt < 40 || !e.deltaY) return;
+    wheelAt = t;
+    poke();
+    step(e.deltaY > 0 ? 1 : -1); paintAll(); hint();
     e.preventDefault();
   });
 
