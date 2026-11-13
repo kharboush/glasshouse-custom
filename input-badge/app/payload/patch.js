@@ -23,7 +23,7 @@ try {
     if (sb.indexOf(m) < 0) throw new Error('SimpleBanner: LG\'s file has changed (' + m + ')');
   });
 
-  // The banner: a 112-high row, 32 in from the left, on a black box with a faint outline in
+  // The banner: a 112-high row, 32 in from the side, on a black box with a faint outline in
   // place of LG's two background pictures.
   var ib = read('InputBanner/InputBanner.qml');
   ib = swap(ib, 'height: visible ? styleSheet.banner.zappingBannerHeight + recInfoIcon.heightWithMargin : 0',
@@ -42,12 +42,18 @@ try {
     '            border.color: Qt.rgba(244/255, 241/255, 234/255, 0.2)\n' +
     '        }\n', 'background box');
 
-  // An input's banner goes to the top, 32 down. The channel banner, the detail view and
-  // Live Pick keep LG's places.
+  // An input's banner keeps LG's own position setting (top or "bottom", left or right). At the top
+  // it sits 32 down. LG's "bottom" is in fact the middle of the screen, so there it keeps LG's
+  // height on screen, centred on where LG's taller banner was. The sides follow from the row's
+  // 32 margin, which LG's mirroring moves to the right when the banner is on the right. The
+  // channel banner, the detail view and Live Pick keep LG's places.
   var bl = read('BannerItems/BannerListView.qml');
+  bl = swap(bl, '                return styleSheet.banner.tZappingBannerTopMargin;',
+    '                return isChannel ? styleSheet.banner.tZappingBannerTopMargin : styleSheet.guiSize(32);',
+    'banner place at the top');
   bl = swap(bl, '            return bannerTopMargin;\n        }\n    }',
-    '            if (!isChannel) {\n                return styleSheet.guiSize(32);\n            }\n            return bannerTopMargin;\n        }\n    }',
-    'banner place');
+    '            if (!isChannel) {\n                return bannerTopMargin + (styleSheet.banner.zappingBannerHeight - styleSheet.guiSize(112)) / 2;\n            }\n            return bannerTopMargin;\n        }\n    }',
+    'banner place in the middle');
 
   fs.mkdirSync(OUT, { recursive: true });
   fs.writeFileSync(path.join(OUT, 'InputBanner.qml'), ib);
