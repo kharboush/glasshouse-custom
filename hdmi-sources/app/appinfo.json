@@ -1,6 +1,6 @@
 {
   "id": "io.github.kharboush.hdmi-sources",
-  "version": "0.3.4",
+  "version": "0.3.5",
   "vendor": "kharboush",
   "type": "web",
   "main": "index.html",

@@ -13,7 +13,7 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
 .tile{position:relative;width:320px;height:112px;box-sizing:border-box;margin-right:16px;padding:20px;
   display:-webkit-flex;display:flex;-webkit-flex-direction:column;flex-direction:column;
   -webkit-justify-content:center;justify-content:center;
-  background:rgba(0,0,0,.95);outline:1px solid rgba(244,241,234,.16);cursor:default}
+  background:rgba(0,0,0,.9);outline:1px solid rgba(244,241,234,.2);cursor:default}
 /* Unselected tiles are dimmed as in Home, but only their contents: dimming the whole tile
    would dim the outline too, to nearly nothing over black. */
 .tile .dhead{opacity:.8}
@@ -31,8 +31,8 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
 .tile.home{width:112px;padding:0;-webkit-align-items:center;align-items:center}
 .tile.home .dico{margin-right:0}
 /* Nothing connected, or an input that would not open. */
-#msg{display:none;position:absolute;left:32px;bottom:32px;width:560px;padding:22px 26px;background:rgba(0,0,0,.95);
-  outline:1px solid rgba(244,241,234,.16);line-height:1.4}
+#msg{display:none;position:absolute;left:32px;bottom:32px;width:560px;padding:22px 26px;background:rgba(0,0,0,.9);
+  outline:1px solid rgba(244,241,234,.2);line-height:1.4}
 #msg.show{display:block}
 #msg.err{outline-color:#e9ad55}
 #msg b{display:block;font-size:24px;font-weight:600}

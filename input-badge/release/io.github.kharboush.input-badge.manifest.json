@@ -1,0 +1,14 @@
+{
+  "id": "io.github.kharboush.input-badge",
+  "version": "1.0.0",
+  "type": "web",
+  "title": "Input Badge",
+  "appDescription": "LG's input name banner as an HDMI Sources tile, top left, applied at every start",
+  "iconUri": "https://raw.githubusercontent.com/kharboush/glasshouse-custom/main/input-badge/app/icon130.png",
+  "sourceUrl": "https://github.com/kharboush/glasshouse-custom",
+  "rootRequired": true,
+  "ipkUrl": "io.github.kharboush.input-badge_1.0.0_all.ipk",
+  "ipkHash": {
+    "sha256": "8748623c6511eddfdb77e54a2774dcfae69e382623146e2be0ee8ca5c9e222df"
+  }
+}

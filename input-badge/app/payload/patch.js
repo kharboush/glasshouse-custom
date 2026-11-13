@@ -1,0 +1,60 @@
+/*
+ * Builds the three banner files from this TV's own copies of LG's:
+ *   node patch.js <LG's MainViewLayer folder> <this payload folder> <output folder>
+ * InputBanner.qml and BannerListView.qml are LG's, with a few exact replacements; SimpleBanner.qml
+ * is this package's own. Every replacement must match exactly once, and LG's SimpleBanner must
+ * still have what ours stands in for, or nothing is written and the script exits non-zero, so a
+ * firmware that changes these files keeps LG's banner.
+ */
+var fs = require('fs');
+var path = require('path');
+var Q = process.argv[2], P = process.argv[3], OUT = process.argv[4];
+
+function read(f) { return fs.readFileSync(path.join(Q, f), 'utf8'); }
+function swap(s, from, to, what) {
+  if (s.split(from).length !== 2) throw new Error(what + ': not as expected in LG\'s file');
+  return s.replace(from, function () { return to; });
+}
+
+try {
+  var sb = read('InputBanner/SimpleBanner.qml');
+  ['Selectable {', 'getDeviceName()', '._inputLabel', 'function voiceSelect',
+   'function getSimpleGuideText', 'function getIconStringGuideText'].forEach(function (m) {
+    if (sb.indexOf(m) < 0) throw new Error('SimpleBanner: LG\'s file has changed (' + m + ')');
+  });
+
+  // The banner: a 112-high row, 32 in from the left, on a black box with a faint outline in
+  // place of LG's two background pictures.
+  var ib = read('InputBanner/InputBanner.qml');
+  ib = swap(ib, 'height: visible ? styleSheet.banner.zappingBannerHeight + recInfoIcon.heightWithMargin : 0',
+    'height: visible ? styleSheet.guiSize(112) + recInfoIcon.heightWithMargin : 0', 'banner height');
+  ib = swap(ib, '        width: childrenRect.width\n        height: styleSheet.banner.zappingBannerHeight\n        anchors {\n            left: parent.left\n',
+    '        width: childrenRect.width\n        height: styleSheet.guiSize(112)\n        anchors {\n            left: parent.left\n            leftMargin: styleSheet.guiSize(32)\n',
+    'banner row');
+  ib = swap(ib, 'source: root.visible ? styleSheet.banner.middleBg : ""', 'source: ""', 'background');
+  ib = swap(ib, 'source: root.visible ? styleSheet.banner.rightBg : ""', 'source: ""', 'background edge');
+  ib = swap(ib, '        anchors.fill: bannerRow\n',
+    '        anchors.fill: bannerRow\n\n' +
+    '        Rectangle {\n' +
+    '            anchors.fill: parent\n' +
+    '            color: Qt.rgba(0, 0, 0, 0.9)\n' +
+    '            border.width: 1\n' +
+    '            border.color: Qt.rgba(244/255, 241/255, 234/255, 0.2)\n' +
+    '        }\n', 'background box');
+
+  // An input's banner goes to the top, 32 down. The channel banner, the detail view and
+  // Live Pick keep LG's places.
+  var bl = read('BannerItems/BannerListView.qml');
+  bl = swap(bl, '            return bannerTopMargin;\n        }\n    }',
+    '            if (!isChannel) {\n                return styleSheet.guiSize(32);\n            }\n            return bannerTopMargin;\n        }\n    }',
+    'banner place');
+
+  fs.mkdirSync(OUT, { recursive: true });
+  fs.writeFileSync(path.join(OUT, 'InputBanner.qml'), ib);
+  fs.writeFileSync(path.join(OUT, 'BannerListView.qml'), bl);
+  fs.writeFileSync(path.join(OUT, 'SimpleBanner.qml'), fs.readFileSync(path.join(P, 'SimpleBanner.qml')));
+  console.log('built');
+} catch (e) {
+  console.log(e.message);
+  process.exit(1);
+}

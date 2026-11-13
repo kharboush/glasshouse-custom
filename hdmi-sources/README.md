@@ -1,6 +1,6 @@
 # HDMI Sources
 
-A switcher for the connected HDMI sources, shown as an **overlay window** over whatever is playing, in the Spotlight View look: small square tiles (320×112, 16px apart), the subtle 1px outline, black at 95%, and Glasshouse Home's input icons.
+A switcher for the connected HDMI sources, shown as an **overlay window** over whatever is playing, in the Spotlight View look: small square tiles (320×112, 16px apart), a subtle 1px outline (20% white), black at 90%, and Glasshouse Home's input icons.
 
 Needs [Glasshouse](https://github.com/rorygallagher2024/glasshouse) running on the TV, and the Homebrew Channel.
 
@@ -26,7 +26,7 @@ The selected tile has the 2px white outline and `#141310` fill, the others the s
 
 ## Install
 
-Install the package (`release/io.github.kharboush.hdmi-sources_0.3.4_all.ipk`, or the manifest in the same folder, with the Homebrew Channel, or the TV's `dev/install`). That is all: the app puts what it needs on Glasshouse's server itself the first time it is opened, and again if that is ever missing or out of date.
+Install the package (`release/io.github.kharboush.hdmi-sources_0.3.5_all.ipk`, or the manifest in the same folder, with the Homebrew Channel, or the TV's `dev/install`). That is all: the app puts what it needs on Glasshouse's server itself the first time it is opened, and again if that is ever missing or out of date.
 
 Open **HDMI Sources** from the app list, or assign it to a remote button in Glasshouse's remote keys. To open it from a command:
 

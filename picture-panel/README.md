@@ -1,6 +1,6 @@
 # Picture Panel
 
-A picture settings panel shown as an **overlay window** over whatever is playing, in the Spotlight View look (square, black, subtle outlines, 95% opaque). It reads and sets the TV's real values, and shows the signal the TV is receiving.
+A picture settings panel shown as an **overlay window** over whatever is playing, in the Spotlight View look (square, black at 90%, a 1px outline at 20% white, the rows' outlines at 10%). It reads and sets the TV's real values, and shows the signal the TV is receiving.
 
 Needs [Glasshouse](https://github.com/rorygallagher2024/glasshouse) running on the TV, and the Homebrew Channel.
 
@@ -51,7 +51,7 @@ Settings are per picture mode and per input, so the panel shows and changes thos
 
 ## Install
 
-Install the package (`release/io.github.kharboush.picture-panel_1.7.2_all.ipk`, or the manifest in the same folder, with the Homebrew Channel, or the TV's `dev/install`). That is all: the app puts what it needs on Glasshouse's server itself the first time it is opened, and again if that is ever missing or out of date.
+Install the package (`release/io.github.kharboush.picture-panel_1.7.4_all.ipk`, or the manifest in the same folder, with the Homebrew Channel, or the TV's `dev/install`). That is all: the app puts what it needs on Glasshouse's server itself the first time it is opened, and again if that is ever missing or out of date.
 
 Open **Picture Panel** from the app list, or assign it to a remote button in Glasshouse's remote keys (it is listed there like any app). To open it from a command:
 
