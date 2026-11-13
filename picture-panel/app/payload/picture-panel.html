@@ -18,10 +18,13 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
 .row.off .lbl,.row.off .val{color:#6b665e}
 .row.focus.off .lbl{color:#a39d93}
 .lbl{font-size:21px;color:#a39d93}
-.row.more{-webkit-justify-content:center;justify-content:center;padding:0 22px}
-.row.more .ctl{display:-webkit-flex;display:flex}
-.row.more .lbl{display:none}
-.row.more .arrow,.row.more.focus .arrow{width:56px;height:56px;line-height:52px;font-size:44px;color:#ece7df;visibility:visible}
+#dots{display:-webkit-flex;display:flex;-webkit-justify-content:space-between;justify-content:space-between;-webkit-align-items:center;align-items:center;margin:0 16px;padding:0 0 14px 6px}
+#pgArrows{display:-webkit-flex;display:flex}
+.pg{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center;cursor:pointer;font-size:21px;color:#a39d93}
+.pg .ar{width:40px;height:40px;margin:-12px 0;line-height:38px;text-align:center;font-size:24px;color:#ece7df}
+#prevPg .ar{-webkit-transform:rotate(-90deg);transform:rotate(-90deg)}
+#nextPg .ar{-webkit-transform:rotate(90deg);transform:rotate(90deg)}
+#pgNum{font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:#6b665e}
 .row.focus .lbl{color:#ece7df}
 .ctl{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center}
 .arrow{width:40px;height:40px;line-height:38px;text-align:center;font-size:24px;color:#3a3732;cursor:pointer}
@@ -45,6 +48,7 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
 <body>
 <div id="panel">
   <div id="info"><div id="cells"></div></div>
+  <div id="dots"><span id="pgNum"></span><div id="pgArrows"><div class="pg" id="prevPg"><span class="ar">&#8250;</span></div><div class="pg" id="nextPg"><span class="ar">&#8250;</span></div></div></div>
   <div id="rows"></div>
 </div>
 <div id="tip"><b id="tipT"></b><span id="tipX"></span></div>
@@ -56,30 +60,68 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
  * Glasshouse's dashboard does. ES5 only.
  */
 (function () {
+  // Three pages of four. A row that only applies sometimes keeps its place, greyed, with the reason.
   var DEFS = [
-    { id: 'pictureMode', label: 'Picture Mode', kind: 'choice', core: true },
-    { id: 'gameGenre', label: 'Game Genre', kind: 'choice', hide: true, gameOnly: true },
-    { id: 'backlight', label: 'OLED Pixel Brightness', kind: 'range', core: true },
-    { id: 'blackLevel', label: 'Black Level', kind: 'choice', names: { auto: 'Auto', low: 'Low', high: 'High' },
-      missing: 'Not on this input' },
-    { id: 'dynamicContrast', label: 'Auto Dynamic Contrast', kind: 'choice' },
-    { id: 'peakBrightness', label: 'Peak Brightness', kind: 'choice' },
-    { id: 'hdrDynamicToneMapping', label: 'Dynamic Tone Mapping', kind: 'choice', hide: true },
-    { id: 'colorTemperature', label: 'Color Temperature', kind: 'temp', core: true },
-    { id: 'truMotionMode', label: 'TruMotion', kind: 'choice', core: true },
-    { id: 'allSettings', label: 'All Settings', kind: 'link', action: 'settings' },
-    { id: 'more', label: 'See more', kind: 'link', action: 'more', always: true }
+    { id: 'pictureMode', label: 'Picture Mode', kind: 'choice', page: 0 },
+    { id: 'backlight', label: 'OLED Pixel Brightness', kind: 'range', page: 0 },
+    { id: 'colorTemperature', label: 'Color Temperature', kind: 'temp', page: 0 },
+    { id: 'truMotionMode', label: 'TruMotion', kind: 'choice', page: 0 },
+    { id: 'brightness', label: 'Black Level', kind: 'range', page: 1 },
+    { id: 'peakBrightness', label: 'Peak Brightness', kind: 'choice', page: 1 },
+    { id: 'dynamicContrast', label: 'Auto Dynamic Contrast', kind: 'choice', page: 1 },
+    { id: 'expressionEnhancer', label: 'Expression Enhancer', kind: 'choice', page: 1, names: { off: 'Off', detail: 'Detail', highlight: 'Brightness' } },
+    { id: 'sharpness', label: 'Sharpness', kind: 'range', page: 2 },
+    { id: 'gamma', label: 'Gamma', kind: 'choice', page: 2, names: { high2: 'BT.1886', mediumHavingLevel: '2.2' } },
+    { id: 'filmmakerAmbientLight', label: 'Filmmaker Ambient Light', kind: 'choice', page: 2, luna: true },
+    { id: 'hdrDynamicToneMapping', label: 'Dynamic Tone Mapping', kind: 'choice', page: 2, missing: 'HDR only' },
+    { id: 'gameGenre', label: 'Game Genre', kind: 'choice', page: 3, gameOnly: true, missing: 'Game modes only' },
+    { id: 'allSettings', label: 'All Settings', kind: 'link', action: 'settings', page: 3 }
   ];
+  var PAGES = 4, PAGE_NAMES = ['Picture', 'Brightness', 'Tuning', 'More'];
   var CELLS = [
-    { id: 'res', label: 'Resolution' }, { id: 'hz', label: 'Refresh rate' }, { id: 'fps', label: 'FPS' }, { id: 'vrr', label: 'VRR' },
+    { id: 'res', label: 'Resolution' }, { id: 'hz', label: 'Refresh rate' }, { id: 'fps', label: 'Frame rate' }, { id: 'vrr', label: 'VRR' },
     { id: 'hdr', label: 'Dynamic range' }, { id: 'allm', label: 'Low latency' }, { id: 'color', label: 'Color' }, { id: 'bits', label: 'Bit depth' },
     { id: 'speed', label: 'Link speed' }, { id: 'vdata', label: 'Video data' }, { id: 'audio', label: 'Audio' }, { id: 'out', label: 'Audio output' }
   ];
   var cellEls = {}, sig = null, now = null, fps = null, aud = null;
-  var sel = 0, idleTimer = null, loaded = false, shown = false, expanded = false;
+  var sel = 0, idleTimer = null, loaded = false, shown = false, page = 0, stale = false;
   var rowsEl = document.getElementById('rows');
   var tipEl = document.getElementById('tip'), tipT = document.getElementById('tipT'), tipX = document.getElementById('tipX');
-  var els = [], pending = {};
+  var els = [], pending = {}, gen = 0;
+
+  // Filmmaker Ambient Light is not one of Glasshouse's rows, so it is read and set the way the
+  // launcher sets the panel up: through the Homebrew Channel's exec service, which runs the TV's
+  // own luna-send. It needs no part of Glasshouse.
+  function exec(cmd, cb) {
+    var b, done = false, t;
+    function end(r) { if (!done) { done = true; clearTimeout(t); cb(r); } }
+    try { b = new PalmServiceBridge(); } catch (e) { return cb(null); }
+    t = setTimeout(function () { end(null); }, 5000);
+    b.onservicecallback = function (m) { var r = null; try { r = JSON.parse(m); } catch (e) { r = null; } end(r); };
+    b.call('luna://org.webosbrew.hbchannel.service/exec', JSON.stringify({ command: cmd }));
+  }
+  var SETTINGS = 'luna-send -n 1 luna://com.webos.service.settings/';
+  function readAmbient(cb) {
+    exec(SETTINGS + "getSystemSettings '{\"category\":\"picture\",\"keys\":[\"filmmakerAmbientLight\"]}'", function (r) {
+      var v = null;
+      try {
+        var out = String(r && r.stdoutString || '').replace(/\s+$/, '').split('\n');
+        v = JSON.parse(out[out.length - 1]).settings.filmmakerAmbientLight;
+      } catch (e) { v = null; }
+      cb(v === 'on' || v === 'off' ? { id: 'filmmakerAmbientLight', value: v,
+        choices: [{ value: 'on', label: 'On' }, { value: 'off', label: 'Off' }] } : null);
+    });
+  }
+  function writeAmbient(value, cb) {
+    exec(SETTINGS + "setSystemSettings '{\"category\":\"picture\",\"settings\":{\"filmmakerAmbientLight\":\"" + value + "\"}}'", function (r) {
+      var ok = false;
+      try {
+        var out = String(r && r.stdoutString || '').replace(/\s+$/, '').split('\n');
+        ok = JSON.parse(out[out.length - 1]).returnValue === true;
+      } catch (e) { ok = false; }
+      cb(ok);
+    });
+  }
 
   function http(method, url, body, cb) {
     var x = new XMLHttpRequest();
@@ -115,8 +157,8 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
   }
   function text(c) {
     if (c.def.kind === 'link') return '';
-    if (!loaded && !shown) return '\u2014';       // until the TV has answered
-    if (!c.row) return c.def.missing || 'Not available';
+    if ((!loaded && !shown) || (stale && c.def.id !== 'pictureMode')) return '\u2014';   // until the TV has answered
+    if (!usable(c)) return c.def.missing || 'Not available';
     if (c.def.kind === 'range') return String(c.row.value);
     if (c.def.kind === 'temp') {
       var v = c.row.value;
@@ -129,37 +171,40 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
   }
   function paint(i) {
     var c = ctl[i], e = els[i];
-    var cls = 'row' + (c.def.action === 'more' ? ' more' : '') + (i === sel ? ' focus' : '');
-    if (c.def.kind !== 'link') cls += !c.row ? ' na' : (c.row.active === false ? ' off' : '');
+    var cls = 'row' + (i === sel ? ' focus' : '');
+    if (c.def.kind !== 'link') cls += !usable(c) ? ' na' : (c.row.active === false ? ' off' : '');
     e.row.className = cls;
-    e.row.style.display = visible(i) ? '' : 'none';
-    if (c.def.action === 'more') { e.lbl.textContent = ''; e.arrow.style.webkitTransform = e.arrow.style.transform = expanded ? 'rotate(-90deg)' : 'rotate(90deg)'; }
+    e.row.style.display = c.def.page === page ? '' : 'none';
     e.val.textContent = text(c);
   }
-  function paintAll() { for (var i = 0; i < ctl.length; i++) paint(i); }
+  function paintAll() {
+    page = ctl[sel].def.page;
+    for (var i = 0; i < ctl.length; i++) paint(i);
+    // The strip under the rows: the page's name on the left, up and down arrows on the right.
+    document.getElementById('pgNum').textContent = PAGE_NAMES[page];
+  }
 
-  // A row marked hide is left out when the TV does not offer it here; Game Genre also only
-  // shows in a game picture mode (game, HDR game, Dolby Vision game).
+  // Game Genre only applies in a game picture mode (game, HDR game, Dolby Vision game).
   function isGameMode() { return !!(ctl[0].row && /game/i.test(String(ctl[0].row.value))); }
-  function visible(i) {
-    var c = ctl[i];
-    if (!expanded && !c.def.core && !c.def.always) return false;
-    if (c.def.hide && !c.row) return false;
+  function usable(c) {
+    if (c.def.kind === 'link') return true;
+    if (stale && c.def.id !== 'pictureMode') return false;
+    if (!c.row) return false;
     if (c.def.gameOnly && !isGameMode()) return false;
     return true;
   }
-  // Moves the selection to the next shown row, wrapping at either end.
-  function step(dir) {
-    var n = ctl.length, i = sel, k;
-    for (k = 0; k < n; k++) {
-      i = (i + dir + n) % n;
-      if (visible(i)) { sel = i; return; }
-    }
-  }
+  // Up and Down run through all twelve rows, so going past a page's last row turns to the next
+  // page and past its first to the one before, wrapping at both ends.
+  function step(dir) { sel = (sel + dir + ctl.length) % ctl.length; }
 
   // ---- the signal block: read only, refreshed while the panel is open
   var HDR = { hdr10: 'HDR10', hdr10plus: 'HDR10+', dolby_vision: 'Dolby Vision', hlg: 'HLG', sdr: 'SDR' };
   function num(n) { return String(Math.round(n * 100) / 100); }
+  // The TV's HDMI receiver gives the rate cut down to a whole number: 23.976 Hz reads 23. The NTSC-style
+  // rates are the only standard ones just under a whole number, so a whole 23, 29, 47, 59 or 119 is taken
+  // as 23.976, 29.97, 47.952, 59.94 or 119.88. Other readings, and rates already given with decimals, stand.
+  var FRACTIONAL = { 23: 23.976, 29: 29.97, 47: 47.952, 59: 59.94, 119: 119.88 };
+  function rate(hz) { return num(hz === Math.floor(hz) && FRACTIONAL[hz] ? FRACTIONAL[hz] : hz); }
   function vrrName(t) {
     var k = String(t || '').toLowerCase().replace(/[^a-z]/g, '');
     if (!k || k === 'off' || k === 'fixed') return '';
@@ -213,6 +258,10 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
     var gbps = (s.width * s.height * s.hz * factor * bits) / 1e9;
     return (Math.round(gbps * 10) / 10) + ' Gbps';
   }
+  function fmtType() {
+    var f = stats && stats.signal_format;
+    return f && f.type ? (f.type_display || HDR[f.type] || String(f.type).toUpperCase()) : null;
+  }
   function outName() {
     var snd = stats && stats.sound;
     if (!snd || !snd.output_raw) return null;
@@ -230,14 +279,17 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
     link = hm && stats.signal_timing ? linkOf(stats, Number(hm[1])) : null;
     var v = {
       res: s && s.width ? s.width + '\u00d7' + s.height : null,
-      hz: s && s.hz ? num(s.hz) + ' Hz' : null,
+      hz: s && s.hz ? rate(s.hz) + ' Hz' : null,
       vrr: s ? (t || (s.vrr ? 'On' : 'Off')) : null,
-      hdr: s ? (HDR[s.hdr] || (s.hdr ? String(s.hdr).toUpperCase() : 'SDR')) : null,
+      // From the TV's video output service, as Glasshouse's dashboard reads it: it names both ways a source
+      // announces Dolby Vision, where Home's reading of the HDMI receiver knows only one (the Apple TV's menus
+      // read SDR there). Home's reading stands in when the service gives none.
+      hdr: fmtType() || (s ? (HDR[s.hdr] || (s.hdr ? String(s.hdr).toUpperCase() : 'SDR')) : null),
       allm: s ? (s.allm ? 'On' : 'Off') : null,
       color: s && s.chroma ? s.chroma : null,
       bits: s && s.bits ? s.bits + '-bit' : null,
       audio: audioText(),
-      fps: fps && !offInput && fps.frameRate ? String(Math.round(fps.frameRate)) : null,
+      fps: fps && !offInput && fps.frameRate ? num(fps.frameRate) + ' FPS' : null,
       speed: link ? ('HDMI ' + link.ver) : null,
       vdata: !offInput ? videoData(s) : null,
       out: outName()
@@ -289,32 +341,40 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
     var by = {};
     rows.forEach(function (r) { by[r.id] = r; });
     ctl.forEach(function (c) { c.row = c.def.kind === 'link' ? {} : (by[c.def.id] || null); });
-    if (!visible(sel)) step(1);
     paintAll();
   }
 
   function load(quiet) {
     // Both sections are asked for at once.
-    var pic, game, left = 2;
+    var pic, game, amb, left = 3, g = gen;
     function done() {
       if (--left) return;
+      // A change made after this read started wins over what it brings back.
+      if (g !== gen) return;
       if (!pic || !pic.ok) {
         if (!quiet) say('Could not read the TV', 'Glasshouse did not answer. Is it running?', true);
         return;
       }
       loaded = true;
+      stale = false;
       var rows = pic.rows || [];
       if (game && game.ok) rows = rows.concat(game.rows || []);
+      if (amb) rows.push(amb);
       apply(rows);
-      try { localStorage.setItem('picture-panel-rows', JSON.stringify(rows)); } catch (e) { /* not kept */ }
       if (!quiet) say('');
       if (ctl[sel].row && ctl[sel].row.active === false) hint();
     }
     http('GET', '/api/lgsettings?section=picture&t=' + Date.now(), null, function (r) { pic = r; done(); });
     http('GET', '/api/lgsettings?section=game&t=' + Date.now(), null, function (g) { game = g; done(); });
+    readAmbient(function (a) { amb = a; done(); });
   }
 
   function send(c, value) {
+    if (c.def.luna) {
+      return writeAmbient(value, function (ok) {
+        if (!ok) { say('The TV did not accept that', '', true); load(true); } else say('');
+      });
+    }
     http('POST', '/api/control', { action: 'lgSetting', value: { id: c.def.id, value: value } }, function (ok, r) {
       if (!ok || (r && r.ok === false)) {
         say('The TV did not accept that', r && r.error ? r.error : '', true);
@@ -323,22 +383,30 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
       }
       say('');
       // A picture mode brings its own set of every other value with it.
-      if (c.def.id === 'pictureMode') setTimeout(function () { load(true); }, 700);
+      if (c.def.id === 'pictureMode') { var g = gen; setTimeout(function () { if (g === gen) load(true); }, 700); }
     });
   }
 
   function change(i, dir) {
     var c = ctl[i];
     if (c.def.kind === 'link') { if (dir > 0) activate(c); return; }
-    if (!c.row || !loaded) return;
+    if (!usable(c) || !loaded) return;
     if (c.row.active === false) { hint(); return; }
+    gen++;
     if (c.def.kind === 'choice') {
       var n = c.row.choices.length, at = choiceAt(c);
       if (!n) return;
       at = (at + dir + n) % n;
       c.row.value = c.row.choices[at].value;
       paint(i);
-      send(c, c.row.value);
+      // Flicking through picture modes: only the one left on for a moment is sent.
+      if (c.def.id === 'pictureMode') {
+        // Every other value belongs to the old mode until the TV is read again: dashes and greyed.
+        stale = true;
+        paintAll();
+        if (pending.pictureMode) clearTimeout(pending.pictureMode);
+        pending.pictureMode = setTimeout(function () { pending.pictureMode = null; send(c, c.row.value); }, 500);
+      } else send(c, c.row.value);
     } else {
       // Colour temperature is stored warm-negative, but the number shown (Warm 10) goes up
       // to the right, so its arrows are flipped: Left lowers what is shown, Right raises it.
@@ -365,8 +433,7 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
   }
 
   function activate(c) {
-    if (c.def.action === 'more') { expanded = !expanded; paintAll(); hint(); }
-    else openSettings();
+    openSettings();
   }
 
   function openSettings() {
@@ -396,6 +463,14 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
       left.addEventListener('mousedown', function (e) { e.stopPropagation(); sel = i; change(i, -1); paintAll(); poke(); });
       right.addEventListener('mousedown', function (e) { e.stopPropagation(); sel = i; change(i, 1); paintAll(); poke(); });
     });
+    // Magic Remote pointer: either side of the strip opens the page it names, at its first row.
+    function turn(d) {
+      var p = (page + d + PAGES) % PAGES;
+      for (var k = 0; k < ctl.length; k++) if (ctl[k].def.page === p) { sel = k; break; }
+      paintAll(); hint(); poke();
+    }
+    document.getElementById('prevPg').addEventListener('mousedown', function () { turn(-1); });
+    document.getElementById('nextPg').addEventListener('mousedown', function () { turn(1); });
     paintAll();
   }
 
@@ -420,11 +495,8 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
   build();
   buildInfo();
   if (lastInfo) paintInfo();
-  // The last values the TV gave are shown at once; changes wait for the TV's own answer (loaded).
-  try {
-    var saved = JSON.parse(localStorage.getItem('picture-panel-rows') || 'null');
-    if (saved && saved.length) { shown = true; apply(saved); }
-  } catch (e) { /* nothing kept */ }
+  // The settings show a dash until the TV answers; only the signal block keeps its last values.
+  try { localStorage.removeItem('picture-panel-rows'); } catch (e) { /* nothing kept */ }
   load(false);
   loadInfo();
   setInterval(loadInfo, 3000);
