@@ -11,13 +11,14 @@ Needs [Glasshouse](https://github.com/rorygallagher2024/glasshouse) running on t
 | Resolution | Refresh rate | FPS | VRR |
 |---|---|---|---|
 | **Dynamic range** | **Low latency** | **Color** | **Bit depth** |
-| **HDMI** | **Speed** | **Audio** | **Audio output** |
+| **Link speed** | **Video data** | **Audio** | **Audio output** |
 
 - What is on screen is the TV's own foreground app, not Glasshouse's "last input". On an app or Home the picture is read the same way (Home gives 1080p SDR, for example).
 - FPS is the frame rate Glasshouse's game reading reports, and shows only on an HDMI input in game content. Under VRR the refresh rate stays at the link's rate (120 Hz) while FPS moves.
 - VRR is the kind in use as the TV names it (G-SYNC, FreeSync, HDMI VRR) or Off; a plain On only when the TV says VRR is active without saying which.
 - Dynamic range is SDR, HDR10, HDR10+, HLG or Dolby Vision.
-- HDMI is the version of the link on that input (2.1 for FRL, 2.0 or 1.4 for TMDS) and Speed its bandwidth, from the TV's stats. Both are dashes off an HDMI input.
+- Link speed is the HDMI mode agreed with the device on that input: "HDMI 2.1" when it uses FRL, "HDMI 2.0" or "HDMI 1.4" for the older TMDS modes, from the TV's stats. It is a dash off an HDMI input.
+- Video data is not the link's own top speed: it is what the picture itself needs, worked out from its resolution, refresh rate, colour format and bit depth. It is normally well under the link's ceiling.
 - Audio is what the TV is receiving on its HDMI inputs: PCM, Dolby Digital, Dolby Digital+, Dolby TrueHD, DTS, DTS-HD, and Dolby Atmos or DTS:X when flagged. It is None for silence on an HDMI input and a dash elsewhere, where the sound is made inside the TV. Glasshouse has no channel count or sample rate.
 - Audio output is the TV's output setting (TV Speaker, Optical, Bluetooth...); over ARC it is the soundbar's name when Glasshouse has found one.
 - The last values the TV gave, for both the settings and the Signal block, are shown at once when the panel opens and replaced when the TV answers. A change is never sent until the TV has answered.
@@ -45,7 +46,7 @@ Settings are per picture mode and per input, so the panel shows and changes thos
 
 ## Install
 
-Install the package (`release/io.github.kharboush.picture-panel_1.1.16_all.ipk`, or the manifest in the same folder, with the Homebrew Channel, or the TV's `dev/install`). That is all: the app puts what it needs on Glasshouse's server itself the first time it is opened, and again if that is ever missing or out of date.
+Install the package (`release/io.github.kharboush.picture-panel_1.1.18_all.ipk`, or the manifest in the same folder, with the Homebrew Channel, or the TV's `dev/install`). That is all: the app puts what it needs on Glasshouse's server itself the first time it is opened, and again if that is ever missing or out of date.
 
 Open **Picture Panel** from the app list, or assign it to a remote button in Glasshouse's remote keys (it is listed there like any app). To open it from a command:
 

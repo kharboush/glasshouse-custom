@@ -73,7 +73,7 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
   var CELLS = [
     { id: 'res', label: 'Resolution' }, { id: 'hz', label: 'Refresh rate' }, { id: 'fps', label: 'FPS' }, { id: 'vrr', label: 'VRR' },
     { id: 'hdr', label: 'Dynamic range' }, { id: 'allm', label: 'Low latency' }, { id: 'color', label: 'Color' }, { id: 'bits', label: 'Bit depth' },
-    { id: 'hdmi', label: 'HDMI' }, { id: 'speed', label: 'Speed' }, { id: 'audio', label: 'Audio' }, { id: 'out', label: 'Audio output' }
+    { id: 'speed', label: 'Link speed' }, { id: 'vdata', label: 'Video data' }, { id: 'audio', label: 'Audio' }, { id: 'out', label: 'Audio output' }
   ];
   var cellEls = {}, sig = null, now = null, fps = null, aud = null;
   var sel = 0, idleTimer = null, loaded = false, shown = false, expanded = false;
@@ -204,6 +204,15 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
   var OUTS = { tv_speaker: 'TV Speaker', external_optical: 'Optical', tv_external_speaker: 'TV + Optical',
     external_arc: 'HDMI ARC', bt_soundbar: 'Bluetooth', tv_speaker_bluetooth: 'TV + Bluetooth',
     mobile_phone: 'Mobile Phone', flex_connector: 'Flex Connector' };
+  // What the picture itself needs, from its resolution, refresh rate, colour format and bit depth —
+  // not the link's own top speed, which may be well above this.
+  function videoData(s) {
+    if (!s || !s.width || !s.height || !s.hz) return null;
+    var bits = s.bits || 8;
+    var factor = /4:2:0/.test(String(s.chroma)) ? 1.5 : /4:2:2/.test(String(s.chroma)) ? 2 : 3;
+    var gbps = (s.width * s.height * s.hz * factor * bits) / 1e9;
+    return (Math.round(gbps * 10) / 10) + ' Gbps';
+  }
   function outName() {
     var snd = stats && stats.sound;
     if (!snd || !snd.output_raw) return null;
@@ -229,8 +238,8 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
       bits: s && s.bits ? s.bits + '-bit' : null,
       audio: audioText(),
       fps: fps && !offInput && fps.frameRate ? String(Math.round(fps.frameRate)) : null,
-      hdmi: link ? link.ver : null,
-      speed: link ? link.speed : null,
+      speed: link ? ('HDMI ' + link.ver) : null,
+      vdata: !offInput ? videoData(s) : null,
       out: outName()
     };
     // Until the TV has answered for the signal and the audio, the last readings stand in for dashes.
