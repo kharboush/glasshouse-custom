@@ -5,7 +5,7 @@ HERE=$(cd "$(dirname "$0")" && pwd)
 HOOKDIR=/var/lib/webosbrew/init.d
 fail() { printf '{"ok":false,"error":"%s"}\n' "$1"; exit 0; }
 
-for f in SimpleBanner.qml patch.js restyle.sh boot.sh; do [ -f "$HERE/$f" ] || fail "the app is missing its files"; done
+for f in SimpleBanner.qml patch.js splash.js restyle.sh boot.sh; do [ -f "$HERE/$f" ] || fail "the app is missing its files"; done
 command -v node >/dev/null 2>&1 || fail "this TV has no node to build the files with"
 # ares-package stores plain files as 0666 and the installer owns them as another user; root runs
 # them at every boot, so they are made root-owned and not writable by anyone else.

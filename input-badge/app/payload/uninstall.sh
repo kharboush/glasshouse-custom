@@ -8,6 +8,11 @@ for f in InputBanner/SimpleBanner.qml InputBanner/InputBanner.qml BannerItems/Ba
     umount "$Q/$f" || { printf '{"ok":false,"error":"could not unmount; restart the TV"}\n'; exit 0; }
   fi
 done
+for n in 1 2 3 4; do
+  for f in /usr/palm/applications/com.webos.app.hdmi$n/assets/HDMI-${n}_splash.astc /usr/palm/applications/com.webos.app.hdmi$n/assets/HDMI-${n}_splash.png; do
+    grep -q " $f " /proc/mounts && umount "$f"
+  done
+done
 P=$(pidof $APP)
 if [ -n "$P" ]; then
   FG=$(luna-send -n 1 -w 8000 luna://com.webos.applicationManager/getForegroundAppInfo '{}' 2>/dev/null | grep -o '"appId":"[^"]*"' | cut -d'"' -f4)

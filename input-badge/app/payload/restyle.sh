@@ -32,6 +32,23 @@ for f in $FILES; do
   mount --bind "$W/files/$(basename "$f")" "$Q/$f" || { echo "could not mount $f"; for g in $FILES; do grep -q " $Q/$g " /proc/mounts && umount "$Q/$g"; done; exit 1; }
 done
 
+# The grey launch splash of each HDMI input (shown while it opens) becomes plain black: made once
+# from LG's file sizes (splash.js) and laid over both of each input's splash files. Done on its
+# own, so a failure here leaves LG's splash and does not affect the banner.
+SPLASH_SUMS=$(md5sum < "$HERE/splash.js" | cut -d' ' -f1)
+for n in 1 2 3 4; do
+  A=/usr/palm/applications/com.webos.app.hdmi$n/assets
+  for f in "$A/HDMI-${n}_splash.astc" "$A/HDMI-${n}_splash.png"; do grep -q " $f " /proc/mounts && umount "$f"; done
+  [ -f "$A/HDMI-${n}_splash.astc" ] && [ -f "$A/HDMI-${n}_splash.png" ] || { echo "HDMI $n has no splash files"; continue; }
+  if [ ! -s "$W/splash/black.astc" ] || [ "$(cat "$W/splash/stamp" 2>/dev/null)" != "$SPLASH_SUMS" ]; then
+    rm -rf "$W/splash"
+    out=$(node "$HERE/splash.js" "$A/HDMI-${n}_splash.astc" "$A/HDMI-${n}_splash.png" "$W/splash" 2>&1) \
+      && echo "$SPLASH_SUMS" > "$W/splash/stamp" || { rm -rf "$W/splash"; echo "splash not made: $out"; break; }
+  fi
+  mount --bind "$W/splash/black.astc" "$A/HDMI-${n}_splash.astc" && mount --bind "$W/splash/black.png" "$A/HDMI-${n}_splash.png" \
+    || echo "could not mount the splash for HDMI $n"
+done
+
 # LG's input app keeps its pages loaded, so it is restarted, and the input on screen reopened.
 P=$(pidof $APP)
 if [ -n "$P" ]; then

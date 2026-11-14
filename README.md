@@ -20,7 +20,7 @@ See [customizations/README.md](customizations/README.md) for what the layout cha
 
 ## Also here: Input Badge
 
-[input-badge/](input-badge/) restyles the banner LG shows when you switch inputs: an HDMI Sources tile (320×112, black at 90%, a 1px outline, the input's name over its port) 32px from the side, where LG's banner position setting puts it. Like Settings Restyle, a boot hook builds it on the TV from LG's own files at every start; LG's files are not in this repository. See its [README](input-badge/README.md).
+[input-badge/](input-badge/) restyles the banner LG shows when you switch inputs: an HDMI Sources tile (320×112, black at 90%, a 1px outline, the input's name over its port) 32px from the side, where LG's banner position setting puts it. Like Settings Restyle, a boot hook builds it on the TV from LG's own files at every start; It also makes the grey screen shown while an input opens plain black. LG's files are not in this repository. See its [README](input-badge/README.md).
 
 ## Also here: Picture Panel and HDMI Sources
 
