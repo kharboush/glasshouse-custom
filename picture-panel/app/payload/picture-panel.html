@@ -403,9 +403,18 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
     paintAll();
   }
 
+  // The two Glasshouse sections are asked for at once and shown as soon as both answer. Filmmaker
+  // Ambient Light comes through the Homebrew Channel, which takes a few seconds (it starts a shell
+  // and luna-send each time), so it is not waited for: its row fills in when it answers.
+  var ambRow = null;
   function load(quiet) {
-    // Both sections are asked for at once.
-    var pic, game, amb, left = 3, g = gen;
+    var pic, game, left = 2, g = gen;
+    function rowsNow() {
+      var rows = pic.rows || [];
+      if (game && game.ok) rows = rows.concat(game.rows || []);
+      if (ambRow) rows = rows.concat([ambRow]);
+      return rows;
+    }
     function done() {
       if (--left) return;
       // A change made after this read started wins over what it brings back.
@@ -416,15 +425,16 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
       }
       loaded = true;
       stale = false;
-      var rows = pic.rows || [];
-      if (game && game.ok) rows = rows.concat(game.rows || []);
-      if (amb) rows.push(amb);
-      apply(rows);
+      apply(rowsNow());
       if (!quiet) hint();
     }
     http('GET', '/api/lgsettings?section=picture&t=' + Date.now(), null, function (r) { pic = r; done(); });
-    http('GET', '/api/lgsettings?section=game&t=' + Date.now(), null, function (g) { game = g; done(); });
-    readAmbient(function (a) { amb = a; done(); });
+    http('GET', '/api/lgsettings?section=game&t=' + Date.now(), null, function (r) { game = r; done(); });
+    readAmbient(function (a) {
+      ambRow = a;
+      if (g !== gen || left || !pic || !pic.ok) return;      // the rest not in yet: it is added then
+      apply(rowsNow());
+    });
   }
 
   function send(c, value) {
@@ -674,6 +684,9 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
   loadInfo();
   setInterval(loadInfo, 3000);
   poke();
+  // Put in the background (another app opened, or Home), it closes, so it does not stay loaded.
+  // Only its own window: a "back" from a hidden page would reach the app on screen.
+  document.addEventListener('visibilitychange', function () { if (document.hidden) window.close(); });
 })();
 </script>
 </body>

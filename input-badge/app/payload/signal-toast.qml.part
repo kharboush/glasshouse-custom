@@ -181,10 +181,29 @@
         Timer {
             interval: 500
             repeat: true
-            running: true
+            running: rangeToast.onScreen
             triggeredOnStart: true
             onTriggered: atmosWatch.callService({})
         }
 
-        Component.onCompleted: rangeWatch.callService({"subscribe": true})
+        // All of it runs only in the input app that is on screen. LG keeps one preloaded for each
+        // input; the ones in the background watch nothing and show nothing. Coming on screen, it
+        // starts afresh, so the input's own format is read first and not shown as a change.
+        property bool onScreen: systemProperties.isWindowMaximized
+        onOnScreenChanged: onScreen ? start() : stop()
+        Component.onCompleted: if (onScreen) start()
+
+        function start () {
+            rangeToast.video = "";
+            rangeToast.seenVideo = false;
+            rangeToast.seenAudio = false;
+            rangeWatch.callService({"subscribe": true});
+        }
+
+        function stop () {
+            rangeWatch.cancel();
+            rangeDelay.stop();
+            rangeHide.stop();
+            rangeBox.visible = false;
+        }
     }

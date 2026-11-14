@@ -1,14 +1,14 @@
 {
   "id": "io.github.kharboush.input-badge",
-  "version": "1.2.0",
+  "version": "1.2.3",
   "type": "web",
   "title": "Input Badge",
   "appDescription": "LG's input name banner as an HDMI Sources tile, a signal toast in place of LG's Dolby and HDR toasts, and a black screen while an input opens",
   "iconUri": "https://raw.githubusercontent.com/kharboush/glasshouse-custom/main/input-badge/app/icon130.png",
   "sourceUrl": "https://github.com/kharboush/glasshouse-custom",
   "rootRequired": true,
-  "ipkUrl": "io.github.kharboush.input-badge_1.2.0_all.ipk",
+  "ipkUrl": "io.github.kharboush.input-badge_1.2.3_all.ipk",
   "ipkHash": {
-    "sha256": "a347791f426f40736e14176d6eb82c8af85539fa8da1f608b0f9e4212e72df0a"
+    "sha256": "01f63ea6263c26d9e1032c5906a780381fc89f73ef66683cd82e494b38c2611e"
   }
 }

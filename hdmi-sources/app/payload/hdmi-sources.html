@@ -217,6 +217,9 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
 
   load();
   setInterval(load, 5000);
+  // Put in the background (another app opened, or Home), it closes, so it does not stay loaded.
+  // Only its own window: a "back" from a hidden page would reach the app on screen.
+  document.addEventListener('visibilitychange', function () { if (document.hidden) window.close(); });
   poke();
 })();
 </script>

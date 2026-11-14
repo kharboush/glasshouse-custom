@@ -106,6 +106,9 @@ body{display:flex;display:-webkit-flex;align-items:center;-webkit-align-items:ce
     }
   });
 
+  // Left in the background once you have moved on, it closes, so it does not stay loaded; not while
+  // a setup or removal is running.
+  document.addEventListener('visibilitychange', function () { if (document.hidden && !busy) window.close(); });
   install();
 })();
 </script>

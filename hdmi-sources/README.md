@@ -26,7 +26,7 @@ The selected tile has the 2px white outline and `#141310` fill, the others the s
 
 ## Install
 
-Install the package (`release/io.github.kharboush.hdmi-sources_0.3.5_all.ipk`, or the manifest in the same folder, with the Homebrew Channel, or the TV's `dev/install`). That is all: the app puts what it needs on Glasshouse's server itself the first time it is opened, and again if that is ever missing or out of date.
+Install the package (`release/io.github.kharboush.hdmi-sources_0.3.6_all.ipk`, or the manifest in the same folder, with the Homebrew Channel, or the TV's `dev/install`). That is all: the app puts what it needs on Glasshouse's server itself the first time it is opened, and again if that is ever missing or out of date.
 
 Open **HDMI Sources** from the app list, or assign it to a remote button in Glasshouse's remote keys. To open it from a command:
 

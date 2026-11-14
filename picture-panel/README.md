@@ -38,7 +38,7 @@ The choices are the ones the TV itself offers (this G6 has no "Clear" TruMotion,
 
 Staying on a row for three seconds shows a box beside the panel: the setting's name, Glasshouse's own description of it (read from the TV's reply, not kept in the page), and a short recommendation line from this panel where there is one (for example "Use High for HDR and Off for SDR." for Peak Brightness). The box goes away as soon as you move.
 
-Filmmaker Ambient Light is not one of Glasshouse's settings, so the panel reads and sets it through the Homebrew Channel's exec service (the TV's own `luna-send`), the way the launcher installs the page. It needs nothing from Glasshouse. LG hides and greys it outside Filmmaker Mode, so the panel asks the TV whether it applies and shows it greyed when it does not.
+Filmmaker Ambient Light is not one of Glasshouse's settings, so the panel reads and sets it through the Homebrew Channel's exec service; that takes a few seconds, so the other settings are shown as soon as Glasshouse answers and its row fills in after (the TV's own `luna-send`), the way the launcher installs the page. It needs nothing from Glasshouse. LG hides and greys it outside Filmmaker Mode, so the panel asks the TV whether it applies and shows it greyed when it does not.
 
 Settings are per picture mode and per input, so the panel shows and changes those of the input on screen. Changing the picture mode re-reads everything.
 
@@ -53,7 +53,7 @@ Settings are per picture mode and per input, so the panel shows and changes thos
 
 ## Install
 
-Install the package (`release/io.github.kharboush.picture-panel_1.8.8_all.ipk`, or the manifest in the same folder, with the Homebrew Channel, or the TV's `dev/install`). That is all: the app puts what it needs on Glasshouse's server itself the first time it is opened, and again if that is ever missing or out of date.
+Install the package (`release/io.github.kharboush.picture-panel_1.9.0_all.ipk`, or the manifest in the same folder, with the Homebrew Channel, or the TV's `dev/install`). That is all: the app puts what it needs on Glasshouse's server itself the first time it is opened, and again if that is ever missing or out of date.
 
 Open **Picture Panel** from the app list, or assign it to a remote button in Glasshouse's remote keys (it is listed there like any app). To open it from a command:
 
