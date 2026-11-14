@@ -6,8 +6,9 @@
 # were built, so a failure, or a firmware that changed them, leaves LG's banner in place.
 HERE=$(cd "$(dirname "$(readlink -f "$0")")" && pwd)
 APP=com.webos.app.inputcommon
-Q=/usr/palm/applications/$APP/qml/UserInterfaceLayer/Containers/MainViewLayer
-FILES="InputBanner/SimpleBanner.qml InputBanner/InputBanner.qml BannerItems/BannerListView.qml"
+Q=/usr/palm/applications/$APP/qml
+MV=UserInterfaceLayer/Containers/MainViewLayer
+FILES="$MV/InputBanner/SimpleBanner.qml $MV/InputBanner/InputBanner.qml $MV/BannerItems/BannerListView.qml RootWindow.qml"
 W=/var/lib/input-badge
 
 # LG's files are only readable with nothing mounted over them.
@@ -17,7 +18,7 @@ for f in $FILES; do
 done
 
 mkdir -p "$W" || exit 1
-sums=$( { for f in $FILES; do md5sum "$Q/$f"; done; md5sum < "$HERE/SimpleBanner.qml"; md5sum < "$HERE/patch.js"; } | md5sum | cut -d' ' -f1 )
+sums=$( { for f in $FILES; do md5sum "$Q/$f"; done; md5sum < "$HERE/SimpleBanner.qml"; md5sum < "$HERE/patch.js"; md5sum < "$HERE/signal-toast.qml.part"; } | md5sum | cut -d' ' -f1 )
 if [ ! -s "$W/files/SimpleBanner.qml" ] || [ "$(cat "$W/stamp" 2>/dev/null)" != "$sums" ]; then
   rm -rf "$W/files.new" "$W/stamp"
   out=$(node "$HERE/patch.js" "$Q" "$HERE" "$W/files.new" 2>&1) || { rm -rf "$W/files.new"; echo "not applied: $out"; exit 1; }
@@ -48,6 +49,14 @@ for n in 1 2 3 4; do
   mount --bind "$W/splash/black.astc" "$A/HDMI-${n}_splash.astc" && mount --bind "$W/splash/black.png" "$A/HDMI-${n}_splash.png" \
     || echo "could not mount the splash for HDMI $n"
 done
+
+# LG's own toasts are switched off, so the Dolby and HDR ones give way to the signal toast. The
+# notification service has no way to switch off only some, so this hides every ordinary toast (alerts
+# still show). It is not kept across restarts, so it is done at every start, once the service answers.
+( for t in $(seq 1 60); do
+    luna-send -n 1 -w 3000 luna://com.webos.notification/disable '{}' 2>/dev/null | grep -q '"returnValue":true' && break
+    sleep 2
+  done ) </dev/null >/dev/null 2>&1 &
 
 # LG's input app keeps its pages loaded, so it is restarted, and the input on screen reopened.
 P=$(pidof $APP)

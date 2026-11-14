@@ -1,0 +1,190 @@
+/*
+ * Input Badge: the signal toast, added by patch.js inside LG's RootWindow.qml (the input app's root),
+ * just before its last closing brace. Not LG's code. It needs "import WebOSServices 1.0", which
+ * patch.js also adds, and uses the root's styleSheet and systemProperties.
+ */
+    // Input Badge: a toast in the Picture Panel's signal style (small grey labels over values), top
+    // right, when the picture's dynamic range changes or Dolby Atmos starts. Everything in it is read
+    // from the TV itself: the picture from the video output service, the sound from the audio service.
+    Item {
+
+        id: rangeToast
+
+        property string video: ""
+        property string size: ""
+        property string rate: ""
+        property string sound: ""
+        property bool atmos: false
+        property bool vrr: false
+        property bool seenVideo: false
+        property bool seenAudio: false
+        // Two rows of two: dynamic range and audio, then resolution and refresh rate (with VRR on it
+        // when VRR is on). With no sound the audio place is left empty, so the rows stay as they are.
+        property var cells: [
+            { k: "Dynamic range", v: video },
+            { k: sound !== "" ? "Audio" : "", v: sound },
+            { k: "Resolution", v: size },
+            { k: "Refresh rate", v: rate + (vrr && rate !== "" ? " VRR" : "") }
+        ]
+
+        anchors.fill: parent
+        z: 100000
+
+        Rectangle {
+
+            id: rangeBox
+
+            visible: false
+            anchors {
+                top: parent.top
+                right: parent.right
+                topMargin: styleSheet.guiSize(32)
+                rightMargin: styleSheet.guiSize(32)
+            }
+            width: cellRow.x + cellRow.width + styleSheet.guiSize(22)
+            height: cellRow.height + styleSheet.guiSize(40)
+            color: Qt.rgba(0, 0, 0, 0.9)
+            border.width: 1
+            border.color: Qt.rgba(244/255, 241/255, 234/255, 0.2)
+
+            // Two lines of cells, as the Picture Panel's signal block lays them out, each at least the
+            // panel's cell width.
+            Grid {
+                id: cellRow
+                x: styleSheet.guiSize(22)
+                anchors.verticalCenter: parent.verticalCenter
+                columns: 2
+                columnSpacing: styleSheet.guiSize(24)
+                rowSpacing: styleSheet.guiSize(14)
+
+                Repeater {
+                    model: rangeToast.cells
+
+                    Column {
+                        width: Math.max(styleSheet.guiSize(160), implicitWidth)
+                        spacing: styleSheet.guiSize(3)
+
+                        Text {
+                            text: modelData.k
+                            color: "#6b665e"
+                            font.family: styleSheet.regularFont(styleSheet.guiSize(14)).family
+                            font.pixelSize: styleSheet.guiSize(14)
+                            font.letterSpacing: styleSheet.guiSize(14) * 0.06
+                            font.capitalization: Font.AllUppercase
+                        }
+
+                        Text {
+                            text: modelData.v
+                            color: "#ece7df"
+                            font: styleSheet.semiBoldFont(styleSheet.guiSize(20))
+                        }
+                    }
+                }
+            }
+        }
+
+        Timer {
+            id: rangeHide
+            interval: 5000
+            onTriggered: rangeBox.visible = false
+        }
+
+        // Shown a second after the change, so Atmos, which the TV reports a little after the picture,
+        // is in it; already showing, it just stays its 5 seconds from then.
+        function show () {
+            if (rangeToast.video === "") return;
+            if (rangeBox.visible) { rangeHide.restart(); return; }
+            rangeDelay.restart();
+        }
+
+        Timer {
+            id: rangeDelay
+            interval: 1000
+            onTriggered: {
+                rangeBox.visible = true;
+                rangeHide.restart();
+            }
+        }
+
+        Service {
+
+            id: rangeWatch
+
+            appId: systemProperties.appId
+            service: "com.webos.service.videooutput"
+            method: "getStatus"
+
+            onCallResponse: {
+                var r = response;
+                if (typeof r === "string") { try { r = JSON.parse(r); } catch (e) { return; } }
+                var list = (r && r.video) || [], main = null;
+                for (var k = 0; k < list.length; k++) if (list[k].sink === "MAIN") main = list[k];
+                if (!main || !main.connected || !main.videoInfo) return;
+                var vi = main.videoInfo;
+                var t = String(vi.hdrType || "none");
+                var names = { DolbyVision: "Dolby Vision", HDR10: "HDR10", HDR10PLUS: "HDR10+", HDR10Plus: "HDR10+", HLG: "HLG", none: "SDR", SDR: "SDR" };
+                var name = names[t] || t;
+                // The rate comes as a whole number (59 for 59.94) or in hundredths; the NTSC-style rates
+                // are shown with their decimals, as the Picture Panel does.
+                var hz = Number(main.frameRate || 0);
+                if (hz > 1000) hz = hz / 100;
+                var frac = { 23: 23.976, 29: 29.97, 47: 47.952, 59: 59.94, 119: 119.88 };
+                if (hz === Math.floor(hz) && frac[hz]) hz = frac[hz];
+                hz = Math.round(hz * 100) / 100;
+                rangeToast.size = main.width && main.height ? main.width + "×" + main.height : "";
+                rangeToast.rate = hz ? hz + " Hz" : "";
+                rangeToast.vrr = !!(vi.hdmiVrrInfo && vi.hdmiVrrInfo.vrrEnabled);
+                if (rangeToast.video === name) return;
+                rangeToast.video = name;
+                if (!rangeToast.seenVideo) { rangeToast.seenVideo = true; return; }
+                rangeToast.show();
+            }
+        }
+
+        // The sound the input sends, as the audio service names it, asked every half second: Atmos
+        // starting on its own also shows the toast.
+        function soundName (codec, immersive) {
+            var c = String(codec || "").toLowerCase(), m = String(immersive || "").toLowerCase();
+            if (/atmos/.test(m) || /atmos/.test(c)) return "Dolby Atmos";
+            if (/dtsx|dts_x/.test(m) || /dtsx|dts_x/.test(c)) return "DTS:X";
+            if (/mat|truehd/.test(c)) return "Dolby TrueHD";
+            if (/eac3|ddp/.test(c)) return "Dolby Digital+";
+            if (/ac3/.test(c)) return "Dolby Digital";
+            if (/dts.*(hd|ma)|dtshd/.test(c)) return "DTS-HD";
+            if (/dts/.test(c)) return "DTS";
+            if (/pcm/.test(c)) return "PCM";
+            return "";
+        }
+
+        Service {
+
+            id: atmosWatch
+
+            appId: systemProperties.appId
+            service: "com.webos.service.audio"
+            method: "tv/getAudioInputProperty"
+
+            onCallResponse: {
+                var r = response;
+                if (typeof r === "string") { try { r = JSON.parse(r); } catch (e) { return; } }
+                var a = r && r.audioInputProperty && r.audioInputProperty[0];
+                rangeToast.sound = a ? rangeToast.soundName(a.codec, a.immersive) : "";
+                var on = !!(a && (/atmos/i.test(String(a.immersive || "")) || /atmos/i.test(String(a.codec || ""))));
+                if (on === rangeToast.atmos && rangeToast.seenAudio) return;
+                var was = rangeToast.atmos;
+                rangeToast.atmos = on;
+                if (!rangeToast.seenAudio) { rangeToast.seenAudio = true; return; }
+                if (on && !was) rangeToast.show();
+            }
+        }
+
+        Timer {
+            interval: 500
+            repeat: true
+            running: true
+            triggeredOnStart: true
+            onTriggered: atmosWatch.callService({})
+        }
+
+        Component.onCompleted: rangeWatch.callService({"subscribe": true})
+    }

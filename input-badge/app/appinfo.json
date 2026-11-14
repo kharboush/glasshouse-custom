@@ -1,11 +1,11 @@
 {
   "id": "io.github.kharboush.input-badge",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "vendor": "kharboush",
   "type": "web",
   "main": "index.html",
   "title": "Input Badge",
-  "appDescription": "LG's input name banner as an HDMI Sources tile, and a black screen in place of the grey one while an input opens",
+  "appDescription": "LG's input name banner as an HDMI Sources tile, a signal toast in place of LG's Dolby and HDR toasts, and a black screen while an input opens",
   "icon": "icon80.png",
   "largeIcon": "icon130.png",
   "iconColor": "#000000",
