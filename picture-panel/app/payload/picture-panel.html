@@ -374,6 +374,7 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
       var id = stats ? String(stats.app_id || '') : '', m = /^com\.webos\.app\.hdmi(\d)$/.exec(id);
       if (!stats || !id) { sig = null; sigDone = true; return paintInfo(); }
       paintInfo();
+      rangeChanged(fmtType());
       var q = '/api/home/picture?kind=' + (m ? 'input' : 'app') + '&port=' + (m ? m[1] : 0) +
         '&app=' + encodeURIComponent(id) + '&t=' + Date.now();
       http('GET', q, null, function (p) { sig = p && p.ok && p.signal ? p.signal : null; sigDone = true; paintInfo(); });
@@ -407,7 +408,22 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
   // Ambient Light comes through the Homebrew Channel, which takes a few seconds (it starts a shell
   // and luna-send each time), so it is not waited for: its row fills in when it answers.
   var ambRow = null;
-  function load(quiet) {
+  // The picture settings depend on the dynamic range: LG keeps a picture mode and its settings for
+  // SDR, HDR10, Dolby Vision and so on. When the signal block sees the range change, the settings are
+  // read again. Glasshouse keeps its reading of the TV's settings for up to 30 seconds, so until its
+  // answer is for the new range the rows show dashes, and it is asked again every 2 seconds.
+  var liveRange = null, shownDim = null;
+  function rangeChanged(range) {
+    if (!range) return;
+    var was = liveRange;
+    liveRange = range;
+    if (!was || was === range || !loaded || pick) return;
+    gen++;
+    stale = true;
+    paintAll();
+    if (shownDim) load(true, shownDim, 0); else load(true);
+  }
+  function load(quiet, waitDim, tries) {
     var pic, game, left = 2, g = gen;
     function rowsNow() {
       var rows = pic.rows || [];
@@ -423,6 +439,12 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
         if (!quiet) say('Could not read the TV', 'Glasshouse did not answer. Is it running?', true);
         return;
       }
+      var dim = pic.dimensions && pic.dimensions.picture ? String(pic.dimensions.picture.dynamicRange || '') : '';
+      if (waitDim !== undefined && dim === waitDim && tries < 16) {
+        setTimeout(function () { if (g === gen) load(quiet, waitDim, tries + 1); }, 2000);
+        return;
+      }
+      shownDim = dim;
       loaded = true;
       stale = false;
       apply(rowsNow());
