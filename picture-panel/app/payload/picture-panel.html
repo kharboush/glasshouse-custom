@@ -30,6 +30,8 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
 .ctl{display:-webkit-flex;display:flex;-webkit-align-items:center;align-items:center}
 .arrow{width:40px;height:40px;line-height:38px;text-align:center;font-size:24px;color:#3a3732;cursor:pointer}
 .row.focus .arrow{color:#ece7df}
+.row.focus .arrow:hover{color:#fff;background:rgba(244,241,234,.12)}
+.pg:hover .ar{color:#fff}
 .row.na .arrow,.row.off .arrow{visibility:hidden}
 .val{min-width:200px;text-align:center;font-size:21px;font-weight:600}
 #info{margin:0 16px 4px;padding-top:20px}
@@ -45,6 +47,19 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
 #tip b{display:block;font-size:22px;font-weight:600;color:#ece7df}
 #tip span{display:block;font-size:19px;color:#a39d93;margin-top:4px}
 #tip span.rec{color:#ece7df;margin-top:10px}
+/* The option list: OK on a setting with choices opens every choice beside the panel, level with its top. */
+#pick{display:none;position:absolute;top:0;left:704px;width:440px;box-sizing:border-box;padding:20px 0 10px;background:rgba(0,0,0,.9);
+  outline:1px solid rgba(244,241,234,.2)}
+#pick.show{display:block}
+#pickT{margin:0 16px 14px;padding-left:6px;font-size:14px;letter-spacing:.06em;text-transform:uppercase;color:#6b665e}
+/* Room above and below for the focused option's 2px outline, which is drawn outside it. Below the last
+   option: its 8px margin, these 2px and the box's 10px make the panel's 20px (8px row margin, 12px padding). */
+#pickL{overflow:hidden;padding:2px 0}
+.opt{position:relative;height:58px;line-height:58px;margin:0 16px 8px;padding:0 44px 0 22px;font-size:21px;color:#a39d93;
+  outline:1px solid rgba(244,241,234,.1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:default}
+.opt.cur{color:#ece7df}
+.opt.cur:after{content:'';position:absolute;right:22px;top:25px;width:8px;height:8px;border-radius:50%;background:#e9ad55}
+.opt.focus{outline:2px solid #ece7df;background:#141310;color:#ece7df}
 </style>
 </head>
 <body>
@@ -54,6 +69,7 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
   <div id="rows"></div>
 </div>
 <div id="tip"><b id="tipT"></b><span id="tipX"></span><span class="rec" id="tipR"></span></div>
+<div id="pick"><div id="pickT"></div><div id="pickL"></div></div>
 <script>
 /*
  * The Picture Panel, served by Glasshouse so its requests are same-origin with the
@@ -65,7 +81,7 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
   // Three pages of up to five, all "Picture Settings". A row that only applies sometimes keeps its
   // place, greyed, with the reason.
   var DEFS = [
-    { id: 'pictureMode', label: 'Picture Mode', kind: 'choice', page: 0 },
+    { id: 'pictureMode', nameOf: modeName, label: 'Picture Mode', kind: 'choice', page: 0 },
     { id: 'backlight', rec: 'HDR wants it high. SDR follows the room.', label: 'Brightness', kind: 'range', page: 0 },
     { id: 'contrast', rec: '100 suits HDR. Lower it if SDR looks flat.', label: 'Contrast', kind: 'range', page: 0 },
     { id: 'brightness', label: 'Black Level', kind: 'range', page: 0 },
@@ -73,7 +89,7 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
     { id: 'dynamicContrast', rec: 'Off keeps scenes as graded.', label: 'Auto Dynamic Contrast', kind: 'choice', page: 1 },
     { id: 'expressionEnhancer', rec: 'Off keeps the HDR grade intact.', label: 'Expression Enhancer', kind: 'choice', page: 1, names: { off: 'Off', detail: 'Detail', highlight: 'Brightness' } },
     { id: 'gamma', rec: 'BT.1886 suits dark rooms. 2.2 suits lit ones.', label: 'Gamma', kind: 'choice', page: 1, names: { high2: 'BT.1886', mediumHavingLevel: '2.2' } },
-    { id: 'hdrDynamicToneMapping', rec: 'Off is accurate. On is brighter.', label: 'Dynamic Tone Mapping', kind: 'choice', page: 1, missing: 'HDR only' },
+    { id: 'hdrDynamicToneMapping', rec: 'Off for best accuracy.', label: 'Dynamic Tone Mapping', kind: 'choice', page: 1, missing: 'HDR only' },
     { id: 'filmmakerAmbientLight', tip: "Adapts Filmmaker Mode's picture to the light in the room.", label: 'Filmmaker Ambient Light', kind: 'choice', page: 1, luna: true },
     { id: 'colorTemperature', label: 'Color Temperature', kind: 'temp', page: 2 },
     { id: 'sharpness', label: 'Sharpness', kind: 'range', page: 2 },
@@ -138,6 +154,25 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
     });
   }
 
+  // Picture modes under the names this TV's own picture menu uses (webOS 11), in US English as Glasshouse: the same six in
+  // SDR, HDR and Dolby Vision. In Dolby Vision LG's "Cinema" is the one the menu calls Filmmaker Mode.
+  // Anything else keeps Glasshouse's name.
+  function modeName(v) {
+    v = String(v);
+    if (/personali[sz]ed/i.test(v)) return 'Personalized';
+    if (/vivid/i.test(v)) return 'Enhanced';
+    if (/standard/i.test(v)) return 'Standard';
+    if (/cinemaBright|cinemaHome/i.test(v)) return 'Cinema Home';
+    if (/filmMaker/i.test(v) || v === 'dolbyHdrCinema') return 'Filmmaker Mode';
+    if (/game/i.test(v)) return 'Game Optimizer';
+    if (/^(hdr|dolbyHdr)?eco$/i.test(v)) return 'Auto Power Save';
+    return null;
+  }
+
+  function choiceName(c, ch) {
+    return (c.def.nameOf && c.def.nameOf(ch.value)) || (c.def.names && c.def.names[ch.value]) || ch.label || String(ch.value);
+  }
+
   function http(method, url, body, cb) {
     var x = new XMLHttpRequest();
     x.open(method, url, true);
@@ -185,7 +220,7 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
     var i = choiceAt(c);
     if (i < 0) return String(c.row.value);
     var ch = c.row.choices[i];
-    return (c.def.names && c.def.names[ch.value]) || ch.label || String(ch.value);
+    return choiceName(c, ch);
   }
   function paint(i) {
     var c = ctl[i], e = els[i];
@@ -424,16 +459,8 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
       var n = c.row.choices.length, at = choiceAt(c);
       if (!n) return;
       at = (at + dir + n) % n;
-      c.row.value = c.row.choices[at].value;
-      paint(i);
       // Flicking through picture modes: only the one left on for a moment is sent.
-      if (c.def.id === 'pictureMode') {
-        // Every other value belongs to the old mode until the TV is read again: dashes and greyed.
-        stale = true;
-        paintAll();
-        if (pending.pictureMode) clearTimeout(pending.pictureMode);
-        pending.pictureMode = setTimeout(function () { pending.pictureMode = null; send(c, c.row.value); }, 500);
-      } else send(c, c.row.value);
+      setChoice(i, c.row.choices[at].value, 500);
     } else {
       // Colour temperature is stored warm-negative, but the number shown (Warm 10) goes up
       // to the right, so its arrows are flipped: Left lowers what is shown, Right raises it.
@@ -447,6 +474,72 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
     }
   }
 
+  // Sets a choice: shown at once, sent after wait ms (picture modes), or at once.
+  function setChoice(i, value, wait) {
+    var c = ctl[i];
+    c.row.value = value;
+    paint(i);
+    if (c.def.id !== 'pictureMode') return send(c, value);
+    // Every other value belongs to the old mode until the TV is read again: dashes and greyed.
+    stale = true;
+    paintAll();
+    if (pending.pictureMode) clearTimeout(pending.pictureMode);
+    pending.pictureMode = setTimeout(function () { pending.pictureMode = null; send(c, c.row.value); }, wait || 0);
+  }
+
+  // ---- the option list: every choice of the selected setting, in a box beside the panel.
+  // Up and Down move, OK picks (and closes), Left or Back closes. The amber dot marks the current one.
+  var pickRows = 99, pick = null, pickEl = document.getElementById('pick'), pickL = document.getElementById('pickL'), optEls = [];
+  function openPick(i) {
+    var c = ctl[i];
+    if (c.def.kind !== 'choice' || !usable(c) || !loaded) return false;
+    if (c.row.active === false) { hint(); return true; }
+    if (!c.row.choices || !c.row.choices.length) return false;
+    if (hintTimer) { clearTimeout(hintTimer); hintTimer = null; }
+    say('');
+    pick = { i: i, at: Math.max(0, choiceAt(c)) };
+    document.getElementById('pickT').textContent = c.def.label;
+    pickL.innerHTML = ''; optEls = [];
+    c.row.choices.forEach(function (ch, k) {
+      var o = document.createElement('div');
+      o.textContent = choiceName(c, ch);
+      o.addEventListener('mousemove', function () { poke(); if (pick && pick.at !== k) { pick.at = k; paintPick(); } });
+      o.addEventListener('mousedown', function (e) { e.stopPropagation(); poke(); if (pick) { pick.at = k; choosePick(); } });
+      pickL.appendChild(o); optEls.push(o);
+    });
+    var r = document.getElementById('panel').getBoundingClientRect();
+    pickEl.style.top = r.top + 'px';
+    pickEl.style.left = (r.right + 16) + 'px';
+    // As tall as its options, but only as many whole options as fit in the panel's height; the rest
+    // scroll. Each option takes 66 (58 and its 8 margin); the list's 2+2 padding and the box's 10 at
+    // the bottom come on top.
+    pickEl.className = 'show';
+    pickL.style.maxHeight = '';
+    pickL.scrollTop = 0;
+    pickRows = Math.max(1, Math.floor((r.height - pickL.offsetTop - 4 - 10) / 66));
+    if (optEls.length > pickRows) pickL.style.maxHeight = (pickRows * 66) + 'px';
+    paintPick();
+    return true;
+  }
+  function paintPick() {
+    if (!pick) return;
+    var c = ctl[pick.i], cur = choiceAt(c);
+    for (var k = 0; k < optEls.length; k++) optEls[k].className = 'opt' + (k === cur ? ' cur' : '') + (k === pick.at ? ' focus' : '');
+    // Scrolled by whole options, so the focused one is always shown whole, with its outline.
+    var top = pickL.scrollTop / 66;
+    if (pick.at < top) pickL.scrollTop = pick.at * 66;
+    else if (pick.at >= top + pickRows) pickL.scrollTop = (pick.at - pickRows + 1) * 66;
+  }
+  function movePick(dir) { if (pick) { pick.at = (pick.at + dir + optEls.length) % optEls.length; paintPick(); } }
+  function closePick() { pick = null; pickEl.className = ''; hint(); }
+  function choosePick() {
+    var i = pick.i, c = ctl[i], v = c.row.choices[pick.at].value;
+    closePick();
+    if (v === c.row.value || c.row.active === false) return;
+    gen++;
+    setChoice(i, v, 0);
+  }
+
   // The TV marks a setting inactive when the picture mode or input switches it off
   // (TruMotion in Game mode, for example). Say so, instead of letting a change fail.
   // The blurb for the selected row appears after a second on it, so moving through the rows does not
@@ -457,6 +550,7 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
     say('');
     hintTimer = setTimeout(function () {
       hintTimer = null;
+      if (pick) return;
       var c = ctl[sel], desc = (c.row && c.row.desc) || c.def.tip || '';
       if (c.def.kind !== 'link' && usable(c) && c.row.active === false) {
         var mode = ctl[0].row ? text(ctl[0]) : '';
@@ -494,7 +588,15 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
       row.appendChild(lbl); row.appendChild(box); rowsEl.appendChild(row);
       els.push({ row: row, val: val, fill: fill, lbl: lbl, arrow: right });
       // Magic Remote pointer: click a row to select it, an arrow to change it.
-      row.addEventListener('mousedown', function () { sel = i; paintAll(); hint(); poke(); if (c.def.kind === 'link') activate(c); });
+      // Magic Remote pointer: moving over a row selects it, as Up and Down do. mousemove, not
+      // mouseover, so rows sliding under a still pointer (a page turn) do not take the selection.
+      row.addEventListener('mousemove', function () {
+        poke();
+        if (pick || sel === i) return;
+        sel = i; paintAll(); hint();
+      });
+      row.addEventListener('mousedown', function () { if (pick) { pick = null; pickEl.className = ''; } sel = i; paintAll(); hint(); poke(); if (c.def.kind === 'link') activate(c); });
+      val.addEventListener('mousedown', function (e) { e.stopPropagation(); sel = i; paintAll(); poke(); if (!openPick(i)) hint(); });
       left.addEventListener('mousedown', function (e) { e.stopPropagation(); sel = i; change(i, -1); paintAll(); poke(); });
       right.addEventListener('mousedown', function (e) { e.stopPropagation(); sel = i; change(i, 1); paintAll(); poke(); });
     });
@@ -514,12 +616,21 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
   document.addEventListener('keydown', function (e) {
     var k = e.keyCode || e.which;
     poke();
+    if (pick) {
+      if (k === 38 || k === 33) movePick(-1);
+      else if (k === 40 || k === 34) movePick(1);
+      else if (k === 13) choosePick();
+      else if (k === 37 || k === 461 || k === 27 || k === 8) closePick();
+      e.preventDefault();
+      return;
+    }
     if (k === 38) { step(-1); paintAll(); hint(); }
     else if (k === 40) { step(1); paintAll(); hint(); }
     else if (k === 33) { step(-1); paintAll(); hint(); }   // channel up / page up: like Up
     else if (k === 34) { step(1); paintAll(); hint(); }    // channel down / page down: like Down
     else if (k === 37) { change(sel, -1); }
-    else if (k === 39 || k === 13) { change(sel, 1); }
+    else if (k === 13) { if (!openPick(sel)) change(sel, 1); }
+    else if (k === 39) { change(sel, 1); }
     else if (k === 461 || k === 27 || k === 8) { leave(); }
     e.preventDefault();
   });
@@ -531,7 +642,8 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
     if (t - wheelAt < 40 || !e.deltaY) return;
     wheelAt = t;
     poke();
-    step(e.deltaY > 0 ? 1 : -1); paintAll(); hint();
+    if (pick) movePick(e.deltaY > 0 ? 1 : -1);
+    else { step(e.deltaY > 0 ? 1 : -1); paintAll(); hint(); }
     e.preventDefault();
   });
 
