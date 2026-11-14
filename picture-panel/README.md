@@ -34,7 +34,7 @@ Needs [Glasshouse](https://github.com/rorygallagher2024/glasshouse) running on t
 | Black Level | Dynamic Tone Mapping (HDR only) | Game Genre (game picture modes only) |
 | Peak Brightness | Filmmaker Ambient Light | All Settings, which opens LG's full Settings and closes the panel |
 
-The choices are the ones the TV itself offers (this G6 has no "Clear" TruMotion, for example). Brightness, Contrast, Black Level and Sharpness are plain numbers. Color Temperature runs from Warm 50 through Neutral to Cool 50, and its arrows follow the number shown: Left lowers it (Warm 10 to Warm 9), Right raises it. Gamma shows BT.1886 or 2.2. Picture modes have the names this TV's own picture menu gives them (webOS 11), in US English as Glasshouse: Personalized, Enhanced (LG's Vivid), Standard, Auto Power Save (Eco), Cinema Home, Filmmaker Mode (also Dolby Vision's "Cinema") and Game Optimizer; any other mode keeps Glasshouse's name. A setting the TV does not offer here is shown as a dash, with the reason where there is one ("HDR only", "Game modes only"). The panel keeps the height of five rows on every page.
+The choices are the ones the TV itself offers (this G6 has no "Clear" TruMotion, for example). Brightness, Contrast, Black Level and Sharpness are plain numbers. Color Temperature runs from Warm 50 through Neutral to Cool 50, and its arrows follow the number shown: Left lowers it (Warm 10 to Warm 9), Right raises it. Gamma shows BT.1886 or 2.2. Picture modes have the names this TV's own picture menu gives them (webOS 11), in US English as Glasshouse: Personalized, Enhanced (LG's Vivid), Standard (also SDR's "normal"), Auto Power Save (Eco), Cinema Home (SDR's Cinema, and Cinema Bright in HDR10 and Dolby Vision), Filmmaker Mode (also Dolby Vision's "Cinema", which has no Filmmaker mode of its own) and Game Optimizer; any other mode keeps Glasshouse's name. A setting the TV does not offer here is shown as a dash, with the reason where there is one ("HDR only", "Game modes only"). The panel keeps the height of five rows on every page.
 
 Staying on a row for three seconds shows a box beside the panel: the setting's name, Glasshouse's own description of it (read from the TV's reply, not kept in the page), and a short recommendation line from this panel where there is one (for example "Use High for HDR and Off for SDR." for Peak Brightness). The box goes away as soon as you move.
 
@@ -53,7 +53,7 @@ Settings are per picture mode and per input, so the panel shows and changes thos
 
 ## Install
 
-Install the package (`release/io.github.kharboush.picture-panel_1.8.7_all.ipk`, or the manifest in the same folder, with the Homebrew Channel, or the TV's `dev/install`). That is all: the app puts what it needs on Glasshouse's server itself the first time it is opened, and again if that is ever missing or out of date.
+Install the package (`release/io.github.kharboush.picture-panel_1.8.8_all.ipk`, or the manifest in the same folder, with the Homebrew Channel, or the TV's `dev/install`). That is all: the app puts what it needs on Glasshouse's server itself the first time it is opened, and again if that is ever missing or out of date.
 
 Open **Picture Panel** from the app list, or assign it to a remote button in Glasshouse's remote keys (it is listed there like any app). To open it from a command:
 
