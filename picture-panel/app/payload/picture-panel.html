@@ -540,9 +540,16 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
     setChoice(i, v, 0);
   }
 
+  // OK: in the option list it picks; on a setting with choices it opens the list; otherwise it
+  // steps the value (or opens Settings on All Settings).
+  function ok() {
+    if (pick) return choosePick();
+    if (!openPick(sel)) change(sel, 1);
+  }
+
   // The TV marks a setting inactive when the picture mode or input switches it off
   // (TruMotion in Game mode, for example). Say so, instead of letting a change fail.
-  // The blurb for the selected row appears after a second on it, so moving through the rows does not
+  // The blurb for the selected row appears after three seconds on it, so moving through the rows does not
   // flash a box at every step. Errors (say) show at once.
   var hintTimer = null;
   function hint() {
@@ -558,7 +565,7 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
       } else if (desc || c.def.rec) {
         say(c.def.label, desc, false, c.def.rec || '');
       }
-    }, 1000);
+    }, 3000);
   }
 
   function activate(c) {
@@ -595,14 +602,24 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
         if (pick || sel === i) return;
         sel = i; paintAll(); hint();
       });
-      row.addEventListener('mousedown', function () { if (pick) { pick = null; pickEl.className = ''; } sel = i; paintAll(); hint(); poke(); if (c.def.kind === 'link') activate(c); });
+      // A click on a row is OK on it: it opens the option list, or Settings on All Settings.
+      row.addEventListener('mousedown', function (e) {
+        e.stopPropagation();
+        if (pick) { pick = null; pickEl.className = ''; }
+        sel = i; paintAll(); poke();
+        if (c.def.kind === 'link') activate(c);
+        else if (!openPick(i)) hint();
+      });
       val.addEventListener('mousedown', function (e) { e.stopPropagation(); sel = i; paintAll(); poke(); if (!openPick(i)) hint(); });
       left.addEventListener('mousedown', function (e) { e.stopPropagation(); sel = i; change(i, -1); paintAll(); poke(); });
       right.addEventListener('mousedown', function (e) { e.stopPropagation(); sel = i; change(i, 1); paintAll(); poke(); });
     });
     // Magic Remote pointer: either side of the strip opens the page it names, at its first row.
-    document.getElementById('prevPg').addEventListener('mousedown', function () { turn(-1); });
-    document.getElementById('nextPg').addEventListener('mousedown', function () { turn(1); });
+    document.getElementById('prevPg').addEventListener('mousedown', function (e) { e.stopPropagation(); turn(-1); });
+    document.getElementById('nextPg').addEventListener('mousedown', function (e) { e.stopPropagation(); turn(1); });
+    // While the Magic Remote's pointer is showing, its OK button arrives as a click wherever the pointer
+    // is, not as the Enter key. A click that lands on nothing of the panel's is taken as OK.
+    document.addEventListener('mousedown', function () { poke(); ok(); });
     paintAll();
   }
 
@@ -619,7 +636,7 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
     if (pick) {
       if (k === 38 || k === 33) movePick(-1);
       else if (k === 40 || k === 34) movePick(1);
-      else if (k === 13) choosePick();
+      else if (k === 13) ok();
       else if (k === 37 || k === 461 || k === 27 || k === 8) closePick();
       e.preventDefault();
       return;
@@ -629,7 +646,7 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
     else if (k === 33) { step(-1); paintAll(); hint(); }   // channel up / page up: like Up
     else if (k === 34) { step(1); paintAll(); hint(); }    // channel down / page down: like Down
     else if (k === 37) { change(sel, -1); }
-    else if (k === 13) { if (!openPick(sel)) change(sel, 1); }
+    else if (k === 13) { ok(); }
     else if (k === 39) { change(sel, 1); }
     else if (k === 461 || k === 27 || k === 8) { leave(); }
     e.preventDefault();

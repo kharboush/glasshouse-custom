@@ -36,7 +36,7 @@ Needs [Glasshouse](https://github.com/rorygallagher2024/glasshouse) running on t
 
 The choices are the ones the TV itself offers (this G6 has no "Clear" TruMotion, for example). Brightness, Contrast, Black Level and Sharpness are plain numbers. Color Temperature runs from Warm 50 through Neutral to Cool 50, and its arrows follow the number shown: Left lowers it (Warm 10 to Warm 9), Right raises it. Gamma shows BT.1886 or 2.2. Picture modes have the names this TV's own picture menu gives them (webOS 11), in US English as Glasshouse: Personalized, Enhanced (LG's Vivid), Standard, Auto Power Save (Eco), Cinema Home, Filmmaker Mode (also Dolby Vision's "Cinema") and Game Optimizer; any other mode keeps Glasshouse's name. A setting the TV does not offer here is shown as a dash, with the reason where there is one ("HDR only", "Game modes only"). The panel keeps the height of five rows on every page.
 
-Selecting a row for a second shows a box beside the panel: the setting's name, Glasshouse's own description of it (read from the TV's reply, not kept in the page), and a short recommendation line from this panel where there is one (for example "Use High for HDR and Off for SDR." for Peak Brightness). The box goes away as soon as you move.
+Staying on a row for three seconds shows a box beside the panel: the setting's name, Glasshouse's own description of it (read from the TV's reply, not kept in the page), and a short recommendation line from this panel where there is one (for example "Use High for HDR and Off for SDR." for Peak Brightness). The box goes away as soon as you move.
 
 Filmmaker Ambient Light is not one of Glasshouse's settings, so the panel reads and sets it through the Homebrew Channel's exec service (the TV's own `luna-send`), the way the launcher installs the page. It needs nothing from Glasshouse. LG hides and greys it outside Filmmaker Mode, so the panel asks the TV whether it applies and shows it greyed when it does not.
 
@@ -46,14 +46,14 @@ Settings are per picture mode and per input, so the panel shows and changes thos
 
 - Up and Down move between rows and pages; Left and Right step the value; OK opens the option list on a setting with choices (on a number it steps the value, on All Settings it opens Settings); Back closes. The scroll wheel and the channel up and down keys act as Up and Down.
 - The option list sits beside the panel, level with its top: the setting's name over its choices, the current one marked with an amber dot. Up and Down move (and scroll a whole option at a time when there are more than fit in the panel's height), OK picks and closes, Left or Back closes. A picture mode picked here is applied at once.
-- A Magic Remote pointer selects a row, or an option in the list, by moving over it; clicking a row's arrows steps its value, clicking its value opens the list, and clicking an option picks it.
+- A Magic Remote pointer selects a row, or an option in the list, by moving over it. While the pointer is showing, the remote's OK arrives as a click wherever the pointer is, so a click is OK: on a row it opens the option list (or Settings), on an option it picks it, on a row's arrows it steps the value, and anywhere else it is OK on the selected row.
 - Picture Mode waits half a second after the last press before it is sent, so flicking through modes only applies the one you stop on. Until the TV has been read again for that mode, every other setting shows a dash and is greyed.
 - Settings the TV has switched off for the current mode or input (TruMotion, Peak Brightness and Auto Dynamic Contrast in Game mode, for example) are shown greyed and are not changed. Their box says "Not available in HDR Game mode." under the description. This is read from the `active` flag the TV gives each setting, so a change is never sent only to be refused. Errors use the same box, with an amber outline.
 - It closes itself after 60 seconds without a key or pointer.
 
 ## Install
 
-Install the package (`release/io.github.kharboush.picture-panel_1.8.5_all.ipk`, or the manifest in the same folder, with the Homebrew Channel, or the TV's `dev/install`). That is all: the app puts what it needs on Glasshouse's server itself the first time it is opened, and again if that is ever missing or out of date.
+Install the package (`release/io.github.kharboush.picture-panel_1.8.7_all.ipk`, or the manifest in the same folder, with the Homebrew Channel, or the TV's `dev/install`). That is all: the app puts what it needs on Glasshouse's server itself the first time it is opened, and again if that is ever missing or out of date.
 
 Open **Picture Panel** from the app list, or assign it to a remote button in Glasshouse's remote keys (it is listed there like any app). To open it from a command:
 
