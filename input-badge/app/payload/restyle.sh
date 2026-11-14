@@ -10,6 +10,11 @@ Q=/usr/palm/applications/$APP/qml
 MV=UserInterfaceLayer/Containers/MainViewLayer
 FILES="$MV/InputBanner/SimpleBanner.qml $MV/InputBanner/InputBanner.qml $MV/BannerItems/BannerListView.qml RootWindow.qml"
 W=/var/lib/input-badge
+mkdir -p "$W" || exit 1
+# One run at a time: two at once (the page's install and another start) would remove each other's
+# freshly built files.
+exec 9>"$W/.lock"
+flock 9
 
 # LG's files are only readable with nothing mounted over them.
 for f in $FILES; do
@@ -49,6 +54,15 @@ for n in 1 2 3 4; do
   mount --bind "$W/splash/black.astc" "$A/HDMI-${n}_splash.astc" && mount --bind "$W/splash/black.png" "$A/HDMI-${n}_splash.png" \
     || echo "could not mount the splash for HDMI $n"
 done
+
+# The spinner shown while an app opens: this package's own GIF (a black square with the 1px outline
+# and three dots) over LG's. It is bigger than LG's, so it also covers the grey disc the window
+# manager draws behind it. The window manager reads the file each time, so no restart is needed.
+G=/usr/lib/weston/images/Spinner_large.gif
+if [ -f "$G" ] && [ -s "$HERE/spinner.gif" ]; then
+  grep -q " $G " /proc/mounts && umount "$G"
+  mount --bind "$HERE/spinner.gif" "$G" || echo "could not mount the spinner"
+fi
 
 # LG's own toasts are switched off, so the Dolby and HDR ones give way to the signal toast. The
 # notification service has no way to switch off only some, so this hides every ordinary toast (alerts

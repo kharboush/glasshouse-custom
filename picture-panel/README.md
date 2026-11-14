@@ -22,7 +22,7 @@ Needs [Glasshouse](https://github.com/rorygallagher2024/glasshouse) running on t
 - Video data is not the link's own top speed: it is what the picture itself needs, worked out from its resolution, refresh rate, colour format and bit depth. It is normally well under the link's ceiling.
 - Audio is what the TV is receiving on its HDMI inputs: PCM, Dolby Digital, Dolby Digital+, Dolby TrueHD, DTS, DTS-HD, and Dolby Atmos or DTS:X when flagged. It is None for silence on an HDMI input and a dash elsewhere, where the sound is made inside the TV. Glasshouse has no channel count or sample rate.
 - Audio output is the TV's output setting (TV Speaker, Optical, Bluetooth...); over ARC it is the soundbar's name when Glasshouse has found one.
-- The last values the TV gave for the Signal block are shown at once when the panel opens and replaced when the TV answers. The settings are not kept: they show a dash until the TV answers, and no change is sent before then.
+- The panel's layout (the signal labels, the page title and page 1's settings, with dashes) is part of the page, so it shows as soon as the page draws; the last values the TV gave for the Signal block are shown at once and replaced when the TV answers. The settings are not kept: they show a dash until the TV answers, and no change is sent before then.
 
 **Settings**, in three pages of up to five rows, titled "Picture Settings 1/3" to "3/3", in the order of LG's own Picture menu. Beside the title are up and down arrows; going Down past the last row of a page turns to the next, and past the first row of a page back to the one before, wrapping at both ends. It always opens on the first page.
 
@@ -42,6 +42,8 @@ Filmmaker Ambient Light is not one of Glasshouse's settings, so the panel reads 
 
 Settings are per picture mode, per input and per dynamic range, so the panel shows and changes those of the input on screen. Changing the picture mode re-reads everything, and so does the signal changing dynamic range (SDR to HDR10, for example), when the TV switches to that range's picture mode by itself: the rows show dashes until Glasshouse's reading is for the new range, which can take up to about 30 seconds, as Glasshouse keeps its reading of the TV's settings that long.
 
+Over HDR (HDR10, HDR10+, HLG, Dolby Vision) the TV draws its interface brighter than over SDR, so there the panel's text and its 2px selection ring are drawn at 60% (the faint outlines and the background stay as they are). It follows the signal, easing over in 0.8 seconds when it changes while open, and opens in the brightness it last had.
+
 ## Using it
 
 - Up and Down move between rows and pages; Left and Right step the value; OK opens the option list on a setting with choices (on a number it steps the value, on All Settings it opens Settings); Back closes. The scroll wheel and the channel up and down keys act as Up and Down.
@@ -53,7 +55,7 @@ Settings are per picture mode, per input and per dynamic range, so the panel sho
 
 ## Install
 
-Install the package (`release/io.github.kharboush.picture-panel_1.9.1_all.ipk`, or the manifest in the same folder, with the Homebrew Channel, or the TV's `dev/install`). That is all: the app puts what it needs on Glasshouse's server itself the first time it is opened, and again if that is ever missing or out of date.
+Install the package (`release/io.github.kharboush.picture-panel_1.9.7_all.ipk`, or the manifest in the same folder, with the Homebrew Channel, or the TV's `dev/install`). That is all: the app puts what it needs on Glasshouse's server itself the first time it is opened, and again if that is ever missing or out of date.
 
 Open **Picture Panel** from the app list, or assign it to a remote button in Glasshouse's remote keys (it is listed there like any app). To open it from a command:
 

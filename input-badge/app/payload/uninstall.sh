@@ -20,6 +20,8 @@ if [ -n "$P" ]; then
   sleep 2
   case "$FG" in com.webos.app.hdmi*|com.webos.app.livetv) luna-send -n 1 -w 8000 luna://com.webos.applicationManager/launch "{\"id\":\"$FG\"}" >/dev/null 2>&1 ;; esac
 fi
+G=/usr/lib/weston/images/Spinner_large.gif
+grep -q " $G " /proc/mounts && umount "$G"
 rm -rf /var/lib/input-badge
 # LG's own toasts back on.
 luna-send -n 1 -w 8000 luna://com.webos.notification/enable '{}' >/dev/null 2>&1

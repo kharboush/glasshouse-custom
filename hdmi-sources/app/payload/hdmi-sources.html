@@ -37,6 +37,16 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
 #msg.err{outline-color:#e9ad55}
 #msg b{display:block;font-size:24px;font-weight:600}
 #msg span{display:block;font-size:19px;color:#a39d93;margin-top:4px}
+/* Over HDR the TV draws its interface brighter than over SDR, so there the text (bright and secondary)
+   is scaled to 60%; outlines and backgrounds stay as they are. html gets the class hdr from the signal. */
+html.hdr,html.hdr body{color:#8e8b86}
+html.hdr .dico{color:#8e8b86}
+html.hdr .path{color:#625e58}
+html.hdr #msg span{color:#625e58}
+/* The 2px selection ring too; the faint outlines stay. */
+html.hdr .tile.focus{outline-color:#8e8b86}
+/* While switching between SDR and HDR (html.fade, for a second), the colours ease over instead of jumping. */
+html.fade *{-webkit-transition:color .8s ease,outline-color .8s ease;transition:color .8s ease,outline-color .8s ease}
 </style>
 </head>
 <body>
@@ -55,6 +65,20 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
   var sel = 0, list = [], idleTimer = null, busy = false;
   var rowEl = document.getElementById('row'), msgEl = document.getElementById('msg');
   var els = [];
+
+  // Sets html.hdr (dimmer text over HDR), easing the colours over when it changes rather than jumping.
+  // It opens straight in the brightness it last had (kept here), so it does not open bright and
+  // then dim once the signal is read; a change from that, as it opens or while it is open, is eased.
+  var fadeTimer = null, HKEY = 'hdmi-sources-hdr';
+  try { if (localStorage.getItem(HKEY) === '1') document.documentElement.className = 'hdr'; } catch (e) { /* none kept */ }
+  function setHdr(on) {
+    var el = document.documentElement, was = /\bhdr\b/.test(el.className);
+    try { localStorage.setItem(HKEY, on ? '1' : '0'); } catch (e) { /* not kept */ }
+    if (was === on) return;
+    el.className = 'fade' + (on ? ' hdr' : '');
+    if (fadeTimer) clearTimeout(fadeTimer);
+    fadeTimer = setTimeout(function () { el.className = on ? 'hdr' : ''; }, 900);
+  }
 
   function http(method, url, body, cb) {
     var x = new XMLHttpRequest();
@@ -215,8 +239,17 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
     e.preventDefault();
   });
 
+  // Over HDR the text is drawn at 60% (html.hdr in the styles): the TV draws its interface brighter
+  // there. The format on screen is Glasshouse's reading of the TV's video output.
+  function hdrCheck() {
+    http('GET', '/api/stats?t=' + Date.now(), null, function (r) {
+      var t = r && r.signal_format && r.signal_format.type ? String(r.signal_format.type).toLowerCase() : '';
+      if (t) setHdr(!/^(sdr|none)$/.test(t));
+    });
+  }
+  hdrCheck();
   load();
-  setInterval(load, 5000);
+  setInterval(function () { load(); hdrCheck(); }, 5000);
   // Put in the background (another app opened, or Home), it closes, so it does not stay loaded.
   // Only its own window: a "back" from a hidden page would reach the app on screen.
   document.addEventListener('visibilitychange', function () { if (document.hidden) window.close(); });

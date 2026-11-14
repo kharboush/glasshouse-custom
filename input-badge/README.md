@@ -6,9 +6,11 @@ A Homebrew Channel app that restyles the banner LG shows when you switch to an H
 - the input's name at 26px over its port ("HDMI 1") at 20px in grey, with the same space at the sides as above and below the text;
 - where LG's own banner position setting puts it, left or right, 32px from that side (LG put it against the edge). At the top it is 32px down; LG's "bottom" is really the middle of the screen, and there the tile is centred on where LG's taller banner was.
 
-It also shows its own **signal toast** in place of LG's Dolby and HDR ones: a box in the Picture Panel's signal style (small grey labels over values), top right, 32px from the edges, black at 90% with the 1px outline. It comes a second after the picture's dynamic range changes, or Dolby Atmos starts, and stays 5 seconds. Two rows of two: Dynamic range and Audio, then Resolution and Refresh rate ("120 Hz VRR" when VRR is on). Everything in it is read from the TV itself, not from Glasshouse: the picture from the video output service, the sound from the audio service (Audio is left out when there is none, or a format it does not know). It shows on HDMI inputs only: in the TV's own apps, LG's input app is not running. It runs only in the input app on screen; LG keeps one preloaded for each input, and the ones in the background watch nothing.
+It also shows its own **signal toast** in place of LG's Dolby and HDR ones: a box in the Picture Panel's signal style (small grey labels over values), top right, 32px from the edges, black at 90% with the 1px outline. It comes a second after an input comes on screen, after the picture's dynamic range changes, or when Dolby Atmos starts, and stays 5 seconds. Over HDR its text (and the input banner's, and the banner's selection ring) is drawn at 60%, easing over when the format changes, as the TV draws its interface brighter there. Two rows of two: Dynamic range and Audio, then Resolution and Refresh rate ("120 Hz VRR" when VRR is on). Everything in it is read from the TV itself, not from Glasshouse: the picture from the video output service, the sound from the audio service (Audio is left out when there is none, or a format it does not know). It shows on HDMI inputs only: in the TV's own apps, LG's input app is not running. It runs only in the input app on screen; LG keeps one preloaded for each input, and the ones in the background watch nothing.
 
 LG's toasts are switched off at every start so the signal toast replaces theirs. The notification service has no way to switch off only some, so **every ordinary toast is hidden** (alerts still show); removing the app switches them back on.
+
+It also replaces the spinner LG shows while an app opens with its own: a 128px black square with the 1px outline and three cream dots lighting in turn (`app/payload/spinner.gif`, laid over `/usr/lib/weston/images/Spinner_large.gif`). It is bigger than LG's 48px one so it also covers the grey disc the window manager draws behind it, which is not in any file this package could change. The window manager reads the file each time, so it applies at once.
 
 It also turns the grey screen LG shows while an HDMI input opens (a flat grey with LG's HDMI plug icon) plain black, on all four inputs.
 
@@ -35,7 +37,7 @@ The files are rebuilt only when LG's files or this package's change. Every repla
 ./input-badge/build-ipk.py      # needs ares-package (npm i -g @webos-tools/cli)
 ```
 
-writes `dist/io.github.kharboush.input-badge_1.2.3_all.ipk` and its manifest (both also in `release/`). Install it with the Homebrew Channel or `dev/install`, then open **Input Badge** once: its page has the Homebrew Channel run `payload/install.sh` as root, which links the boot hook and applies the banner straight away. From then on the hook does it at every start; it logs to `/var/lib/input-badge/restyle.log`.
+writes `dist/io.github.kharboush.input-badge_1.3.0_all.ipk` and its manifest (both also in `release/`). Install it with the Homebrew Channel or `dev/install`, then open **Input Badge** once: its page has the Homebrew Channel run `payload/install.sh` as root, which links the boot hook and applies the banner straight away. From then on the hook does it at every start; it logs to `/var/lib/input-badge/restyle.log`.
 
 The page also has a **Remove the restyle** button (`payload/uninstall.sh`): it unmounts the files, removes the hook, deletes `/var/lib/input-badge` and switches LG's toasts back on, which brings back LG's own banner, splash and toasts. Uninstalling the app from the Homebrew Channel leaves the hook pointing at nothing, so nothing runs after the next restart.
 
@@ -48,6 +50,7 @@ The page also has a **Remove the restyle** button (`payload/uninstall.sh`): it u
 | `app/payload/signal-toast.qml.part` | The signal toast: this package's own, added inside LG's `RootWindow.qml` |
 | `app/payload/patch.js` | Builds the three files from LG's (exact replacements, all or nothing) |
 | `app/payload/splash.js` | Makes the black launch splash in LG's sizes |
+| `app/payload/spinner.gif` | The app-opening spinner, this package's own |
 | `app/payload/restyle.sh` | Builds if needed, mounts, restarts LG's input app |
 | `app/payload/boot.sh` | The boot hook, linked as `/var/lib/webosbrew/init.d/70-input-badge` |
 | `app/payload/install.sh`, `uninstall.sh` | Run as root by the page |

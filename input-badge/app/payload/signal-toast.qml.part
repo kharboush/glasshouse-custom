@@ -15,6 +15,16 @@
         property string rate: ""
         property string sound: ""
         property bool atmos: false
+        // Over HDR the TV draws its interface brighter than over SDR, so there the toast's colours are
+        // scaled to 60%: the values and the labels (the outline and the black stay as they are). The
+        // input banner reads hdr from here too.
+        property bool hdr: video !== "" && video !== "SDR"
+        property color valueColor: hdr ? "#8e8b86" : "#ece7df"
+        property color labelColor: hdr ? "#403d38" : "#6b665e"
+        // Eased over when the picture changes between SDR and HDR, not switched at once.
+        Behavior on valueColor { ColorAnimation { duration: 800 } }
+        Behavior on labelColor { ColorAnimation { duration: 800 } }
+        property real lineAlpha: 0.2
         property bool vrr: false
         property bool seenVideo: false
         property bool seenAudio: false
@@ -45,7 +55,7 @@
             height: cellRow.height + styleSheet.guiSize(40)
             color: Qt.rgba(0, 0, 0, 0.9)
             border.width: 1
-            border.color: Qt.rgba(244/255, 241/255, 234/255, 0.2)
+            border.color: Qt.rgba(244/255, 241/255, 234/255, rangeToast.lineAlpha)
 
             // Two lines of cells, as the Picture Panel's signal block lays them out, each at least the
             // panel's cell width.
@@ -66,7 +76,7 @@
 
                         Text {
                             text: modelData.k
-                            color: "#6b665e"
+                            color: rangeToast.labelColor
                             font.family: styleSheet.regularFont(styleSheet.guiSize(14)).family
                             font.pixelSize: styleSheet.guiSize(14)
                             font.letterSpacing: styleSheet.guiSize(14) * 0.06
@@ -75,7 +85,7 @@
 
                         Text {
                             text: modelData.v
-                            color: "#ece7df"
+                            color: rangeToast.valueColor
                             font: styleSheet.semiBoldFont(styleSheet.guiSize(20))
                         }
                     }
@@ -136,7 +146,8 @@
                 rangeToast.vrr = !!(vi.hdmiVrrInfo && vi.hdmiVrrInfo.vrrEnabled);
                 if (rangeToast.video === name) return;
                 rangeToast.video = name;
-                if (!rangeToast.seenVideo) { rangeToast.seenVideo = true; return; }
+                // Shown as an input comes on screen (its first reading), and on every change after.
+                rangeToast.seenVideo = true;
                 rangeToast.show();
             }
         }
@@ -188,7 +199,7 @@
 
         // All of it runs only in the input app that is on screen. LG keeps one preloaded for each
         // input; the ones in the background watch nothing and show nothing. Coming on screen, it
-        // starts afresh, so the input's own format is read first and not shown as a change.
+        // starts afresh and shows the toast for the input's format as soon as it is read.
         property bool onScreen: systemProperties.isWindowMaximized
         onOnScreenChanged: onScreen ? start() : stop()
         Component.onCompleted: if (onScreen) start()

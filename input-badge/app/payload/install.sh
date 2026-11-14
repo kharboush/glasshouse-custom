@@ -25,6 +25,7 @@ rm -rf /var/lib/glasshouse-custom/input-banner
 R=/usr/palm/applications/com.webos.app.inputcommon/qml/RootWindow.qml
 grep -q " $R " /proc/mounts && umount "$R"
 rm -rf /var/lib/input-badge/test
+rm -f /var/lib/input-badge/spinner-test.gif
 rmdir /var/lib/glasshouse-custom 2>/dev/null
 
 out=$(sh "$HERE/restyle.sh" 2>&1) || fail "$(printf '%s' "$out" | tr '\n"' ' ')"

@@ -33,6 +33,14 @@ Selectable {
     property var inputLabelFont: styleSheet.banner.inputLabelFont
 
     property int pad: styleSheet.guiSize(20)
+    // Over HDR the TV draws its interface brighter, so the text is scaled to 60% there, as in the
+    // signal toast, whose reading of the picture this uses (an id in LG's root, so looked up safely).
+    property bool hdrOn: typeof rangeToast !== "undefined" && rangeToast !== null && rangeToast.hdr
+    property color bright: hdrOn ? "#8e8b86" : "#ece7df"
+    property color second: hdrOn ? "#625e58" : "#a39d93"
+    // Eased over when the picture changes between SDR and HDR, not switched at once.
+    Behavior on bright { ColorAnimation { duration: 800 } }
+    Behavior on second { ColorAnimation { duration: 800 } }
 
     width: styleSheet.guiSize(320)
     height: styleSheet.guiSize(112)
@@ -46,7 +54,7 @@ Selectable {
         anchors.fill: parent
         color: hasFocus ? "#141310" : Qt.rgba(0, 0, 0, 0.9)
         border.width: hasFocus ? 2 : 1
-        border.color: hasFocus ? "#ece7df" : Qt.rgba(244/255, 241/255, 234/255, 0.2)
+        border.color: hasFocus ? root.bright : Qt.rgba(244/255, 241/255, 234/255, 0.2)
         visible: root.needFocusHandle || root.displayOnlyZapping
     }
 
@@ -72,7 +80,7 @@ Selectable {
             width: parent.width
             elide: Text.ElideRight
             font: styleSheet.regularFont(styleSheet.guiSize(26))
-            color: "#ece7df"
+            color: root.bright
             text: inputLabel
             visible: inputLabel !== "" && inputLabel !== deviceName
         }
@@ -85,7 +93,7 @@ Selectable {
             width: parent.width
             elide: Text.ElideRight
             font: inputLabelItem.visible ? styleSheet.regularFont(styleSheet.guiSize(20)) : styleSheet.regularFont(styleSheet.guiSize(26))
-            color: inputLabelItem.visible ? "#a39d93" : "#ece7df"
+            color: inputLabelItem.visible ? root.second : root.bright
             text: deviceName
         }
     }

@@ -60,13 +60,45 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
 .opt.cur{color:#ece7df}
 .opt.cur:after{content:'';position:absolute;right:22px;top:25px;width:8px;height:8px;border-radius:50%;background:#e9ad55}
 .opt.focus{outline:2px solid #ece7df;background:#141310;color:#ece7df}
+/* Over HDR the TV draws its interface brighter than over SDR, so there the text (bright and secondary)
+   is scaled to 60%; outlines and backgrounds stay as they are. html gets the class hdr from the signal. */
+html.hdr,html.hdr body{color:#8e8b86}
+html.hdr .row.na .lbl,html.hdr .row.na .val{color:#232120}
+html.hdr .row.off .lbl,html.hdr .row.off .val{color:#403d38}
+html.hdr .row.focus.off .lbl{color:#625e58}
+html.hdr .lbl{color:#625e58}
+html.hdr .pg{color:#625e58}
+html.hdr .pg .ar{color:#8e8b86}
+html.hdr #pgNum{color:#403d38}
+html.hdr .row.focus .lbl{color:#8e8b86}
+html.hdr .arrow{color:#232120}
+html.hdr .row.focus .arrow{color:#8e8b86}
+html.hdr .row.focus .arrow:hover{color:#999999}
+html.hdr .pg:hover .ar{color:#999999}
+html.hdr .cell .k{color:#403d38}
+html.hdr .cell .v{color:#8e8b86}
+html.hdr .cell .v.none{color:#232120}
+html.hdr #tip b{color:#8e8b86}
+html.hdr #tip span{color:#625e58}
+html.hdr #tip span.rec{color:#8e8b86}
+html.hdr #pickT{color:#403d38}
+html.hdr .opt{color:#625e58}
+html.hdr .opt.cur{color:#8e8b86}
+html.hdr .opt.focus{color:#8e8b86}
+/* The 2px selection ring too; the faint outlines stay. */
+html.hdr .row.focus,html.hdr .opt.focus{outline-color:#8e8b86}
+/* While switching between SDR and HDR (html.fade, for a second), the colours ease over instead of jumping. */
+html.fade *{-webkit-transition:color .8s ease,outline-color .8s ease;transition:color .8s ease,outline-color .8s ease}
 </style>
+<!-- The brightness it last had over HDR, set before anything is drawn. -->
+<script>try { if (localStorage.getItem('picture-panel-hdr') === '1') document.documentElement.className = 'hdr'; } catch (e) {}</script>
 </head>
 <body>
 <div id="panel">
-  <div id="info"><div id="cells"></div></div>
-  <div id="dots"><span id="pgNum"></span><div id="pgArrows"><div class="pg" id="prevPg"><span class="ar">&#8250;</span></div><div class="pg" id="nextPg"><span class="ar">&#8250;</span></div></div></div>
-  <div id="rows"></div>
+  <!-- A still copy of the panel as it first draws (labels, dashes, page 1), so it shows at once; the
+       script replaces it with the live one. --><div id="info"><div id="cells"><div class="cell"><div class="k">Resolution</div><div class="v none">&#8212;</div></div><div class="cell"><div class="k">Refresh rate</div><div class="v none">&#8212;</div></div><div class="cell"><div class="k">Frame rate</div><div class="v none">&#8212;</div></div><div class="cell"><div class="k">VRR</div><div class="v none">&#8212;</div></div><div class="cell"><div class="k">Dynamic range</div><div class="v none">&#8212;</div></div><div class="cell"><div class="k">Low latency</div><div class="v none">&#8212;</div></div><div class="cell"><div class="k">Color</div><div class="v none">&#8212;</div></div><div class="cell"><div class="k">Bit depth</div><div class="v none">&#8212;</div></div><div class="cell"><div class="k">Link speed</div><div class="v none">&#8212;</div></div><div class="cell"><div class="k">Video data</div><div class="v none">&#8212;</div></div><div class="cell"><div class="k">Audio</div><div class="v none">&#8212;</div></div><div class="cell"><div class="k">Audio output</div><div class="v none">&#8212;</div></div></div></div>
+  <div id="dots"><span id="pgNum">Picture Settings 1/3</span><div id="pgArrows"><div class="pg" id="prevPg"><span class="ar">&#8250;</span></div><div class="pg" id="nextPg"><span class="ar">&#8250;</span></div></div></div>
+  <div id="rows"><div class="row focus"><div class="lbl">Picture Mode</div><div class="ctl"><div class="arrow">&#8249;</div><div class="val">&#8212;</div><div class="arrow">&#8250;</div></div></div><div class="row"><div class="lbl">Brightness</div><div class="ctl"><div class="arrow">&#8249;</div><div class="val">&#8212;</div><div class="arrow">&#8250;</div></div></div><div class="row"><div class="lbl">Contrast</div><div class="ctl"><div class="arrow">&#8249;</div><div class="val">&#8212;</div><div class="arrow">&#8250;</div></div></div><div class="row"><div class="lbl">Black Level</div><div class="ctl"><div class="arrow">&#8249;</div><div class="val">&#8212;</div><div class="arrow">&#8250;</div></div></div><div class="row"><div class="lbl">Peak Brightness</div><div class="ctl"><div class="arrow">&#8249;</div><div class="val">&#8212;</div><div class="arrow">&#8250;</div></div></div></div>
 </div>
 <div id="tip"><b id="tipT"></b><span id="tipX"></span><span class="rec" id="tipR"></span></div>
 <div id="pick"><div id="pickT"></div><div id="pickL"></div></div>
@@ -172,6 +204,20 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
 
   function choiceName(c, ch) {
     return (c.def.nameOf && c.def.nameOf(ch.value)) || (c.def.names && c.def.names[ch.value]) || ch.label || String(ch.value);
+  }
+
+  // Sets html.hdr (dimmer text over HDR), easing the colours over when it changes rather than jumping.
+  // It opens straight in the brightness it last had (kept here), so it does not open bright and
+  // then dim once the signal is read; a change from that, as it opens or while it is open, is eased.
+  var fadeTimer = null, HKEY = 'picture-panel-hdr';
+  try { if (localStorage.getItem(HKEY) === '1') document.documentElement.className = 'hdr'; } catch (e) { /* none kept */ }
+  function setHdr(on) {
+    var el = document.documentElement, was = /\bhdr\b/.test(el.className);
+    try { localStorage.setItem(HKEY, on ? '1' : '0'); } catch (e) { /* not kept */ }
+    if (was === on) return;
+    el.className = 'fade' + (on ? ' hdr' : '');
+    if (fadeTimer) clearTimeout(fadeTimer);
+    fadeTimer = setTimeout(function () { el.className = on ? 'hdr' : ''; }, 900);
   }
 
   function http(method, url, body, cb) {
@@ -374,7 +420,10 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
       var id = stats ? String(stats.app_id || '') : '', m = /^com\.webos\.app\.hdmi(\d)$/.exec(id);
       if (!stats || !id) { sig = null; sigDone = true; return paintInfo(); }
       paintInfo();
-      rangeChanged(fmtType());
+      // Over HDR the text is drawn at 60% (html.hdr in the styles): the TV draws its interface brighter there.
+      var fr = fmtType();
+      if (fr) setHdr(fr !== 'SDR');
+      rangeChanged(fr);
       var q = '/api/home/picture?kind=' + (m ? 'input' : 'app') + '&port=' + (m ? m[1] : 0) +
         '&app=' + encodeURIComponent(id) + '&t=' + Date.now();
       http('GET', q, null, function (p) { sig = p && p.ok && p.signal ? p.signal : null; sigDone = true; paintInfo(); });
@@ -386,6 +435,7 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
   }
   function buildInfo() {
     var box = document.getElementById('cells');
+    box.innerHTML = '';                       // the still copy in the page
     CELLS.forEach(function (c) {
       var cell = document.createElement('div'), k = document.createElement('div'), val = document.createElement('div');
       cell.className = 'cell' + (c.wide ? ' wide' : ''); k.className = 'k'; k.textContent = c.label; val.className = 'v none';
@@ -613,6 +663,7 @@ html,body{margin:0;width:100%;height:100%;background:transparent;overflow:hidden
   }
 
   function build() {
+    rowsEl.innerHTML = '';                    // the still copy in the page
     ctl.forEach(function (c, i) {
       var row = document.createElement('div'), lbl = document.createElement('div'), box = document.createElement('div');
       var left = document.createElement('div'), right = document.createElement('div'), val = document.createElement('div');

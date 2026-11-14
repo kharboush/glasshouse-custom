@@ -24,7 +24,7 @@ Build the package, then install it on the TV with the Homebrew Channel (or `dev/
 ./lg-settings-restyle/build-ipk.py      # needs ares-package (npm i -g @webos-tools/cli)
 ```
 
-This writes `dist/io.github.kharboush.lg-settings-restyle_1.0.1_all.ipk` and its `.manifest.json`. After installing, open **Settings Restyle** once: its page has the Homebrew Channel run `payload/install.sh` as root, which links the boot hook into the app's folder and applies the restyle straight away. From then on the hook does it at every start.
+This writes `dist/io.github.kharboush.lg-settings-restyle_1.0.3_all.ipk` and its `.manifest.json`. After installing, open **Settings Restyle** once: its page has the Homebrew Channel run `payload/install.sh` as root, which links the boot hook into the app's folder and applies the restyle straight away. From then on the hook does it at every start.
 
 The built package and manifest of the current version are also in `release/`, so the manifest can be added to the Homebrew Channel by its raw GitHub URL.
 
