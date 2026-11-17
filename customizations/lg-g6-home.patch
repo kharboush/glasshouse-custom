@@ -1,26 +1,26 @@
 diff --git a/docs/dashboard/home.md b/docs/dashboard/home.md
-index 30e3643..a28bb63 100644
+index a3ab0b22..1545d301 100644
 --- a/docs/dashboard/home.md
 +++ b/docs/dashboard/home.md
-@@ -234,7 +234,7 @@ When opening a channel from the Internet TV row or live preview, playback opens
+@@ -246,7 +246,7 @@ When opening a channel from the Internet TV row or live preview, playback opens
  
  ### Electronic Programme Guide (EPG)
  
--Whenever the lineup contains channels, a **Guide** tile remains accessible on the Internet TV row (even if no channels are currently starred):
-+Whenever the lineup contains channels, a **Guide** tile remains accessible on the Internet TV row (even if no channels are currently starred). It follows the channels by default, or leads the row while **Spotlight View** is on:
+-Whenever the lineup contains channels, an **IPTV Guide** tile remains accessible on the Internet TV row (even if no channels are currently starred):
++Whenever the lineup contains channels, an **IPTV Guide** tile remains accessible on the Internet TV row (even if no channels are currently starred). It follows the channels by default, or leads the row while **Spotlight View** is on:
  
  ![The guide on a G3](../screenshots/iptv-home-guide.jpg)
  
-@@ -424,7 +424,7 @@ The Home tab's **Home customisation** section holds what applies to whichever Ho
+@@ -480,7 +480,7 @@ The Home tab's **Home customisation** section holds what applies to whichever Ho
  
  * While Glasshouse Home is on:
      * **Starting up:** Open Home at power-on, Hide LG's Home while the TV starts.
 -    * **Layout:** Alternative View, Rows along the bottom.
 +    * **Layout:** Alternative View, Spotlight View, Spotlight View font, Rows along the bottom.
-     * **Shown on Home:** Clock and date, Last watched, App count, CEC addresses, Channel logos, Weather, Picture details.
-     * **Live preview:** Live preview, with Preview sound, Keep the preview on and Preview in the tile once it is on.
+     * **Shown on Home:** Clock and date, Last watched, App count, App labels, CEC addresses, Channel logos, Weather, Remote battery, Picture details.
+     * **Live preview:** Live preview, with Preview sound, Keep the preview on, Preview in the tile and Preview size once it is on.
      * **Search.**
-@@ -446,6 +446,8 @@ The **Layout** section configures the on-screen placement of rows and status ele
+@@ -502,6 +502,8 @@ The **Layout** section configures the on-screen placement of rows and status ele
  
      ![Glasshouse Home with the clock off and the rows along the bottom](../screenshots/home-bottom.jpg)
  
@@ -30,10 +30,10 @@ index 30e3643..a28bb63 100644
  
      ![Glasshouse Home in Alternative View with the rows along the bottom](../screenshots/home-alternative.jpg)
 diff --git a/scripts/check-dashboards.js b/scripts/check-dashboards.js
-index 0c81a53..7a99507 100755
+index 9ad19f50..5e575310 100755
 --- a/scripts/check-dashboards.js
 +++ b/scripts/check-dashboards.js
-@@ -508,6 +508,75 @@ async function visitHomePreviewOptions(browser, base, problems) {
+@@ -1291,6 +1291,75 @@ async function visitHomePreviewOptions(browser, base, problems) {
    await page.close();
  }
  
@@ -109,20 +109,20 @@ index 0c81a53..7a99507 100755
  // Each animated background draws, the pictures step aside, and Off puts them back.
  async function visitHomeAnimations(browser, base, problems) {
    const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
-@@ -2916,7 +2985,7 @@ function groups(web, tv) {
-     { job: 'tabs', tabs: web.map(t => ({ path: '/?tab=' + t, label: 'web ' + t })), visits: [visitHomeAnimations] },
+@@ -4642,7 +4711,7 @@ function groups(web, tv) {
+     { job: 'tabs', tabs: web.map(t => ({ path: '/?tab=' + t, label: 'web ' + t })), visits: [visitHomeAnimations, visitHuesyncSettings, visitInputsAndRemote, visitAdblockCards, visitSaverEntitySlots, visitRemoteView] },
      { job: 'tabs', tabs: tv.map(t => ({ path: '/assets/dashboard.html?tab=' + t, label: 'TV ' + t })),
-       visits: [visitTvDashboard, visitTvAudio, visitTvPictureWrites, visitPictureUnavailable, visitTvNonOled] },
--    { job: 'home', tabs: [], visits: [visitHomePicture, visitHomePreview, visitHomePreviewOptions, visitHomeOrder, visitHomeAvailability, visitHomeSearch, visitHomeWeather, visitHomeWeatherSetting] },
-+    { job: 'home', tabs: [], visits: [visitHomePicture, visitHomePreview, visitHomePreviewOptions, visitHomeG6Layout, visitHomeOrder, visitHomeAvailability, visitHomeSearch, visitHomeWeather, visitHomeWeatherSetting] },
+       visits: [visitTvDashboard, visitTvAudio, visitTvPictureWrites, visitPictureUnavailable, visitTvNonOled, visitTvHuesync] },
+-    { job: 'home', tabs: [], visits: [visitHomePicture, visitHomePreview, visitHomePreviewOptions, visitHomePreviewWebos4, visitHomePreviewSize, visitHomePreviewSizeDetails, visitInputBarBehindHome, visitInputBarSwitchOnOk, visitHomeBarPrewarm, visitHomeBarIconsReady, visitHomeBarTiles, visitHomeBarBesideHome, visitHomeBarScroll, visitHomeUpDown, visitHomePointerOff, visitHomeOrder, visitHomeAvailability, visitHomeSearch, visitHomeWeather, visitHomeWeatherSetting, visitHomeRemoteBattery, visitHomeRemoteBatterySetting] },
++    { job: 'home', tabs: [], visits: [visitHomePicture, visitHomePreview, visitHomePreviewOptions, visitHomeG6Layout, visitHomePreviewWebos4, visitHomePreviewSize, visitHomePreviewSizeDetails, visitInputBarBehindHome, visitInputBarSwitchOnOk, visitHomeBarPrewarm, visitHomeBarIconsReady, visitHomeBarTiles, visitHomeBarBesideHome, visitHomeBarScroll, visitHomeUpDown, visitHomePointerOff, visitHomeOrder, visitHomeAvailability, visitHomeSearch, visitHomeWeather, visitHomeWeatherSetting, visitHomeRemoteBattery, visitHomeRemoteBatterySetting] },
      { job: 'home', tabs: [], visits: [visitHomeArrangement, visitHomeVisibility, visitHomeColours, visitHomeInputsEditor, visitHomeEditor,
        visitHomeRecentsHidden, visitHomeUploads, visitHomeShuffle, visitHomeLauncher, visitHomeReadiness, visitAudioOverride, visitHomeRecents, visitHomeGuide,
        visitHomeFadeAndInputs] },
 diff --git a/server/assets/dashboard.html b/server/assets/dashboard.html
-index bd1b51e..16c8470 100644
+index 34b566d9..a1041e66 100644
 --- a/server/assets/dashboard.html
 +++ b/server/assets/dashboard.html
-@@ -1193,6 +1193,14 @@ function glasshouseHomeRows(d) {
+@@ -1307,6 +1307,14 @@ function glasshouseHomeRows(d) {
      }
      r.push(homeSwitchRow(d, 'showClock', t('home.showClock', 'Clock and date'), t('home.showClockDesc', 'At the top of Glasshouse Home. Switched off, the space stays empty.'), 'homeShow', d.layout.showClock !== false));
      r.push(homeSwitchRow(d, 'rowsBottom', t('home.rowsBottom', 'Rows along the bottom'), t('home.rowsBottomDesc', 'The rows of apps and inputs sit along the bottom of the screen, as on LG’s Home, rather than in the middle.'), 'homeShow', d.layout.rowsBottom === true));
@@ -137,7 +137,7 @@ index bd1b51e..16c8470 100644
      var altOn = d.layout.view === 'alternative';
      r.push({ label: t('home.alternative', 'Alternative View'),
               value: altOn ? t('common.on', 'On') : t('common.off', 'Off'), cls: altOn ? 'on' : 'off',
-@@ -3443,6 +3451,10 @@ function activate() {
+@@ -3597,6 +3605,10 @@ function activate() {
        return homeLayout({ search: !r.on });
      case 'homeAlternative':
        return homeLayout({ view: r.on ? 'standard' : 'alternative' });
@@ -149,7 +149,7 @@ index bd1b51e..16c8470 100644
        var wxOrder = ['off', 'ha', 'internet'];
        var wxAt = wxOrder.indexOf((homeData && homeData.layout && homeData.layout.weather) || 'ha');
 diff --git a/server/assets/home.html b/server/assets/home.html
-index 4a922cd..de47992 100644
+index 0984bfa7..2dc7c580 100644
 --- a/server/assets/home.html
 +++ b/server/assets/home.html
 @@ -17,6 +17,14 @@
@@ -167,7 +167,7 @@ index 4a922cd..de47992 100644
  *{margin:0;padding:0;box-sizing:border-box}
  html,body{height:100%;background:#000;overflow:hidden}
  body{font-family:'Manrope',sans-serif;color:#ece7df;-webkit-font-smoothing:antialiased;cursor:default}
-@@ -163,6 +171,64 @@ html.resting #wall .layer{-webkit-animation-play-state:paused;animation-play-sta
+@@ -205,6 +213,78 @@ html.resting #wall .layer{-webkit-animation-play-state:paused;animation-play-sta
  .rows-bottom #rows:before{-webkit-flex:0 0 auto;flex:0 0 auto;height:100%}
  .rows-bottom #rows:after{-webkit-flex:0 0 0;flex:0 0 0}
  
@@ -225,6 +225,20 @@ index 4a922cd..de47992 100644
 +.g6-custom #wxTemp{font-size:48px;line-height:.8;letter-spacing:-1px}
 +.g6-custom #wxLine{margin-top:10px;font-size:24px;line-height:normal}
 +.g6-custom #plate{display:none}
++/* Preview size in Spotlight View: Large is the 864x486 it was made with, Medium 672x378 and Small
++   480x270. The strip, the Guide and the rows follow the preview's height, as they do for Large: the
++   strip is 116px taller than the preview (its padding and the details line), the Guide starts 10px
++   below the strip and the rows 108px below the Guide. */
++.g6-custom.g6-pv-medium #preview,.g6-custom.g6-pv-medium #now #preview.info{width:672px;height:378px}
++.g6-custom.g6-pv-medium #pvNote{line-height:378px}
++.g6-custom.g6-pv-medium #now{height:494px}
++.g6-custom.g6-pv-medium #guide{top:504px}
++.g6-custom.g6-pv-medium #rows{top:612px}
++.g6-custom.g6-pv-small #preview,.g6-custom.g6-pv-small #now #preview.info{width:480px;height:270px}
++.g6-custom.g6-pv-small #pvNote{line-height:270px}
++.g6-custom.g6-pv-small #now{height:386px}
++.g6-custom.g6-pv-small #guide{top:396px}
++.g6-custom.g6-pv-small #rows{top:504px}
 +.g6-custom .row h2{padding:0 64px}
 +.g6-custom .wrap{margin:0 42px}
 +.g6-custom .slot{margin:0 64px}
@@ -232,7 +246,7 @@ index 4a922cd..de47992 100644
  /* Alternative View (#999): a smaller clock on the right, Last watched to its
     left, and the rows as rounded, translucent tiles, titled only while arranging. */
  .alternative #now{padding:0 90px}
-@@ -731,7 +797,7 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
+@@ -786,7 +866,7 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
    // The remote's keys as webOS reports them to a page.
    var KEY = { left: 37, up: 38, right: 39, down: 40, ok: 13, back: 461, red: 403, green: 404, yellow: 405,
      chUp: 33, chDown: 34, info: 457, play: 415, pause: 19, stop: 413 };
@@ -241,7 +255,7 @@ index 4a922cd..de47992 100644
    var GUIDE_TILE = 'iptv-guide';
    // Internet TV's Add channels tile: last in its row while arranging, and the row's only tile while it is empty.
    var ADD_TILE = 'iptv-add';
-@@ -739,6 +805,8 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
+@@ -794,6 +874,8 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
    var FOLDER_TILE = 'more-apps';
    // Tiles per line in the More apps grid: 9 of 176px fill the 1696px between the margins.
    var FOLDER_COLS = 9;
@@ -250,7 +264,7 @@ index 4a922cd..de47992 100644
    // Held this long, OK arranges the tiles rather than opening one.
    var LONG_PRESS_MS = 800;
    var BEAT_MS = 5000;
-@@ -809,6 +877,9 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
+@@ -885,6 +967,9 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
    function dateText(d) {
      var lang = (window.I18N && I18N.lang) ? I18N.lang() : 'en';
      var loc = lang === 'en' ? 'en-US' : lang;
@@ -260,28 +274,36 @@ index 4a922cd..de47992 100644
      function part(opts) {
        try { return d.toLocaleDateString(loc, opts); } catch (e) { return ''; }
      }
-@@ -900,7 +971,9 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
+@@ -978,7 +1063,9 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
      if (kind === 'iptv' && data.sources && data.sources.iptv && (state.arranging || (!out.length && !hasLineup))) {
        out.push({ id: ADD_TILE, add: true, name: t('home.tv.addTitle', 'Add channels') });
      } else if (kind === 'iptv' && (out.length || hasLineup) && !state.arranging) {
--      out.push({ id: GUIDE_TILE, guide: true, name: t('home.tv.guide', 'Guide') });
-+      var guideTile = { id: GUIDE_TILE, guide: true, name: t('home.tv.guide', 'Guide') };
+-      out.push({ id: GUIDE_TILE, guide: true, name: t('home.tv.guide', 'IPTV Guide') });
++      var guideTile = { id: GUIDE_TILE, guide: true, name: t('home.tv.guide', 'IPTV Guide') };
 +      if (layout.g6CustomLayout === true) out.unshift(guideTile);
 +      else out.push(guideTile);
      }
      return out;
    }
-@@ -1905,7 +1978,8 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
+@@ -2137,6 +2224,8 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
+   // Medium or Large beside the clock; in the tile, the tile sets its size.
+   function previewSizeClass() {
+     if (!layout || layout.livePreview !== true || layout.previewInTile === true) return '';
++    // Spotlight View sizes its own preview (g6-pv-*, in its styles).
++    if (layout.g6CustomLayout === true) return '';
+     return layout.previewSize === 'medium' ? ' pv-medium' : layout.previewSize === 'large' ? ' pv-large' : '';
+   }
+ 
+@@ -2144,7 +2233,7 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
      $('stage').className = (state.arranging ? 'arranging' : '') + (recents.open ? ' recents' : '') +
        (finder.open ? ' finding' : '') + (finder.typing ? ' typing' : '') + (searchOn() ? '' : ' no-search') + (folder.open ? ' folder' : '') +
        (!layout || layout.showClock === false ? ' no-clock' : '') + (layout && layout.rowsBottom === true ? ' rows-bottom' : '') +
--      (layout && layout.view === 'alternative' ? ' alternative' : '') + (player.open ? ' playing' : '') + (adder.open ? ' adding' : '') +
-+      (layout && layout.view === 'alternative' ? ' alternative' : '') + (layout && layout.g6CustomLayout === true ? ' g6-custom g6-font-' + (layout.g6Font || 'system') : '') +
-+      (player.open ? ' playing' : '') + (adder.open ? ' adding' : '') +
-       (adder.open && adder.typing ? ' adtyping' : '') + (guide.open ? ' guiding' : '');
-     followPreview();
-   }
-@@ -3884,11 +3958,11 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
+-      (layout && layout.view === 'alternative' ? ' alternative' : '') + (layout && layout.showAppLabels === false ? ' no-app-labels' : '') +
++      (layout && layout.view === 'alternative' ? ' alternative' : '') + (layout && layout.g6CustomLayout === true ? ' g6-custom g6-font-' + (layout.g6Font || 'system') + ' g6-pv-' + (layout.previewSize || 'small') : '') + (layout && layout.showAppLabels === false ? ' no-app-labels' : '') +
+       (player.open ? ' playing' : '') + (adder.open ? ' adding' : '') +
+       (adder.open && adder.typing ? ' adtyping' : '') + (guide.open ? ' guiding' : '') + previewSizeClass();
+     // Home Assistant's media player shows IPTV while the guide or a player is up: told at once, not at the next heartbeat.
+@@ -4179,11 +4268,11 @@ body.no-slide #recents,body.no-slide #finder,body.no-slide #folder,body.no-slide
      if (k === KEY.back) return closeFolder();
      if (!n) return;
      if (k === KEY.ok) return openFromFolder(folder.apps[c]);
@@ -298,10 +320,10 @@ index 4a922cd..de47992 100644
      focusFolder();
    }
 diff --git a/server/assets/ui.html b/server/assets/ui.html
-index 7b1bff0..0f9d3d0 100644
+index 387e5f37..d378aa09 100644
 --- a/server/assets/ui.html
 +++ b/server/assets/ui.html
-@@ -1203,6 +1203,25 @@
+@@ -1400,6 +1400,25 @@
        </div>
        <div class="prot-status"><button type="button" class="pill idle" id="home-alternative" onclick="homeAlternative()">&mdash;</button></div>
      </div>
@@ -328,10 +350,10 @@ index 7b1bff0..0f9d3d0 100644
        <div class="prot-main">
          <div class="prot-title" data-t="home.rowsBottom">Rows along the bottom</div>
 diff --git a/server/assets/ui/home.js b/server/assets/ui/home.js
-index 448e365..12df211 100644
+index b160678a..e22907a7 100644
 --- a/server/assets/ui/home.js
 +++ b/server/assets/ui/home.js
-@@ -233,8 +233,14 @@ function renderHome() {
+@@ -359,8 +359,14 @@ function renderHome() {
        ? t('home.searchBlockedList', 'Unavailable: the ad blocker\u2019s hosts list blocks {host}, which LG\u2019s search needs, so the search mark is hidden on Glasshouse Home. Take {host} out of the list to use it. This switch keeps its setting.', { host: searchBlocked.host })
        : t('home.searchBlockedLevel', 'Unavailable: the ad blocker\u2019s Everything setting blocks {host}, which LG\u2019s search needs, so the search mark is hidden on Glasshouse Home. Set the ad blocker to Ads & telemetry or off to use it. This switch keeps its setting.', { host: searchBlocked.host });
    }
@@ -347,7 +369,7 @@ index 448e365..12df211 100644
      const row = q(id + '-row');
      if (row) row.hidden = !st.supported.ok;
      const btn = q(id);
-@@ -995,6 +1001,14 @@ function homeRowsBottom() {
+@@ -1351,6 +1357,14 @@ function homeRowsBottom() {
    homeSaveLayout({ rowsBottom: homeLayout.rowsBottom !== true });
  }
  
@@ -363,19 +385,19 @@ index 448e365..12df211 100644
    homeSaveLayout({ fade: homeLayout.fade !== true });
  }
 diff --git a/server/lib/home.js b/server/lib/home.js
-index 5422c11..3690779 100644
+index 9d6e485f..dd9c9e68 100644
 --- a/server/lib/home.js
 +++ b/server/lib/home.js
-@@ -54,6 +54,8 @@ var SORTS = ['custom', 'recent'];
- var SHOW_KEYS = ['showClock', 'showLastOn', 'showAppCount', 'showCec', 'showTvLogos'];
- // Where the weather badge's weather comes from: nowhere, Home Assistant's pushes, or Open-Meteo.
- var WEATHER_SOURCES = ['off', 'ha', 'internet'];
+@@ -64,6 +64,8 @@ var REMOTE_BATTERY_LOW = 20;
+ var REMOTE_BATTERY_STEPS = ['high', 'mid', 'low'];
+ // The live preview beside the clock: 356x200, 512x288 or 640x360 on the 1920x1080 view.
+ var PREVIEW_SIZES = ['small', 'medium', 'large'];
 +// The font Spotlight View sets Home in: Glasshouse's own (no change), the TV's, or one bundled with the customisation.
 +var G6_FONTS = ['default', 'system', 'geist', 'inter'];
  // Each kind of motion on the view, on unless switched off: the wallpaper's
  // slow drift and its cross-fade between parts of the day, rows easing to the
  // chosen tile, and Recent apps, search and the folder sliding in.
-@@ -420,6 +422,9 @@ function defaults() {
+@@ -494,6 +496,9 @@ function defaults() {
      wallShuffleMinutes: 10,
      // The rows centred below the top strip, or along the bottom as on LG's Home.
      rowsBottom: false,
@@ -385,7 +407,7 @@ index 5422c11..3690779 100644
      // standard, or alternative: a smaller clock on the right, and the rows
      // as rounded, translucent tiles without their titles.
      view: 'standard',
-@@ -506,6 +511,8 @@ function normalise(raw) {
+@@ -595,6 +600,8 @@ function normalise(raw) {
    d.weather = WEATHER_SOURCES.indexOf(raw.weather) !== -1 ? raw.weather : raw.showWeather === false ? 'off' : 'ha';
    d.weatherPlace = weatherPlaceOf(raw.weatherPlace);
    d.rowsBottom = raw.rowsBottom === true;
@@ -394,7 +416,7 @@ index 5422c11..3690779 100644
    d.view = raw.view === 'alternative' ? 'alternative' : 'standard';
    d.previewAlways = raw.previewAlways === true;
    d.previewInTile = raw.previewInTile === true;
-@@ -657,6 +664,8 @@ function setLayout(body, cb) {
+@@ -786,6 +793,8 @@ function setLayout(body, cb) {
      livePreview: typeof body.livePreview === 'boolean' ? body.livePreview : c.livePreview,
      showClock: typeof body.showClock === 'boolean' ? body.showClock : c.showClock,
      rowsBottom: typeof body.rowsBottom === 'boolean' ? body.rowsBottom : c.rowsBottom,
@@ -403,20 +425,20 @@ index 5422c11..3690779 100644
      view: body.view !== undefined ? body.view : c.view,
      showLastOn: typeof body.showLastOn === 'boolean' ? body.showLastOn : c.showLastOn,
      showAppCount: typeof body.showAppCount === 'boolean' ? body.showAppCount : c.showAppCount,
-@@ -714,7 +723,7 @@ function layoutOf(c) {
+@@ -937,7 +946,7 @@ function layoutOf(c) {
      excludedRecents: c.excludedRecents,
      searchHintSeen: c.searchHintSeen, picture: c.picture, livePreview: c.livePreview, search: c.search, recommended: c.recommended,
      fade: c.fade, wallDrift: c.wallDrift, wallCrossfade: c.wallCrossfade, smoothScroll: c.smoothScroll, slidePanels: c.slidePanels,
--    darkening: c.darkening, hideUnused: c.hideUnused, showClock: c.showClock, rowsBottom: c.rowsBottom, view: c.view,
-+    darkening: c.darkening, hideUnused: c.hideUnused, showClock: c.showClock, rowsBottom: c.rowsBottom, g6CustomLayout: c.g6CustomLayout, g6Font: c.g6Font, view: c.view,
-     showLastOn: c.showLastOn, showAppCount: c.showAppCount, showCec: c.showCec, showTvLogos: c.showTvLogos, weather: c.weather, weatherPlace: c.weatherPlace, previewAlways: c.previewAlways, previewInTile: c.previewInTile, previewSound: c.previewSound, wallAnim: c.wallAnim,
+-    darkening: c.darkening, hideUnused: c.hideUnused, showMediaServers: c.showMediaServers, deviceNames: devNamesNow(c.deviceNames), appNames: c.appNames, inputBarTransparent: c.inputBarTransparent, inputBarSwitchOnOk: c.inputBarSwitchOnOk, showClock: c.showClock, rowsBottom: c.rowsBottom, view: c.view,
++    darkening: c.darkening, hideUnused: c.hideUnused, showMediaServers: c.showMediaServers, deviceNames: devNamesNow(c.deviceNames), appNames: c.appNames, inputBarTransparent: c.inputBarTransparent, inputBarSwitchOnOk: c.inputBarSwitchOnOk, showClock: c.showClock, rowsBottom: c.rowsBottom, g6CustomLayout: c.g6CustomLayout, g6Font: c.g6Font, view: c.view,
+     showLastOn: c.showLastOn, showAppCount: c.showAppCount, showAppLabels: c.showAppLabels, showCec: c.showCec, showTvLogos: c.showTvLogos, showPointer: c.showPointer, weather: c.weather, weatherPlace: c.weatherPlace, previewAlways: c.previewAlways, previewInTile: c.previewInTile, previewSize: c.previewSize, previewSound: c.previewSound, wallAnim: c.wallAnim,
+     remoteBattery: c.remoteBattery,
      animTheme: c.animTheme, animSky: c.animSky, animLight: c.animLight, animThemes: ANIM_THEMES,
-     wallShuffleMinutes: c.wallShuffleMinutes, shuffleMinutes: SHUFFLE_MINUTES, colours: c.colours,
 diff --git a/test/test-home.js b/test/test-home.js
-index 993b744..3db74fa 100644
+index 8fca9f23..2954f6af 100644
 --- a/test/test-home.js
 +++ b/test/test-home.js
-@@ -2564,6 +2564,29 @@ step('Alternative View is off until chosen, saved, and anything but alternative
+@@ -2976,6 +2976,29 @@ step('Alternative View is off until chosen, saved, and anything but alternative
    });
  });
  

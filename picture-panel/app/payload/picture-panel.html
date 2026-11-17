@@ -89,6 +89,14 @@ html.hdr .opt.focus{color:#8e8b86}
 html.hdr .row.focus,html.hdr .opt.focus{outline-color:#8e8b86}
 /* While switching between SDR and HDR (html.fade, for a second), the colours ease over instead of jumping. */
 html.fade *{-webkit-transition:color .8s ease,outline-color .8s ease;transition:color .8s ease,outline-color .8s ease}
+/* Pinned (Pin Picture Overlay): only the signal block stays, looking just as it does in the panel,
+   with 20px under it as over it. So nothing burns in, it glides 60px up and right over two minutes
+   (a pixel every 2 seconds), then back the same way, over and over. */
+body.pinned #dots,body.pinned #rows,body.pinned #tip,body.pinned #pick{display:none}
+body.pinned #panel{padding-bottom:0;-webkit-animation:creep 120s linear infinite alternate;animation:creep 120s linear infinite alternate}
+@-webkit-keyframes creep{from{-webkit-transform:translate(0,0)}to{-webkit-transform:translate(60px,-60px)}}
+@keyframes creep{from{transform:translate(0,0)}to{transform:translate(60px,-60px)}}
+body.pinned #info{margin-bottom:6px}
 </style>
 <!-- The brightness it last had over HDR, set before anything is drawn. -->
 <script>try { if (localStorage.getItem('picture-panel-hdr') === '1') document.documentElement.className = 'hdr'; } catch (e) {}</script>
@@ -110,26 +118,26 @@ html.fade *{-webkit-transition:color .8s ease,outline-color .8s ease;transition:
  * Glasshouse's dashboard does. ES5 only.
  */
 (function () {
-  // Three pages of up to five, all "Picture Settings". A row that only applies sometimes keeps its
-  // place, greyed, with the reason.
+  // Pages of five, all "Picture Settings". A row that only applies sometimes keeps its place, greyed,
+  // with the reason; Game Genre alone is only listed when it applies (see layout).
   var DEFS = [
-    { id: 'pictureMode', nameOf: modeName, label: 'Picture Mode', kind: 'choice', page: 0 },
-    { id: 'backlight', rec: 'HDR wants it high. SDR follows the room.', label: 'Brightness', kind: 'range', page: 0 },
-    { id: 'contrast', rec: '100 suits HDR. Lower it if SDR looks flat.', label: 'Contrast', kind: 'range', page: 0 },
-    { id: 'brightness', label: 'Black Level', kind: 'range', page: 0 },
-    { id: 'peakBrightness', rec: 'Use High for HDR and Off for SDR.', label: 'Peak Brightness', kind: 'choice', page: 0 },
-    { id: 'dynamicContrast', rec: 'Off keeps scenes as graded.', label: 'Auto Dynamic Contrast', kind: 'choice', page: 1 },
-    { id: 'expressionEnhancer', rec: 'Off keeps the HDR grade intact.', label: 'Expression Enhancer', kind: 'choice', page: 1, names: { off: 'Off', detail: 'Detail', highlight: 'Brightness' } },
-    { id: 'gamma', rec: 'BT.1886 suits dark rooms. 2.2 suits lit ones.', label: 'Gamma', kind: 'choice', page: 1, names: { high2: 'BT.1886', mediumHavingLevel: '2.2' } },
-    { id: 'hdrDynamicToneMapping', rec: 'Off for best accuracy.', label: 'Dynamic Tone Mapping', kind: 'choice', page: 1, missing: 'HDR only' },
-    { id: 'filmmakerAmbientLight', tip: "Adapts Filmmaker Mode's picture to the light in the room.", label: 'Filmmaker Ambient Light', kind: 'choice', page: 1, luna: true },
-    { id: 'colorTemperature', label: 'Color Temperature', kind: 'temp', page: 2 },
-    { id: 'sharpness', label: 'Sharpness', kind: 'range', page: 2 },
-    { id: 'truMotionMode', rec: 'Turn it on for sports and fast action.', label: 'TruMotion', kind: 'choice', page: 2 },
-    { id: 'gameGenre', label: 'Game Genre', kind: 'choice', page: 2, gameOnly: true, missing: 'Game modes only' },
-    { id: 'allSettings', tip: "Opens LG's full Settings and closes the panel.", label: 'All Settings', kind: 'link', action: 'settings', page: 2 }
+    { id: 'pictureMode', nameOf: modeName, label: 'Picture Mode', kind: 'choice' },
+    { id: 'gameGenre', label: 'Game Genre', kind: 'choice', gameOnly: true },
+    { id: 'backlight', rec: 'HDR wants it high. SDR follows the room.', label: 'Brightness', kind: 'range' },
+    { id: 'contrast', rec: '100 suits HDR. Lower it if SDR looks flat.', label: 'Contrast', kind: 'range' },
+    { id: 'brightness', label: 'Black Level', kind: 'range' },
+    { id: 'peakBrightness', rec: 'Use High for HDR and Off for SDR.', label: 'Peak Brightness', kind: 'choice' },
+    { id: 'dynamicContrast', rec: 'Off keeps scenes as graded.', label: 'Auto Dynamic Contrast', kind: 'choice' },
+    { id: 'expressionEnhancer', rec: 'Off keeps the HDR grade intact.', label: 'Expression Enhancer', kind: 'choice', names: { off: 'Off', detail: 'Detail', highlight: 'Brightness' } },
+    { id: 'gamma', rec: 'BT.1886 suits dark rooms. 2.2 suits lit ones.', label: 'Gamma', kind: 'choice', names: { high2: 'BT.1886', mediumHavingLevel: '2.2' } },
+    { id: 'hdrDynamicToneMapping', rec: 'Off for best accuracy.', label: 'Dynamic Tone Mapping', kind: 'choice', missing: 'HDR only' },
+    { id: 'filmmakerAmbientLight', tip: "Adapts Filmmaker Mode's picture to the light in the room.", label: 'Filmmaker Ambient Light', kind: 'choice', luna: true },
+    { id: 'colorTemperature', label: 'Color Temperature', kind: 'temp' },
+    { id: 'sharpness', label: 'Sharpness', kind: 'range' },
+    { id: 'truMotionMode', rec: 'Turn it on for sports and fast action.', label: 'TruMotion', kind: 'choice' },
+    { id: 'allSettings', tip: "Opens LG's full Settings and closes the panel.", label: 'All Settings', kind: 'link', action: 'settings' },
+    { id: 'pin', tip: 'Shows only the signal info, creeping it slowly back and forth so it does not burn in. OK brings the panel back.', label: 'Pin Overlay', kind: 'link', action: 'pin' }
   ];
-  var PAGES = 3;
   var CELLS = [
     { id: 'res', label: 'Resolution' }, { id: 'hz', label: 'Refresh rate' }, { id: 'fps', label: 'Frame rate' }, { id: 'vrr', label: 'VRR' },
     { id: 'hdr', label: 'Dynamic range' }, { id: 'allm', label: 'Low latency' }, { id: 'color', label: 'Color' }, { id: 'bits', label: 'Bit depth' },
@@ -274,33 +282,41 @@ html.fade *{-webkit-transition:color .8s ease,outline-color .8s ease;transition:
     var cls = 'row' + (i === sel ? ' focus' : '');
     if (c.def.kind !== 'link') cls += !usable(c) ? ' na' : (c.row.active === false ? ' off' : '');
     e.row.className = cls;
-    e.row.style.display = c.def.page === page ? '' : 'none';
+    e.row.style.display = c.page === page ? '' : 'none';
     e.val.textContent = text(c);
   }
   function paintAll() {
-    page = ctl[sel].def.page;
+    layout();
+    if (ctl[sel].page < 0) sel = 0;
+    page = ctl[sel].page;
     for (var i = 0; i < ctl.length; i++) paint(i);
     // The strip under the rows: the page's name on the left, up and down arrows on the right.
     document.getElementById('pgNum').textContent = 'Picture Settings ' + (page + 1) + '/' + PAGES;
   }
 
-  // Game Genre only applies in a game picture mode (game, HDR game, Dolby Vision game).
+  // Game Genre is only listed in a game picture mode (game, HDR game, Dolby Vision game), right under
+  // Picture Mode, pushing every row after it down a place; the pages are counted afresh each time.
+  var PAGE_ROWS = 5, PAGES = 3;
   function isGameMode() { return !!(ctl[0].row && /game/i.test(String(ctl[0].row.value))); }
+  function layout() {
+    var n = 0;
+    ctl.forEach(function (c) { c.page = !c.def.gameOnly || isGameMode() ? Math.floor(n++ / PAGE_ROWS) : -1; });
+    PAGES = Math.max(1, Math.ceil(n / PAGE_ROWS));
+  }
   function usable(c) {
     if (c.def.kind === 'link') return true;
     if (stale && c.def.id !== 'pictureMode') return false;
     if (!c.row) return false;
-    if (c.def.gameOnly && !isGameMode()) return false;
     return true;
   }
   // Up and Down run through all twelve rows, so going past a page's last row turns to the next
   // page and past its first to the one before, wrapping at both ends.
   function turn(d) {
     var p = (page + d + PAGES) % PAGES;
-    for (var k = 0; k < ctl.length; k++) if (ctl[k].def.page === p) { sel = k; break; }
+    for (var k = 0; k < ctl.length; k++) if (ctl[k].page === p) { sel = k; break; }
     paintAll(); hint(); poke();
   }
-  function step(dir) { sel = (sel + dir + ctl.length) % ctl.length; }
+  function step(dir) { do { sel = (sel + dir + ctl.length) % ctl.length; } while (ctl[sel].page < 0); }
 
   // ---- the signal block: read only, refreshed while the panel is open
   var HDR = { hdr10: 'HDR10', hdr10plus: 'HDR10+', dolby_vision: 'Dolby Vision', hlg: 'HLG', sdr: 'SDR' };
@@ -515,17 +531,24 @@ html.fade *{-webkit-transition:color .8s ease,outline-color .8s ease;transition:
         if (!ok) { say('The TV did not accept that', '', true); load(true); } else hint();
       });
     }
+    if (c.def.id === 'pictureMode') return sendMode(c, value);
     var body = c.def.kind === 'switch' ? { id: c.def.id, on: value } : { id: c.def.id, value: value };
+    post(body, hint);
+  }
+  function post(body, then) {
     http('POST', '/api/control', { action: 'lgSetting', value: body }, function (ok, r) {
       if (!ok || (r && r.ok === false)) {
         say('The TV did not accept that', r && r.error ? r.error : '', true);
         load(true);
         return;
       }
-      hint();
-      // A picture mode brings its own set of every other value with it.
-      if (c.def.id === 'pictureMode') { var g = gen; setTimeout(function () { if (g === gen) load(true); }, 700); }
+      then();
     });
+  }
+  // A picture mode brings its own set of every other value with it, so they are read again after.
+  function sendMode(c, value) {
+    var g = gen;
+    post({ id: 'pictureMode', value: value }, function () { hint(); setTimeout(function () { if (g === gen) load(true); }, 700); });
   }
 
   function change(i, dir) {
@@ -626,6 +649,7 @@ html.fade *{-webkit-transition:color .8s ease,outline-color .8s ease;transition:
   // OK: in the option list it picks; on a setting with choices it opens the list; otherwise it
   // steps the value (or opens Settings on All Settings).
   function ok() {
+    if (pinned) return unpin();
     if (pick) return choosePick();
     if (!openPick(sel)) change(sel, 1);
   }
@@ -652,7 +676,24 @@ html.fade *{-webkit-transition:color .8s ease,outline-color .8s ease;transition:
   }
 
   function activate(c) {
-    openSettings();
+    if (c.def.action === 'pin') pin(); else openSettings();
+  }
+
+  // ---- Pin Picture Overlay: the panel shrinks to its signal block and stays up (the signal keeps being
+  // read every few seconds) and glides slowly back and forth (body.pinned in the styles). OK or a click
+  // brings the whole panel back; Back closes it.
+  var pinned = false;
+  function pin() {
+    pinned = true;
+    if (idleTimer) { clearTimeout(idleTimer); idleTimer = null; }
+    if (hintTimer) { clearTimeout(hintTimer); hintTimer = null; }
+    say('');
+    document.body.className = 'pinned';
+  }
+  function unpin() {
+    pinned = false;
+    document.body.className = '';
+    paintAll(); hint(); poke();
   }
 
   function openSettings() {
@@ -662,6 +703,8 @@ html.fade *{-webkit-transition:color .8s ease,outline-color .8s ease;transition:
     });
   }
 
+  var PIN = '<svg width="22" height="22" viewBox="0 0 24 24" style="vertical-align:middle"><path fill="currentColor" ' +
+    'd="M16 9V4h1c.55 0 1-.45 1-1s-.45-1-1-1H7c-.55 0-1 .45-1 1s.45 1 1 1h1v5c0 1.66-1.34 3-3 3v2h5.97v7l1 1 1-1v-7H19v-2c-1.66 0-3-1.34-3-3z"/></svg>';
   function build() {
     rowsEl.innerHTML = '';                    // the still copy in the page
     ctl.forEach(function (c, i) {
@@ -672,6 +715,8 @@ html.fade *{-webkit-transition:color .8s ease,outline-color .8s ease;transition:
       box.className = 'ctl'; left.className = 'arrow'; right.className = 'arrow'; val.className = 'val';
       left.innerHTML = '&#8249;'; right.innerHTML = '&#8250;';
       if (c.def.kind === 'link') {
+        // Pin Overlay has a pin where the other links have an arrow, in the arrow's colours.
+        if (c.def.action === 'pin') right.innerHTML = PIN;
         box.appendChild(right);
       } else {
         box.appendChild(left); box.appendChild(val); box.appendChild(right);
@@ -711,12 +756,18 @@ html.fade *{-webkit-transition:color .8s ease,outline-color .8s ease;transition:
     if (window.PalmSystem && typeof window.PalmSystem.platformBack === 'function') { try { window.PalmSystem.platformBack(); } catch (e) { /* fall through */ } }
     window.close();
   }
-  // A forgotten panel closes itself after a minute without a key or pointer.
-  function poke() { if (idleTimer) clearTimeout(idleTimer); idleTimer = setTimeout(leave, 60000); }
+  // A forgotten panel closes itself after a minute without a key or pointer; pinned, it stays.
+  function poke() { if (idleTimer) clearTimeout(idleTimer); idleTimer = pinned ? null : setTimeout(leave, 60000); }
 
   document.addEventListener('keydown', function (e) {
     var k = e.keyCode || e.which;
     poke();
+    if (pinned) {
+      if (k === 13) unpin();
+      else if (k === 461 || k === 27 || k === 8) leave();
+      e.preventDefault();
+      return;
+    }
     if (pick) {
       if (k === 38 || k === 33) movePick(-1);
       else if (k === 40 || k === 34) movePick(1);
@@ -740,7 +791,7 @@ html.fade *{-webkit-transition:color .8s ease,outline-color .8s ease;transition:
   var wheelAt = 0;
   document.addEventListener('wheel', function (e) {
     var t = new Date().getTime();
-    if (t - wheelAt < 40 || !e.deltaY) return;
+    if (pinned || t - wheelAt < 40 || !e.deltaY) return;
     wheelAt = t;
     poke();
     if (pick) movePick(e.deltaY > 0 ? 1 : -1);

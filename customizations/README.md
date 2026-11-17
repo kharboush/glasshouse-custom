@@ -12,7 +12,7 @@ Top strip (`#now`, 602px tall, 64px padding), left to right:
 
 | Element | Custom | Stock |
 |---|---|---|
-| Preview (`#preview`) | 864×486, first in the strip, top-aligned, 56px gap to its right | 356×200, right of the source text |
+| Preview (`#preview`) | First in the strip, top-aligned, 56px gap to its right; sized by Home's **Preview size**: Large 864×486, Medium 672×378, Small 480×270 | 356×200 (Small), right of the source text |
 | Source text (`#source`) | Title 32px with 6px below it, source ("via") line 24px; takes the remaining width | Title 70px, via 26px |
 | Clock (`#when`) | 48px clock, 24px date, right-aligned in the top-right corner, shrinks to fit (frees width for the source text) | 176px clock, 28px date, fixed 520px on the left |
 | Date | Short form, e.g. "Wed, Nov 11" (locale-aware) | Long form, e.g. "Wednesday 11 November" |
@@ -29,8 +29,9 @@ Top strip (`#now`, 602px tall, 64px padding), left to right:
 
 Below the strip:
 
-- Rows (`#rows`) start at 720px, with 64px side offsets.
-- The Guide (`#guide`) starts at 612px, with 64px side margins; it shows 4 channel rows and scrolls the rest.
+- The strip, the Guide and the rows follow the preview's height. With a Large preview the strip is 602px tall, the Guide starts at 612px and the rows at 720px; Medium moves them up 108px, Small 216px.
+- Rows (`#rows`) have 64px side offsets.
+- The Guide (`#guide`) starts below the strip, with 64px side margins; it shows 4 channel rows and scrolls the rest.
 - Input tiles and Internet TV tiles are 384×216. App tiles are 216×216 (stock 168 wide, about 181 tall), with the same padding as the other tiles and the icon and name centred. Broadcast channel tiles keep their stock size.
 - More apps: the same app tiles, 16px apart across and down, seven to a line (stock: nine, 8px across and 14px down); `FOLDER_COLS` is read through `folderCols()` so the arrow keys follow the seven columns.
 - Guide is the first Internet TV tile.
